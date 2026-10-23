@@ -1,0 +1,79 @@
+/*
+ * 设计 tokens（阶段 1 建立，后续阶段继续复用）。
+ * 颜色、字体、圆角、阴影、动画时长、焦点样式都以 CSS 变量定义；
+ * 其中 --color-* / --font-* / --radius-* / --shadow-* / --ease-* 由
+ * Tailwind v4 的 @theme 映射成工具类（如 bg-canvas、rounded-card）。
+ * 注释使用简体中文；学生可见文案一律走 src/i18n/dictionary.ts 的繁体中文 + 英文。
+ */
+@theme {
+  /* ---------- 颜色：暖白背景、深蓝文字 ---------- */
+  --color-canvas: #fbf7ef;
+  --color-surface: #fffdf8;
+  --color-surface-raised: #ffffff;
+  --color-ink: #12263f;
+  --color-ink-soft: #3c4a5e; /* 英文副行使用，暖白底对比度约 8.4:1 */
+  --color-ink-muted: #5b6777;
+  --color-border: #ded6c6;
+  --color-border-strong: #b9ae99;
+
+  /* ---------- 主操作色：青绿 ---------- */
+  --color-primary: #0f6f68; /* 白底对比度约 5.9:1 */
+  --color-primary-strong: #0a5650;
+  --color-primary-soft: #e3f1ee;
+
+  /* ---------- 图表语义色 ---------- */
+  --color-compare: #a85b00; /* 琥珀：比较，白底约 4.7:1 */
+  --color-compare-soft: #fbefd9;
+  --color-swap: #b3264b; /* 珊瑚：交换/移动，白底约 5.6:1 */
+  --color-swap-soft: #fbe4ea;
+  --color-success: #166534; /* 绿色：已完成，白底约 6.0:1 */
+  --color-success-soft: #e3f2e7;
+
+  --color-focus: #0a5650;
+
+  /* ---------- 字体：繁中优先 + 系统回退，不下载大字库 ---------- */
+  --font-sans:
+    "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Heiti TC",
+    "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas,
+    "Liberation Mono", Menlo, monospace;
+
+  /* ---------- 圆角 ---------- */
+  --radius-chip: 0.375rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.5rem;
+
+  /* ---------- 阴影 ---------- */
+  --shadow-card:
+    0 1px 2px rgb(18 38 63 / 0.06), 0 14px 32px -20px rgb(18 38 63 / 0.3);
+  --shadow-raised:
+    0 2px 4px rgb(18 38 63 / 0.08), 0 28px 56px -28px rgb(18 38 63 / 0.35);
+
+  /* ---------- 动画 ---------- */
+  --default-transition-duration: 160ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root {
+  /* 双语排版基线：中文 17px（主层级），英文 14px（较小但高对比），间距 3px。 */
+  --bilingual-zh-size: 1.0625rem; /* 17px */
+  --bilingual-en-size: 0.875rem; /* 14px */
+  --bilingual-gap: 0.1875rem; /* 3px */
+
+  /* 页面标题的双语字号，随视口轻微缩放。 */
+  --bilingual-zh-heading: clamp(1.75rem, 1.2rem + 2.4vw, 2.5rem);
+  --bilingual-en-heading: clamp(1rem, 0.88rem + 0.6vw, 1.25rem);
+
+  /* 普通 CSS（动画、过渡）直接使用的时长 token。 */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+
+  /* 间距 token：页面区块、卡片内边距、区块内堆叠。 */
+  --space-page-block: clamp(2rem, 1.2rem + 2.5vw, 3.5rem);
+  --space-section: clamp(1.75rem, 1.2rem + 1.8vw, 2.75rem);
+  --space-card: 1.25rem;
+  --space-stack: 1.5rem;
+  --space-inline: 1rem;
+}

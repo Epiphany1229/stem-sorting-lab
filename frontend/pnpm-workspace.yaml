@@ -1,0 +1,6 @@
+# 本文件的 pnpm 设置是为适应当前 DSH 沙箱环境（详见 README「沙箱限制」）：
+# - verifyDepsBeforeRun: 关闭 pnpm run 前的隐式安装校验（该校验会因 store 锁失败中断脚本）
+# - nodeLinker: hoisted 使用扁平 node_modules；默认 isolated 链接器在本机原生 pnpm 12
+#   会触发 stack overflow（pnpm 12.15.0 + Windows 沙箱的已知问题，非项目代码问题）
+verifyDepsBeforeRun: false
+nodeLinker: hoisted

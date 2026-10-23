@@ -1,0 +1,37 @@
+# 工具链（工作区本地安装，119MB，不入库）
+.tools/
+
+# pnpm 本地仓库（沙箱要求留在工作区内，但不应入库）
+.pnpm-store/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+*.egg-info/
+
+# 环境变量（可能含机密，禁止提交；提供 .env.example 代替）
+.env
+.env.local
+.env.*.local
+
+# 前端
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/.vite/
+
+# 本地数据库与缓存
+*.sqlite3
+*.db
+*.db-journal
+
+# 编辑器与系统
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,55 @@
+[project]
+name = "stem-sorting-weather-lab"
+version = "0.1.0"
+description = "面向初学者的互动 STEM 教学网站：Python 排序算法可视化 + 香港天文台气象数据（后端）"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.5",
+    "httpx>=0.28",
+    "pandas>=2.2",
+    "SQLAlchemy>=2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "hypothesis>=6.112",
+    "ruff>=0.7",
+    "mypy>=1.11",
+]
+
+# 本项目按“虚拟项目”管理：只装依赖，不把 backend 作为 wheel 安装。
+# 运行/测试时由 pythonpath=["."] 与工作目录把 backend 加入 sys.path。
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["backend", "tests"]
+# .tools 存放工作区内的 uv 缓存与工具二进制（含第三方源码），不是本项目代码，必须排除
+extend-exclude = [".tools", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["backend"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["backend", "tests"]
+show_error_codes = true
+pretty = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+addopts = "-ra"
