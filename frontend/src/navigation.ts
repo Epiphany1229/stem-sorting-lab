@@ -42,7 +42,8 @@ export const navItems: readonly NavItem[] = [
     navKey: "nav.weatherSort",
     titleKey: "weatherSort.title",
     descriptionKey: "home.card.weatherSort.desc",
-    status: "inDevelopment",
+    // 阶段 4 已交付：真实天气轨迹接入冒泡播放器
+    status: "available",
   },
   {
     path: "/algorithms",

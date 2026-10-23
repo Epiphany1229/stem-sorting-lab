@@ -15,6 +15,7 @@ import argparse
 import asyncio
 import sys
 from collections.abc import Sequence
+from datetime import date, timedelta
 
 from backend.app.core.settings import Settings, get_settings
 from backend.app.data_sources.hko.client import (
@@ -24,6 +25,10 @@ from backend.app.data_sources.hko.client import (
     HkoFetchError,
 )
 from backend.app.data_sources.hko.registry import load_station_registry
+from backend.app.data_sources.hko.ryes import (
+    RYES_STATION_ID,
+    ingest_rainfall_range,
+)
 from backend.app.models.base import today_hk
 from backend.app.models.db import count_stations, create_database
 from backend.app.services.hko_ingest import METRIC_TO_DATATYPE, ingest_year
@@ -61,6 +66,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         help="只打印将要发起的请求，不联网也不写库",
+    )
+
+    rainfall = subparsers.add_parser(
+        "ingest-rainfall",
+        help="按天回填 RYES 官方日雨量（仅 HKO，1 请求/天，非默认执行）",
+    )
+    rainfall.add_argument("--start", required=True, help="起始日期 YYYY-MM-DD（含）")
+    rainfall.add_argument("--end", required=True, help="结束日期 YYYY-MM-DD（含）")
+    rainfall.add_argument(
+        "--station",
+        default=RYES_STATION_ID,
+        help="官方 RYES 只提供 HKO 一站（其他站号会被拒绝）",
+    )
+    rainfall.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="只打印将发起的请求，不联网也不写库",
     )
     return parser
 
@@ -177,6 +199,74 @@ def _run_ingest(args: argparse.Namespace) -> int:
     return 0
 
 
+def _parse_cli_date(raw: object, field_name: str) -> date:
+    """解析 YYYY-MM-DD 形式的命令行日期。"""
+    text = str(raw)
+    try:
+        return date.fromisoformat(text)
+    except ValueError as exc:
+        raise ValueError(f"{field_name} 不是合法日期（要求 YYYY-MM-DD）：{text}") from exc
+
+
+def _run_ingest_rainfall(args: argparse.Namespace) -> int:
+    """执行 ingest-rainfall 子命令：按天回填 RYES 日雨量（仅 HKO）。"""
+    settings = get_settings()
+    start = _parse_cli_date(args.start, "--start")
+    end = _parse_cli_date(args.end, "--end")
+    station = str(args.station)
+    if station != RYES_STATION_ID:
+        raise ValueError(f"RYES 只提供 {RYES_STATION_ID} 的日雨量（官方仅一站）")
+    if start > end:
+        raise ValueError("--start 不能晚于 --end")
+    total = (end - start).days + 1
+    if bool(args.dry_run):
+        print(f"[dry-run] 目標：{total} 天 × 1 請求/天 = {total} 次請求（僅 {station}）")
+        print(f"[dry-run] 接口：{settings.hko_opendata_url}?dataType=RYES&date=YYYYMMDD")
+        print(
+            f"[dry-run] 合規：同主機並發 1，最小間隔 {settings.fetch_min_interval_seconds}s"
+            f" + jitter ≤ {settings.fetch_jitter_seconds}s；不做常駐守護"
+        )
+        for offset in range(total):
+            day = start + timedelta(days=offset)
+            print(f"[dry-run] GET dataType=RYES date={day.strftime('%Y%m%d')}")
+        return 0
+
+    database = create_database(settings)
+    database.prepare()
+    client = HkoClient(settings, database)
+
+    async def _run() -> None:
+        try:
+            summary = await ingest_rainfall_range(
+                client,
+                database,
+                settings,
+                start=start,
+                end=end,
+                station=station,
+                on_request=print,
+            )
+        finally:
+            await client.aclose()
+        print(
+            f"[完成] 請求 {summary.requests} 次，寫入 {summary.written} 行（metric=rainfall），"
+            f"Trace 跳過 {summary.trace_skipped} 天，缺失跳過 {summary.missing_skipped} 天，"
+            f"日期不符 {summary.date_mismatch} 天，耗時 {summary.elapsed_seconds:.1f}s"
+        )
+
+    try:
+        asyncio.run(_run())
+    except FetchRejected as exc:
+        print(f"[拒絕] {exc.reason.value}: {exc.message}", file=sys.stderr)
+        return 1
+    except (HkoFetchError, HkoDataError) as exc:
+        print(f"[失敗] {exc}", file=sys.stderr)
+        return 1
+    finally:
+        database.dispose()
+    return 0
+
+
 def _run_init_db() -> int:
     """执行 init-db 子命令：建表并写入官方 39 站。"""
     settings = get_settings()
@@ -199,6 +289,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _run_init_db()
         if args.command == "ingest":
             return _run_ingest(args)
+        if args.command == "ingest-rainfall":
+            return _run_ingest_rainfall(args)
     except ValueError as exc:
         print(f"[參數錯誤] {exc}", file=sys.stderr)
         return 2

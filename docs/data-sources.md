@@ -445,6 +445,20 @@ https://data.weather.gov.hk/weatherAPI/opendata/opendata.php
 
 ---
 
+### 9.5 雨量数据专项核查（阶段 4 补做，2026-10-23 实测）
+
+| 候选渠道 | 实测结果 | 结论 |
+|---|---|---|
+| `dataType=CLMRAINF`（用户提到） | 官方 PDF 的 `dataType` 清单中**不存在**该代号；接口对未知 dataType 返回 HTTP 200 + 参数错误文本 | ❌ 不存在 |
+| `hourlyRainfall.php?lang=en` | HTTP 200，返回 `{obsTime, hourlyRainfall}`，**只有当前一小时** | 仅实时，无法回溯 |
+| `opendata.php?dataType=RYES&date=YYYYMMDD` | HTTP 200，返回**平铺 JSON 日报**：`HKOReadingsRainfall`（日雨量 mm）、`HKOReadingsAccumRainfall`、`HKOReadingsMaxRH/MinRH`、多站 `*MaxTemp/*MinTemp` 等 | ✅ **官方日雨量存在**，但**仅天文台总部（HKO）一站**，且**每请求一天** |
+
+**RYES 日期语义（实测，容易踩坑）**：请求 `date=YYYYMMDD` 时，响应中 `ReportTimeInfoDate` = 请求日（资料日），`BulletinDate` = **次日**（`BulletinTime=0015` 发布）。因此入库必须按 `ReportTimeInfoDate` 校验、按请求日归属；若两者不一致应拒绝写入，**绝不能把雨量记到错误日期**。
+
+**项目处置**：不引入任何第三方气象机构数据；不做常驻累积守护进程（实时采集补不回过去 30 天）。仅提供可选 CLI `ingest-rainfall`（1 请求/天，仅 HKO，走既有安全客户端与预算）；`Trace`（<0.05mm）**不入库、不写 0**，在 CLI 汇总中单独计数。
+
+---
+
 ## 10. 更新频率与数据许可/署名要求
 
 ### 10.1 更新时间（汇总）

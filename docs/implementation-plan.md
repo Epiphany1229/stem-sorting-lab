@@ -269,11 +269,15 @@ sample_data/ 官方文件样本（用于离线解析测试）
 - 与设计的偏差（已确认合理）：DB 惰性初始化（避免 import 副作用，另有 `init-db`）；multipart 手工解析（环境无 `python-multipart`，`pyproject` 禁改）；读接口在"未尝试抓取"时返回 `no_cache` 而非伪造 `not_published`；`hourly_observation` 表已建但未接 rhrread 采集。
 - 已知边界：降雨/湿度无历史接口 → 柱状图用日最高温对比、散点用 `tmax` vs `tmean` 并显式标注；Plotly 使主 chunk 约 5.2 MB。
 
-### 阶段 4 · 真实气温排序（复用同一播放器，**仅冒泡排序**）
+### 阶段 4 · 真实气温排序（复用同一播放器，**仅冒泡排序**）✅ 已完成（2026-10-23）
 
-- **范围（D-5 已确认）**：天气数据排序演示**只用冒泡排序**；其余 9 种算法不套用天气数据，用教学小数据。
-- 交付：日最高温/日最低温一键切换（两种都必须完整）、升降序、测站与日期范围、并排比较视图；元素保留 ID/日期/测站/来源；排除日期明示；窗口以最后可用日为锚点并显示起止日期与"当月未发布"（D-1）。
-- 验收：交换后温度标签与日期仍匹配；负值与全部相同温度渲染正确；两种指标有效天数分别说明；"寻找最高温是否必须完整排序"的讨论模块。
+- 设计：`docs/weather-sort-design.md`（协议可选字段扩展、接口、页面要求、雨量专项核查结论）。
+- 后端已交付：`services/weather_trace_service.py`、`schemas/weather_trace.py`、`POST /api/algorithms/bubble/weather-trace`；**零重写排序**（真实调用 `bubble_sort` + `TraceRecorder`，`code_line_ids` 沿用阶段 2 的 `BUBBLE_LINE_MAP`）；`TraceRecorder` 新增**可选** `explanation_factory`（默认 None，阶段 2 行为不变）；items 带 `value_raw`/`label`/`station`/双语站名/`quality_flag`/`source`；顶层新增 `metric/valid_days/requested_days/excluded_dates/before_order/after_order/top_hot/top_cold/single_scan`；稳定性（等温不交换）与缺失过滤均已测。
+- 可选官方日雨量：`data_sources/hko/ryes.py` + CLI `ingest-rainfall`（RYES，1 请求/天，仅 HKO，无常驻）。实测修正日期语义：按 `ReportTimeInfoDate` 校验、`BulletinDate` 为次日发布；`Trace`（<0.05mm）不入库不写 0。
+- 前端已交付：`/weather` 入口按钮；`/weather-sort` 页面（tmax/tmin 切换、升降序、测站、日期范围、并排比较、缺失日期明示、Top5 最热/最冷、排序前后对比、冒泡 vs 单次扫描 STEM 卡片、负温/全相同边界）；**直接复用** `TracePlayer/CodePanel/PredictionDialog/useTracePlayback/BarChart`，仅加可选 `unit` 与元数据渲染。
+- 验收（Lead 独立复跑）：后端 `pytest` **134 passed**、`ruff` 干净、`mypy`（49 files）通过；真实 app.db 冒烟 30 天 HKO tmax → 200、`valid_days=30`、`single_scan=29`、`summary 380/129/19`、解释含真实日期温度、等温日期顺序稳定；前端 `vitest` **187 passed**（新增 28 + 真实响应跨栈 6）、`tsc`、`build` 通过。
+- 已知边界：降雨/湿度仍未在查询接口暴露（RYES 已可取但与阶段 3 metrics 白名单未打通）；`Trace` 不写 0；柱底日期标签在 30 天窗口下较紧凑（完整信息靠悬停/聚焦）。
+- 需求覆盖核对：`tmax`/`tmin` 两种模式均完整；升降序、测站与日期范围可用；并排比较可用；元素保留 ID/日期/测站/温度/来源；排除日期明示；交换后标签与日期仍匹配（前端逐步断言）；负值与全相同温度正常；"寻找最高温是否必须完整排序"以 STEM 卡片实现（`summary` vs `single_scan` 真实数值）。
 
 ### 阶段 5 · 其余九种算法 + 专属可视化
 
@@ -372,7 +376,7 @@ sample_data/ 官方文件样本（用于离线解析测试）
 
 ## 8. 下一步
 
-1. ✅ 阶段 0–3 完成：工具链、骨架与双语导航、冒泡真实轨迹 + 播放器、HKO 安全取数与天气探索页（后端 107 / 前端 153 测试全绿）。
-2. 🔜 **阶段 4（下一步）**：天气数据排序页——复用同一轨迹协议与播放器，仅冒泡排序；`tmax`/`tmin` 一键切换、升降序、测站与日期范围、并排比较、缺口日期明示；元素保留 ID/日期/测站/来源。
-3. ⏳ 阶段 4 可顺带接入：`hourly_observation` 的 rhrread 累积采集 + 降雨/湿度查询接口（届时图表从"回退指标"切到真实指标）。
-4. ⏳ 阶段 5–6：其余九种算法、浏览器/无障碍/性能验收。
+1. ✅ 阶段 0–4 完成：工具链、双语导航、冒泡轨迹与播放器、HKO 安全取数 + 天气探索页、真实气温排序 `/weather-sort`（后端 134 / 前端 187 测试全绿）。
+2. 🔜 **阶段 5（下一步）**：其余九种算法 + 专属可视化（选择/插入/希尔/归并/快速/堆/计数/桶/基数），导航全部列出并标注状态；计数/桶/基数要说明整数与定点转换限制。
+3. ⏳ 阶段 6：Playwright 三视口验收、无障碍检查、性能优化（Plotly 按路由懒加载把 5.2 MB 拆掉）、文档完善。
+4. ⏳ 可选后续：把 RYES 日雨量接入阶段 3 的 metrics 白名单，让柱状图切到真实降雨（仅 HKO）。

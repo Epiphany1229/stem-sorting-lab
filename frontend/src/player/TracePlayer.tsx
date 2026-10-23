@@ -19,6 +19,8 @@ interface TracePlayerProps {
   readonly trace: BubbleTrace;
   /** 引导模式：compare 事件前弹预测题；自由实验模式不弹。 */
   readonly guidedMode: boolean;
+  /** 天气轨迹的数值单位（如 "°C"）；阶段 2 的整数轨迹不传。 */
+  readonly unit?: string;
 }
 
 const SPEED_OPTIONS: readonly number[] = [0.5, 1, 1.5, 2];
@@ -41,7 +43,7 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
   );
 }
 
-export function TracePlayer({ trace, guidedMode }: TracePlayerProps) {
+export function TracePlayer({ trace, guidedMode, unit }: TracePlayerProps) {
   const reducedMotion = usePrefersReducedMotion();
   const playback = useTracePlayback(trace, guidedMode);
   const { phase, step, total, currentEvent, currentState, prediction } = playback;
@@ -106,6 +108,7 @@ export function TracePlayer({ trace, guidedMode }: TracePlayerProps) {
             state={currentState}
             event={currentEvent}
             reducedMotion={reducedMotion}
+            unit={unit}
           />
         </div>
 

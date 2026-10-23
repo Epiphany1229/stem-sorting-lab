@@ -1,0 +1,1121 @@
+{
+  "protocol_version": 1,
+  "algorithm": "bubble",
+  "direction": "asc",
+  "options": {
+    "early_exit": true
+  },
+  "items": [
+    {
+      "id": "it-2026-09-25",
+      "value": 32.5,
+      "value_raw": "32.5",
+      "label": "2026-09-25",
+      "station": "HKO",
+      "station_name_zh_hant": "香港天文台",
+      "station_name_en": "Hong Kong Observatory",
+      "quality_flag": "C",
+      "source": {
+        "dataset": "CLMMAXT",
+        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "mode": "official"
+      }
+    },
+    {
+      "id": "it-2026-09-26",
+      "value": 32.1,
+      "value_raw": "32.1",
+      "label": "2026-09-26",
+      "station": "HKO",
+      "station_name_zh_hant": "香港天文台",
+      "station_name_en": "Hong Kong Observatory",
+      "quality_flag": "C",
+      "source": {
+        "dataset": "CLMMAXT",
+        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "mode": "official"
+      }
+    },
+    {
+      "id": "it-2026-09-27",
+      "value": 32.7,
+      "value_raw": "32.7",
+      "label": "2026-09-27",
+      "station": "HKO",
+      "station_name_zh_hant": "香港天文台",
+      "station_name_en": "Hong Kong Observatory",
+      "quality_flag": "C",
+      "source": {
+        "dataset": "CLMMAXT",
+        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "mode": "official"
+      }
+    },
+    {
+      "id": "it-2026-09-28",
+      "value": 32.5,
+      "value_raw": "32.5",
+      "label": "2026-09-28",
+      "station": "HKO",
+      "station_name_zh_hant": "香港天文台",
+      "station_name_en": "Hong Kong Observatory",
+      "quality_flag": "C",
+      "source": {
+        "dataset": "CLMMAXT",
+        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "mode": "official"
+      }
+    },
+    {
+      "id": "it-2026-09-29",
+      "value": 33.1,
+      "value_raw": "33.1",
+      "label": "2026-09-29",
+      "station": "HKO",
+      "station_name_zh_hant": "香港天文台",
+      "station_name_en": "Hong Kong Observatory",
+      "quality_flag": "C",
+      "source": {
+        "dataset": "CLMMAXT",
+        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "mode": "official"
+      }
+    },
+    {
+      "id": "it-2026-09-30",
+      "value": 34.2,
+      "value_raw": "34.2",
+      "label": "2026-09-30",
+      "station": "HKO",
+      "station_name_zh_hant": "香港天文台",
+      "station_name_en": "Hong Kong Observatory",
+      "quality_flag": "C",
+      "source": {
+        "dataset": "CLMMAXT",
+        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "mode": "official"
+      }
+    }
+  ],
+  "code": {
+    "language": "python",
+    "lines": [
+      {
+        "line_id": "L1",
+        "lineno": 1,
+        "text": "\"\"\"冒泡排序：唯一可信源码。",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L2",
+        "lineno": 2,
+        "text": "",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L3",
+        "lineno": 3,
+        "text": "学生看到的代码就是这里被真实执行的代码：轨迹插桩 ``recorder.emit_*`` 直接写在",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L4",
+        "lineno": 4,
+        "text": "函数体里，展示时按行号标记为 trace 行，不存在第二份“教学版”源码。",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L5",
+        "lineno": 5,
+        "text": "\"\"\"",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L6",
+        "lineno": 6,
+        "text": "",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L7",
+        "lineno": 7,
+        "text": "from __future__ import annotations",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L8",
+        "lineno": 8,
+        "text": "",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L9",
+        "lineno": 9,
+        "text": "from collections.abc import Sequence",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L10",
+        "lineno": 10,
+        "text": "",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L11",
+        "lineno": 11,
+        "text": "from backend.app.trace.recorder import NullRecorder, Tracer",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L12",
+        "lineno": 12,
+        "text": "",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L13",
+        "lineno": 13,
+        "text": "# 未传入 tracer 时使用全空接收器：纯算法调用不产生任何轨迹数据结构。",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L14",
+        "lineno": 14,
+        "text": "_NULL_RECORDER: Tracer = NullRecorder()",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L15",
+        "lineno": 15,
+        "text": "",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L16",
+        "lineno": 16,
+        "text": "",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L17",
+        "lineno": 17,
+        "text": "def bubble_sort(",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L18",
+        "lineno": 18,
+        "text": "    values: Sequence[float],",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L19",
+        "lineno": 19,
+        "text": "    direction: str = \"asc\",",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L20",
+        "lineno": 20,
+        "text": "    early_exit: bool = True,",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L21",
+        "lineno": 21,
+        "text": "    tracer: Tracer | None = None,",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L22",
+        "lineno": 22,
+        "text": ") -> list[float]:",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L23",
+        "lineno": 23,
+        "text": "    \"\"\"冒泡排序：返回排序后的新列表，传入 tracer 时同步产生真实执行轨迹。\"\"\"",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L24",
+        "lineno": 24,
+        "text": "    recorder: Tracer = tracer if tracer is not None else _NULL_RECORDER",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L25",
+        "lineno": 25,
+        "text": "    arr = list(values)",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L26",
+        "lineno": 26,
+        "text": "    n = len(arr)",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L27",
+        "lineno": 27,
+        "text": "    descending = direction == \"desc\"",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L28",
+        "lineno": 28,
+        "text": "    passes = 0",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L29",
+        "lineno": 29,
+        "text": "    for i in range(n - 1):",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L30",
+        "lineno": 30,
+        "text": "        # 进入新一轮：上一轮冒泡到末尾的元素已经确定最终位置。",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L31",
+        "lineno": 31,
+        "text": "        recorder.emit_mark_sorted(pass_index=i)",
+        "kind": "trace"
+      },
+      {
+        "line_id": "L32",
+        "lineno": 32,
+        "text": "        passes += 1",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L33",
+        "lineno": 33,
+        "text": "        swapped = False",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L34",
+        "lineno": 34,
+        "text": "        for j in range(n - 1 - i):",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L35",
+        "lineno": 35,
+        "text": "            # 先记录“即将比较”，此时数组还没有任何变化。",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L36",
+        "lineno": 36,
+        "text": "            recorder.emit_compare(i=j, j=j + 1, pass_index=i)",
+        "kind": "trace"
+      },
+      {
+        "line_id": "L37",
+        "lineno": 37,
+        "text": "            # 升序：左 > 右 才交换；降序：左 < 右 才交换。",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L38",
+        "lineno": 38,
+        "text": "            if (arr[j] < arr[j + 1]) if descending else (arr[j] > arr[j + 1]):",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L39",
+        "lineno": 39,
+        "text": "                arr[j], arr[j + 1] = arr[j + 1], arr[j]",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L40",
+        "lineno": 40,
+        "text": "                # 交换赋值之后记录，才能拿到真实的前后状态。",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L41",
+        "lineno": 41,
+        "text": "                recorder.emit_swap(i=j, j=j + 1, pass_index=i)",
+        "kind": "trace"
+      },
+      {
+        "line_id": "L42",
+        "lineno": 42,
+        "text": "                swapped = True",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L43",
+        "lineno": 43,
+        "text": "        if early_exit and not swapped:",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L44",
+        "lineno": 44,
+        "text": "            break",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L45",
+        "lineno": 45,
+        "text": "    # 只有“还有轮次没跑就退出”才算提前结束；最后一轮自然退出不算。",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L46",
+        "lineno": 46,
+        "text": "    early_stop = early_exit and passes < n - 1",
+        "kind": "normal"
+      },
+      {
+        "line_id": "L47",
+        "lineno": 47,
+        "text": "    recorder.emit_done(pass_index=passes - 1, triggered=early_stop, finalized=tuple(range(n)))",
+        "kind": "trace"
+      },
+      {
+        "line_id": "L48",
+        "lineno": 48,
+        "text": "    return arr",
+        "kind": "normal"
+      }
+    ]
+  },
+  "states": [
+    {
+      "state_id": 0,
+      "order": [
+        "it-2026-09-25",
+        "it-2026-09-26",
+        "it-2026-09-27",
+        "it-2026-09-28",
+        "it-2026-09-29",
+        "it-2026-09-30"
+      ],
+      "values": [
+        32.5,
+        32.1,
+        32.7,
+        32.5,
+        33.1,
+        34.2
+      ]
+    },
+    {
+      "state_id": 1,
+      "order": [
+        "it-2026-09-26",
+        "it-2026-09-25",
+        "it-2026-09-27",
+        "it-2026-09-28",
+        "it-2026-09-29",
+        "it-2026-09-30"
+      ],
+      "values": [
+        32.1,
+        32.5,
+        32.7,
+        32.5,
+        33.1,
+        34.2
+      ]
+    },
+    {
+      "state_id": 2,
+      "order": [
+        "it-2026-09-26",
+        "it-2026-09-25",
+        "it-2026-09-28",
+        "it-2026-09-27",
+        "it-2026-09-29",
+        "it-2026-09-30"
+      ],
+      "values": [
+        32.1,
+        32.5,
+        32.5,
+        32.7,
+        33.1,
+        34.2
+      ]
+    }
+  ],
+  "events": [
+    {
+      "step_id": 0,
+      "event_type": "mark_sorted",
+      "code_line_ids": [
+        "L31",
+        "L29"
+      ],
+      "state_before_id": 0,
+      "state_after_id": 0,
+      "active_indices": [],
+      "compared_indices": [],
+      "modified_indices": [],
+      "finalized_indices": [],
+      "auxiliary_state": {
+        "pass_index": 0,
+        "early_exit_enabled": true,
+        "swapped_in_pass": false
+      },
+      "metrics": {
+        "comparisons": 0,
+        "swaps": 0,
+        "writes": 0
+      },
+      "explanation": {
+        "key": "weather.mark_sorted.start",
+        "zh-Hant": "開始第 1 輪冒泡：由左至右兩兩比較相鄰日子的氣溫。",
+        "en": "Start pass 1: compare adjacent days from left to right."
+      }
+    },
+    {
+      "step_id": 1,
+      "event_type": "compare",
+      "code_line_ids": [
+        "L36",
+        "L38"
+      ],
+      "state_before_id": 0,
+      "state_after_id": 0,
+      "active_indices": [
+        0,
+        1
+      ],
+      "compared_indices": [
+        0,
+        1
+      ],
+      "modified_indices": [],
+      "finalized_indices": [],
+      "auxiliary_state": {
+        "pass_index": 0,
+        "early_exit_enabled": true,
+        "swapped_in_pass": false,
+        "comparison": {
+          "left": 32.5,
+          "right": 32.1,
+          "relation": "gt",
+          "will_swap": true
+        }
+      },
+      "metrics": {
+        "comparisons": 1,
+        "swaps": 0,
+        "writes": 0
+      },
+      "explanation": {
+        "key": "weather.compare.asc.swap",
+        "zh-Hant": "比較 9 月 25 日的 32.5°C 與 9 月 26 日的 32.1°C；升序排列時需要交換。",
+        "en": "Comparing 32.5°C on Sep 25 with 32.1°C on Sep 26; swap needed for ascending order."
+      }
+    },
+    {
+      "step_id": 2,
+      "event_type": "swap",
+      "code_line_ids": [
+        "L41",
+        "L39"
+      ],
+      "state_before_id": 0,
+      "state_after_id": 1,
+      "active_indices": [
+        0,
+        1
+      ],
+      "compared_indices": [],
+      "modified_indices": [
+        0,
+        1
+      ],
+      "finalized_indices": [],
+      "auxiliary_state": {
+        "pass_index": 0,
+        "early_exit_enabled": true,
+        "swapped_in_pass": true
+      },
+      "metrics": {
+        "comparisons": 1,
+        "swaps": 1,
+        "writes": 2
+      },
+      "explanation": {
+        "key": "weather.swap.asc",
+        "zh-Hant": "交換 9 月 25 日（32.5°C）與 9 月 26 日（32.1°C）的位置；升序排列要把較低溫的 9 月 26 日 往前移。",
+        "en": "Swap 32.5°C on Sep 25 with 32.1°C on Sep 26; ascending order moves the cooler day (Sep 26) forward."
+      }
+    },
+    {
+      "step_id": 3,
+      "event_type": "compare",
+      "code_line_ids": [
+        "L36",
+        "L38"
+      ],
+      "state_before_id": 1,
+      "state_after_id": 1,
+      "active_indices": [
+        1,
+        2
+      ],
+      "compared_indices": [
+        1,
+        2
+      ],
+      "modified_indices": [],
+      "finalized_indices": [],
+      "auxiliary_state": {
+        "pass_index": 0,
+        "early_exit_enabled": true,
+        "swapped_in_pass": true,
+        "comparison": {
+          "left": 32.5,
+          "right": 32.7,
+          "relation": "lt",
+          "will_swap": false
+        }
+      },
+      "metrics": {
+        "comparisons": 2,
+        "swaps": 1,
+        "writes": 2
+      },
+      "explanation": {
+        "key": "weather.compare.asc.keep",
+        "zh-Hant": "比較 9 月 25 日的 32.5°C 與 9 月 27 日的 32.7°C；升序排列時不需要交換。",
+        "en": "Comparing 32.5°C on Sep 25 with 32.7°C on Sep 27; no swap needed for ascending order."
+      }
+    },
+    {
+      "step_id": 4,
+      "event_type": "compare",
+      "code_line_ids": [
+        "L36",
+        "L38"
+      ],
+      "state_before_id": 1,
+      "state_after_id": 1,
+      "active_indices": [
+        2,
+        3
+      ],
+      "compared_indices": [
+        2,
+        3
+      ],
+      "modified_indices": [],
+      "finalized_indices": [],
+      "auxiliary_state": {
+        "pass_index": 0,
+        "early_exit_enabled": true,
+        "swapped_in_pass": true,
+        "comparison": {
+          "left": 32.7,
+          "right": 32.5,
+          "relation": "gt",
+          "will_swap": true
+        }
+      },
+      "metrics": {
+        "comparisons": 3,
+        "swaps": 1,
+        "writes": 2
+      },
+      "explanation": {
+        "key": "weather.compare.asc.swap",
+        "zh-Hant": "比較 9 月 27 日的 32.7°C 與 9 月 28 日的 32.5°C；升序排列時需要交換。",
+        "en": "Comparing 32.7°C on Sep 27 with 32.5°C on Sep 28; swap needed for ascending order."
+      }
+    },
+    {
+      "step_id": 5,
+      "event_type": "swap",
+      "code_line_ids": [
+        "L41",
+        "L39"
+      ],
+      "state_before_id": 1,
+      "state_after_id": 2,
+      "active_indices": [
+        2,
+        3
+      ],
+      "compared_indices": [],
+      "modified_indices": [
+        2,
+        3
+      ],
+      "finalized_indices": [],
+      "auxiliary_state": {
+        "pass_index": 0,
+        "early_exit_enabled": true,
+        "swapped_in_pass": true
+      },
+      "metrics": {
+        "comparisons": 3,
+        "swaps": 2,
+        "writes": 4
+      },
+      "explanation": {
+        "key": "weather.swap.asc",
+        "zh-Hant": "交換 9 月 27 日（32.7°C）與 9 月 28 日（32.5°C）的位置；升序排列要把較低溫的 9 月 28 日 往前移。",
+        "en": "Swap 32.7°C on Sep 27 with 32.5°C on Sep 28; ascending order moves the cooler day (Sep 28) forward."
+      }
+    },
+    {
+      "step_id": 6,
+      "event_type": "compare",
+      "code_line_ids": [
+        "L36",
+        "L38"
+      ],
+      "state_before_id": 2,
+      "state_after_id": 2,
+      "active_indices": [
+        3,
+        4
+      ],
+      "compared_indices": [
+        3,
+        4
+      ],
+      "modified_indices": [],
+      "finalized_indices": [],
+      "auxiliary_state": {
+        "pass_index": 0,
+        "early_exit_enabled": true,
+        "swapped_in_pass": true,
+        "comparison": {
+          "left": 32.7,
+          "right": 33.1,
+          "relation": "lt",
+          "will_swap": false
+        }
+      },
+      "metrics": {
+        "comparisons": 4,
+        "swaps": 2,
+        "writes": 4
+      },
+      "explanation": {
+        "key": "weather.compare.asc.keep",
+        "zh-Hant": "比較 9 月 27 日的 32.7°C 與 9 月 29 日的 33.1°C；升序排列時不需要交換。",
+        "en": "Comparing 32.7°C on Sep 27 with 33.1°C on Sep 29; no swap needed for ascending order."
+      }
+    },
+    {
+      "step_id": 7,
+      "event_type": "compare",
+      "code_line_ids": [
+        "L36",
+        "L38"
+      ],
+      "state_before_id": 2,
+      "state_after_id": 2,
+      "active_indices": [
+        4,
+        5
+      ],
+      "compared_indices": [
+        4,
+        5
+      ],
+      "modified_indices": [],
+      "finalized_indices": [],
+      "auxiliary_state": {
+        "pass_index": 0,
+        "early_exit_enabled": true,
+        "swapped_in_pass": true,
+        "comparison": {
+          "left": 33.1,
+          "right": 34.2,
+          "relation": "lt",
+          "will_swap": false
+        }
+      },
+      "metrics": {
+        "comparisons": 5,
+        "swaps": 2,
+        "writes": 4
+      },
+      "explanation": {
+        "key": "weather.compare.asc.keep",
+        "zh-Hant": "比較 9 月 29 日的 33.1°C 與 9 月 30 日的 34.2°C；升序排列時不需要交換。",
+        "en": "Comparing 33.1°C on Sep 29 with 34.2°C on Sep 30; no swap needed for ascending order."
+      }
+    },
+    {
+      "step_id": 8,
+      "event_type": "mark_sorted",
+      "code_line_ids": [
+        "L31",
+        "L29"
+      ],
+      "state_before_id": 2,
+      "state_after_id": 2,
+      "active_indices": [],
+      "compared_indices": [],
+      "modified_indices": [],
+      "finalized_indices": [
+        5
+      ],
+      "auxiliary_state": {
+        "pass_index": 1,
+        "early_exit_enabled": true,
+        "swapped_in_pass": false
+      },
+      "metrics": {
+        "comparisons": 5,
+        "swaps": 2,
+        "writes": 4
+      },
+      "explanation": {
+        "key": "weather.mark_sorted.progress",
+        "zh-Hant": "開始第 2 輪冒泡：9 月 30 日的 34.2°C 已確定為最高溫，位置固定。",
+        "en": "Start pass 2: 34.2°C on Sep 30 is confirmed as the highest temperature and is now in its final place."
+      }
+    },
+    {
+      "step_id": 9,
+      "event_type": "compare",
+      "code_line_ids": [
+        "L36",
+        "L38"
+      ],
+      "state_before_id": 2,
+      "state_after_id": 2,
+      "active_indices": [
+        0,
+        1
+      ],
+      "compared_indices": [
+        0,
+        1
+      ],
+      "modified_indices": [],
+      "finalized_indices": [
+        5
+      ],
+      "auxiliary_state": {
+        "pass_index": 1,
+        "early_exit_enabled": true,
+        "swapped_in_pass": false,
+        "comparison": {
+          "left": 32.1,
+          "right": 32.5,
+          "relation": "lt",
+          "will_swap": false
+        }
+      },
+      "metrics": {
+        "comparisons": 6,
+        "swaps": 2,
+        "writes": 4
+      },
+      "explanation": {
+        "key": "weather.compare.asc.keep",
+        "zh-Hant": "比較 9 月 26 日的 32.1°C 與 9 月 25 日的 32.5°C；升序排列時不需要交換。",
+        "en": "Comparing 32.1°C on Sep 26 with 32.5°C on Sep 25; no swap needed for ascending order."
+      }
+    },
+    {
+      "step_id": 10,
+      "event_type": "compare",
+      "code_line_ids": [
+        "L36",
+        "L38"
+      ],
+      "state_before_id": 2,
+      "state_after_id": 2,
+      "active_indices": [
+        1,
+        2
+      ],
+      "compared_indices": [
+        1,
+        2
+      ],
+      "modified_indices": [],
+      "finalized_indices": [
+        5
+      ],
+      "auxiliary_state": {
+        "pass_index": 1,
+        "early_exit_enabled": true,
+        "swapped_in_pass": false,
+        "comparison": {
+          "left": 32.5,
+          "right": 32.5,
+          "relation": "eq",
+          "will_swap": false
+        }
+      },
+      "metrics": {
+        "comparisons": 7,
+        "swaps": 2,
+        "writes": 4
+      },
+      "explanation": {
+        "key": "weather.compare.eq.keep",
+        "zh-Hant": "比較 9 月 25 日的 32.5°C 與 9 月 28 日的 32.5°C；兩天溫度相同，保持原來的日期先後，不需要交換。",
+        "en": "Comparing 32.5°C on Sep 25 with 32.5°C on Sep 28; the temperatures are equal, so the earlier date keeps its position and no swap is needed."
+      }
+    },
+    {
+      "step_id": 11,
+      "event_type": "compare",
+      "code_line_ids": [
+        "L36",
+        "L38"
+      ],
+      "state_before_id": 2,
+      "state_after_id": 2,
+      "active_indices": [
+        2,
+        3
+      ],
+      "compared_indices": [
+        2,
+        3
+      ],
+      "modified_indices": [],
+      "finalized_indices": [
+        5
+      ],
+      "auxiliary_state": {
+        "pass_index": 1,
+        "early_exit_enabled": true,
+        "swapped_in_pass": false,
+        "comparison": {
+          "left": 32.5,
+          "right": 32.7,
+          "relation": "lt",
+          "will_swap": false
+        }
+      },
+      "metrics": {
+        "comparisons": 8,
+        "swaps": 2,
+        "writes": 4
+      },
+      "explanation": {
+        "key": "weather.compare.asc.keep",
+        "zh-Hant": "比較 9 月 28 日的 32.5°C 與 9 月 27 日的 32.7°C；升序排列時不需要交換。",
+        "en": "Comparing 32.5°C on Sep 28 with 32.7°C on Sep 27; no swap needed for ascending order."
+      }
+    },
+    {
+      "step_id": 12,
+      "event_type": "compare",
+      "code_line_ids": [
+        "L36",
+        "L38"
+      ],
+      "state_before_id": 2,
+      "state_after_id": 2,
+      "active_indices": [
+        3,
+        4
+      ],
+      "compared_indices": [
+        3,
+        4
+      ],
+      "modified_indices": [],
+      "finalized_indices": [
+        5
+      ],
+      "auxiliary_state": {
+        "pass_index": 1,
+        "early_exit_enabled": true,
+        "swapped_in_pass": false,
+        "comparison": {
+          "left": 32.7,
+          "right": 33.1,
+          "relation": "lt",
+          "will_swap": false
+        }
+      },
+      "metrics": {
+        "comparisons": 9,
+        "swaps": 2,
+        "writes": 4
+      },
+      "explanation": {
+        "key": "weather.compare.asc.keep",
+        "zh-Hant": "比較 9 月 27 日的 32.7°C 與 9 月 29 日的 33.1°C；升序排列時不需要交換。",
+        "en": "Comparing 32.7°C on Sep 27 with 33.1°C on Sep 29; no swap needed for ascending order."
+      }
+    },
+    {
+      "step_id": 13,
+      "event_type": "done",
+      "code_line_ids": [
+        "L47",
+        "L48"
+      ],
+      "state_before_id": 2,
+      "state_after_id": 2,
+      "active_indices": [],
+      "compared_indices": [],
+      "modified_indices": [],
+      "finalized_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "auxiliary_state": {
+        "pass_index": 1,
+        "early_exit_enabled": true,
+        "swapped_in_pass": false
+      },
+      "metrics": {
+        "comparisons": 9,
+        "swaps": 2,
+        "writes": 4
+      },
+      "explanation": {
+        "key": "weather.done.early_exit",
+        "zh-Hant": "本輪沒有任何交換，表示這 6 天的氣溫已排好序，因此提前結束；共執行 2 輪。",
+        "en": "No swaps happened in this pass, so the temperatures of these 6 days are already sorted and we can stop early. Total passes: 2."
+      }
+    }
+  ],
+  "summary": {
+    "comparisons": 9,
+    "swaps": 2,
+    "writes": 4,
+    "passes": 2,
+    "early_exit_triggered": true,
+    "final_order": [
+      "it-2026-09-26",
+      "it-2026-09-25",
+      "it-2026-09-28",
+      "it-2026-09-27",
+      "it-2026-09-29",
+      "it-2026-09-30"
+    ],
+    "final_values": [
+      32.1,
+      32.5,
+      32.5,
+      32.7,
+      33.1,
+      34.2
+    ],
+    "state_count": 3,
+    "event_count": 14
+  },
+  "metric": "tmax",
+  "valid_days": 6,
+  "requested_days": 11,
+  "excluded_dates": [
+    {
+      "date": "2026-10-01",
+      "reason": "missing"
+    },
+    {
+      "date": "2026-10-02",
+      "reason": "missing"
+    },
+    {
+      "date": "2026-10-03",
+      "reason": "missing"
+    },
+    {
+      "date": "2026-10-04",
+      "reason": "missing"
+    },
+    {
+      "date": "2026-10-05",
+      "reason": "missing"
+    }
+  ],
+  "before_order": [
+    "it-2026-09-25",
+    "it-2026-09-26",
+    "it-2026-09-27",
+    "it-2026-09-28",
+    "it-2026-09-29",
+    "it-2026-09-30"
+  ],
+  "after_order": [
+    "it-2026-09-26",
+    "it-2026-09-25",
+    "it-2026-09-28",
+    "it-2026-09-27",
+    "it-2026-09-29",
+    "it-2026-09-30"
+  ],
+  "top_hot": [
+    {
+      "date": "2026-09-30",
+      "value": 34.2,
+      "value_raw": "34.2"
+    },
+    {
+      "date": "2026-09-29",
+      "value": 33.1,
+      "value_raw": "33.1"
+    },
+    {
+      "date": "2026-09-27",
+      "value": 32.7,
+      "value_raw": "32.7"
+    },
+    {
+      "date": "2026-09-25",
+      "value": 32.5,
+      "value_raw": "32.5"
+    },
+    {
+      "date": "2026-09-28",
+      "value": 32.5,
+      "value_raw": "32.5"
+    }
+  ],
+  "top_cold": [
+    {
+      "date": "2026-09-26",
+      "value": 32.1,
+      "value_raw": "32.1"
+    },
+    {
+      "date": "2026-09-25",
+      "value": 32.5,
+      "value_raw": "32.5"
+    },
+    {
+      "date": "2026-09-28",
+      "value": 32.5,
+      "value_raw": "32.5"
+    },
+    {
+      "date": "2026-09-27",
+      "value": 32.7,
+      "value_raw": "32.7"
+    },
+    {
+      "date": "2026-09-29",
+      "value": 33.1,
+      "value_raw": "33.1"
+    }
+  ],
+  "single_scan": {
+    "comparisons": 5,
+    "swaps": 0
+  }
+}

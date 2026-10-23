@@ -34,6 +34,7 @@ import { RefreshControl } from "../features/weather/RefreshControl";
 import { StationPicker } from "../features/weather/StationPicker";
 import type { DailyMetric, DataMode } from "../features/weather/types";
 import { WeatherControls } from "../features/weather/WeatherControls";
+import { WeatherSortEntryButton } from "../features/weather-sort/WeatherSortEntryButton";
 
 /** summary 接口的区间数：教学页面固定 5 段，后端会在 threshold_note 说明非官方标准。 */
 const SUMMARY_BIN_COUNT = 5;
@@ -149,10 +150,19 @@ export default function WeatherPage() {
 
   const exportHref = buildExportCsvUrl(queryParams);
   const showChartsHint = selected.length === 0;
+  // 阶段 4 入口：携带当前主测站、指标与后端返回的真实数据窗口。
+  const weatherSortMetric: "tmax" | "tmin" = metrics.includes("tmax") ? "tmax" : "tmin";
 
   return (
     <div className="page-stack">
       <PageHeader titleKey="weather.title" status="available" leadKey="weather.lead" />
+
+      <WeatherSortEntryButton
+        station={selected[0]}
+        metric={weatherSortMetric}
+        start={window?.start}
+        end={window?.end}
+      />
 
       <DemoBanner mode={bannerMode} notice={bannerNotice} sources={bannerSources} />
 

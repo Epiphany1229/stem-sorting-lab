@@ -10,8 +10,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, replace
 from typing import Literal, Protocol
 
 # 排序方向、事件类型与比较关系：与协议 v1 的字符串取值一一对应。
@@ -32,18 +32,22 @@ class TraceLimitError(RuntimeError):
 
 @dataclass(frozen=True)
 class Item:
-    """输入元素：稳定唯一 id 与数值解耦，重复数值也能被区分。"""
+    """输入元素：稳定唯一 id 与数值解耦，重复数值也能被区分。
+
+    数值类型标注为 ``float``：阶段 2 的整数输入仍然合法（int 是 float 的子类型，
+    运行时保持整数对象不变）；阶段 4 的天气轨迹传入一位小数温度。
+    """
 
     id: str
-    value: int
+    value: float
 
 
 @dataclass(frozen=True)
 class ComparisonSnapshot:
     """compare 事件附带的真实比较结果。"""
 
-    left: int
-    right: int
+    left: float
+    right: float
     relation: Relation
     will_swap: bool
 
@@ -73,12 +77,12 @@ class RecordedState:
 
     state_id: int
     order: tuple[str, ...]
-    values: tuple[int, ...]
+    values: tuple[float, ...]
 
 
 @dataclass(frozen=True)
 class RecordedEvent:
-    """一条真实执行事件（explanation 由服务层按模板补全）。"""
+    """一条真实执行事件（explanation 由服务层或解释工厂补全）。"""
 
     step_id: int
     event_type: EventType
@@ -91,6 +95,13 @@ class RecordedEvent:
     finalized_indices: tuple[int, ...]
     auxiliary_state: AuxiliarySnapshot
     metrics: MetricsSnapshot
+    # 可选解释负载：阶段 4 由注入的解释工厂生成（阶段 2 保持 None，行为不变）
+    explanation: object | None = None
+
+
+# 解释工厂：拿到"刚记录的事件 + 当时的全部快照"，返回任意解释负载。
+# 记录器本身不依赖任何具体解释格式，天气服务在调用方把返回值转成双语结构。
+ExplanationFactory = Callable[[RecordedEvent, Sequence[RecordedState]], object]
 
 
 class Tracer(Protocol):
@@ -148,6 +159,7 @@ class TraceRecorder:
         early_exit: bool,
         line_groups: Mapping[EventType, LineGroup],
         max_events: int = MAX_EVENTS,
+        explanation_factory: ExplanationFactory | None = None,
     ) -> None:
         if not items:
             raise ValueError("轨迹记录器至少需要 1 个输入元素")
@@ -161,9 +173,11 @@ class TraceRecorder:
         self._early_exit = early_exit
         self._line_groups = dict(line_groups)
         self._max_events = max_events
+        # 可选解释工厂：不传时行为与阶段 2 完全一致（事件不带 explanation 负载）
+        self._explanation_factory = explanation_factory
 
         self._order: list[str] = [item.id for item in items]
-        self._values: dict[str, int] = {item.id: item.value for item in items}
+        self._values: dict[str, float] = {item.id: item.value for item in items}
         self._states: list[RecordedState] = []
         # 状态 0 固定为输入初始状态。
         self._states.append(self._build_snapshot())
@@ -212,7 +226,7 @@ class TraceRecorder:
         return tuple(self._states[-1].order)
 
     @property
-    def final_values(self) -> tuple[int, ...]:
+    def final_values(self) -> tuple[float, ...]:
         """最终状态的数值顺序。"""
         return tuple(self._states[-1].values)
 
@@ -369,7 +383,7 @@ class TraceRecorder:
     def _current_state_id(self) -> int:
         return self._states[-1].state_id
 
-    def _value_at(self, index: int) -> int:
+    def _value_at(self, index: int) -> float:
         if not 0 <= index < len(self._order):
             raise IndexError(f"下标 {index} 超出数组范围")
         return self._values[self._order[index]]
@@ -410,22 +424,25 @@ class TraceRecorder:
             raise TraceLimitError(
                 f"轨迹事件数超过上限 {self._max_events}，请缩小输入规模或关闭提前结束优化"
             )
-        self._events.append(
-            RecordedEvent(
-                step_id=len(self._events),
-                event_type=event_type,
-                code_line_ids=self._line_ids(event_type),
-                state_before_id=state_before_id,
-                state_after_id=state_after_id,
-                active_indices=active_indices,
-                compared_indices=compared_indices,
-                modified_indices=modified_indices,
-                finalized_indices=finalized_indices,
-                auxiliary_state=auxiliary_state,
-                metrics=MetricsSnapshot(
-                    comparisons=self._comparisons,
-                    swaps=self._swaps,
-                    writes=self._writes,
-                ),
-            )
+        event = RecordedEvent(
+            step_id=len(self._events),
+            event_type=event_type,
+            code_line_ids=self._line_ids(event_type),
+            state_before_id=state_before_id,
+            state_after_id=state_after_id,
+            active_indices=active_indices,
+            compared_indices=compared_indices,
+            modified_indices=modified_indices,
+            finalized_indices=finalized_indices,
+            auxiliary_state=auxiliary_state,
+            metrics=MetricsSnapshot(
+                comparisons=self._comparisons,
+                swaps=self._swaps,
+                writes=self._writes,
+            ),
         )
+        if self._explanation_factory is not None:
+            # 把"刚记录的事件 + 当时的全部快照"交给工厂，由调用方决定解释格式
+            explanation = self._explanation_factory(event, tuple(self._states))
+            event = replace(event, explanation=explanation)
+        self._events.append(event)

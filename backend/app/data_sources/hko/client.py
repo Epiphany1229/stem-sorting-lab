@@ -285,8 +285,27 @@ class HkoClient:
         return datetime.now(timezone.utc)
 
     async def aclose(self) -> None:
-        """关闭底层 HTTP 连接池。"""
+        """关闭底层 HTTP 连接池，并释放本进程持有的抓取租约（若仍属于自己）。"""
+        self._release_lease()
         await self._client.aclose()
+
+    def _release_lease(self) -> None:
+        """正常收尾时主动释放租约，避免同机后续 CLI 被过期租约挡住。
+
+        只在 ``owner`` 仍是自己时释放：跨进程互斥保证的是"同一时刻只有一个抓取者"，
+        抓取结束即释放是安全且更友好的行为。
+        """
+        try:
+            with self._db.session() as session:
+                owner = session.get(ServiceState, STATE_LEASE_OWNER)
+                if owner is None or owner.value != self._owner_id:
+                    return
+                session.delete(owner)
+                expires = session.get(ServiceState, STATE_LEASE_EXPIRES)
+                if expires is not None:
+                    session.delete(expires)
+        except Exception:  # pragma: no cover - 收尾释放失败不应影响主流程
+            network_logger.warning("释放抓取租约失败（已忽略）")
 
     def _aware_now(self) -> datetime:
         return self._now()

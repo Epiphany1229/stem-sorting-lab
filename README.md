@@ -15,7 +15,7 @@
 | 1 | 项目骨架、7 页导航、双语组件、设计 tokens、质量门禁、数据来源调查 | ✅ 完成 |
 | 2 | 冒泡排序真实 Python 轨迹 + SVG 播放器 + 代码同步高亮 + 教学预测弹窗 | ✅ 完成 |
 | 3 | 官方天气数据接入 + 数据质量 + 互动图表 | ✅ 完成 |
-| 4 | 用真实气温做排序（**仅冒泡排序**） | ⬜ 未开始 |
+| 4 | 用真实气温做排序（**仅冒泡排序**） | ✅ 完成 |
 | 5 | 其余九种算法 + 专属可视化 | ⬜ 未开始 |
 | 6 | 浏览器验收、无障碍、性能、文档完善 | ⬜ 未开始 |
 
@@ -25,9 +25,10 @@
 - 前端 `/lab`：SVG 柱状图、播放/暂停/上一步/下一步/重置/调速、引导模式与自由实验模式、Python 代码行组同步高亮（插桩行可折叠且行号不漂移）、"下一步这两个数需要交换吗？"预测弹窗（可用键盘、Esc 关闭、焦点归还）。
 - **天气数据（阶段 3）**：HKO 安全抓取客户端（`trust_env=False`、并发 1、≥3s + jitter、429 `Retry-After` 挂起、403 熔断、ETag/Last-Modified 条件请求、每日预算、单 worker 租约）、SQLite 落库（保留 `value_raw` 原始字符串精度、质量标记 `C`/`#`/`***`）、CLI 入库、8 个天气/来源接口、官方 CSV 导入与演示模式隔离。
 - 前端 `/weather`：日期范围、39 站多选、覆盖率与真实窗口、5 类 Plotly 图表（折线/柱状/直方/散点/环形）、双语悬停、数据表、CSV 导入报告、刷新冷却显示、非 official 模式常驻横幅。
-- 跨栈回归：前端直接消费**后端真实输出**做测试（轨迹 JSON、天气 API JSON 各一组）。
+- **真实气温排序 `/weather-sort`（阶段 4）**：`/weather` 顶部入口按钮；`tmax`/`tmin` 一键切换（各自有效天数与缺失日期）、升降序、测站与日期范围、并排比较开关；**复用**阶段 2 播放器（播放/暂停/上一步/下一步/重置/调速、Python 行组高亮、预测弹窗），零重写排序逻辑；柱上显示 `value_raw + °C` 与日期标签，悬停/聚焦看完整日期、测站中英文名、质量标记；Top5 最热/最冷、排序前后对比、比较/交换/轮次、冒泡 vs 单次扫描 STEM 卡片。
+- 跨栈回归：前端直接消费**后端真实输出**做测试（轨迹 JSON、天气 API JSON、天气排序轨迹各一组）。
 
-**尚未实现（不要误认为已有）**：降雨/湿度查询接口（官方无历史日值，仅实时累积，阶段 4 再接）、天气数据排序页、其余九种算法、shadcn/ui 具体组件、ESLint、Playwright 浏览器截图验收。
+**尚未实现（不要误认为已有）**：其余九种算法、shadcn/ui 具体组件、ESLint、Playwright 浏览器截图验收；降雨/湿度的查询接口仍缺（RYES 日雨量已可由 CLI 回填，但未接入页面）。
 
 ---
 
@@ -110,6 +111,9 @@ uv run python -m backend.app.cli ingest --stations HKO,KP,SHA --metrics tmax,tmi
 
 # 只看将要发起多少请求，不实际抓取
 uv run python -m backend.app.cli ingest --stations HKO --metrics tmax,tmin --year 2026 --dry-run
+
+# 可选：回填官方日雨量（RYES，仅 HKO，1 请求/天；官方无 CLMRAINF 数据源）
+uv run python -m backend.app.cli ingest-rainfall --start 2026-09-01 --end 2026-09-05 --dry-run
 ```
 
 - 数据写入 `app.db`（已 gitignore）。首次运行 `init-db` 会自动建表并可显式执行：`uv run python -m backend.app.cli init-db`
@@ -135,14 +139,14 @@ pnpm build
 
 | 命令 | 结果 |
 |---|---|
-| `uv run pytest -q` | `107 passed, 1 warning`（含 10 个 Hypothesis 属性测试 + 44 个天气/抓取测试，全部离线 MockTransport） |
+| `uv run pytest -q` | `134 passed, 1 warning`（含 Hypothesis 属性测试；全部离线 MockTransport） |
 | `uv run ruff check .` | `All checks passed!` |
-| `uv run mypy backend tests` | `Success: no issues found in 44 source files`（strict，无 `# type: ignore`） |
-| `pnpm test:run` | `Test Files 23 passed`、`Tests 153 passed` |
-| `pnpm build` | `✓ built in 2.19s`（Plotly 使主 chunk 约 5.2 MB / gzip 1.59 MB，见限制） |
+| `uv run mypy backend tests` | `Success: no issues found in 49 source files`（strict，无 `# type: ignore`） |
+| `pnpm test:run` | `Test Files 27 passed`、`Tests 187 passed` |
+| `pnpm build` | `✓ built in 2.09s`（Plotly 主 chunk 5.23 MB / gzip 1.60 MB，阶段 6 做懒加载） |
 | `pnpm exec tsc --noEmit` | 通过（无输出） |
-| 真实后端冒烟 | CLI 抓取 2 请求、写入 546 行（HKO 2026 全年 tmax/tmin）；API 实测 39 站、anchor=2026-09-30、coverage 30/30、`value_raw:"34.2"`、`/summary` bins `[2,7,15,6]` |
-| 跨栈回归 | 轨迹 4 用例 + 天气 6 用例，全部消费真实后端输出 |
+| 真实天气排序冒烟 | HKO 2026-09 全月 tmax → `valid_days=30`、`single_scan=29`、`comparisons=380 / swaps=129 / passes=19`，解释含真实日期与温度 |
+| 跨栈回归 | 轨迹 4 + 天气 API 6 + 天气排序 6 用例，全部消费真实后端输出 |
 
 ---
 
@@ -169,17 +173,17 @@ pnpm build
 
 ## 未完成与已知限制
 
-1. **阶段 4–6 未开始**：无天气数据排序页、其余九种算法未实现、未做浏览器截图验收。
-2. **降雨/湿度没有历史接口**：官方只有实时 `rhrread`（18 个行政区逐小时雨量、天文台总部 1 站湿度），**无法回溯 30 天**。阶段 3 的柱状图使用"所选站日最高温对比"、散点图使用 `tmax` vs `tmean`，页面已明确标注实际指标；降雨/湿度查询接口留待阶段 4 接入累积数据。
+1. **阶段 5–6 未开始**：其余九种算法未实现、未做浏览器截图验收。
+2. **雨量/湿度仍未在页面暴露**：官方无 `CLMRAINF`；`hourlyRainfall.php` 只有当前一小时；`RYES` 日报可给 HKO 单站日雨量（已实现 CLI `ingest-rainfall`），但尚未接入阶段 3 的 metrics 白名单，因此天气页柱状图仍用"日最高温对比"并显式标注。`Trace`（<0.05mm）不入库、不写 0。
 3. **shadcn/ui 未生成具体组件**：`components.json`、`cn()`、路径别名已就位，组件留待按需添加。
-4. **ESLint、Playwright 未接入**；三视口浏览器验收属阶段 6。
+4. **ESLint、Playwright 未接入**；三视口验收属阶段 6。
 5. **行政区 ↔ 测站映射仍缺失**：官方 PDF 只给站名，没有行政区归属表，**不得**按站名猜测。
-6. **API 响应头未观测**：ETag / Last-Modified / Retry-After 是否由官方返回仍未验证；客户端已按"服务器支持则用"实现，缺失时自动降级为无条件请求。
+6. **API 响应头未观测**：ETag / Last-Modified / Retry-After 是否由官方返回仍未验证；客户端按"支持则用"实现，缺失时降级为无条件请求。
 7. **pytest 有一条第三方弃用警告**（fastapi/starlette 建议 `httpx2`），未处理。
-8. **前端 bundle 偏大**：Plotly 使主 chunk 约 5.2 MB（gzip 1.59 MB），后续可对天气页做动态 `import()` 分包。
-9. **单 worker 租约是进程级 + TTL**，不是数据库行锁；SQLite 写串行化下足够，多进程极端竞争靠 TTL 收敛。
-10. **沙箱兼容层**：`frontend/scripts/sandbox-guard.cjs`、`pnpm-workspace.yaml`（`verifyDepsBeforeRun:false`、`nodeLinker:hoisted`、`allowBuilds: es5-ext:false`）均为本机沙箱所需；普通环境可移除/保留。
-11. **`.tools/` 不入库**（uv/pnpm 二进制、HKO PDF 与解析脚本、抓取验证脚本）；本地 `app.db` 已 gitignore。
+8. **前端 bundle 偏大**：Plotly 使主 chunk 约 5.2 MB（gzip 1.60 MB），阶段 6 用路由懒加载拆分。
+9. **单 worker 租约是进程级 + TTL**，不是数据库行锁；SQLite 写串行化下足够。
+10. **沙箱兼容层**：`frontend/scripts/sandbox-guard.cjs`、`pnpm-workspace.yaml`（`verifyDepsBeforeRun:false`、`nodeLinker:hoisted`、`allowBuilds: es5-ext:false`）均为本机沙箱所需。
+11. **`.tools/` 不入库**；本地 `app.db` 已 gitignore。
 
 ---
 

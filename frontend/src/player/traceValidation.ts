@@ -108,12 +108,45 @@ export function parseTraceResponse(payload: unknown): BubbleTrace {
   if (items.length === 0) {
     fail("items 不能为空");
   }
+  const itemIds = new Set<string>();
   items.forEach((item, index) => {
     if (!isRecord(item)) {
       fail(`items[${index}] 必须是对象`);
     }
-    asString(item.id, `items[${index}].id`);
+    const itemId = asString(item.id, `items[${index}].id`);
     asNumber(item.value, `items[${index}].value`);
+    if (itemIds.has(itemId)) {
+      fail(`items 中 id 重复：${itemId}`);
+    }
+    itemIds.add(itemId);
+
+    // 阶段 4 天气元数据全部可选；出现时必须符合类型，否则视为坏轨迹。
+    for (const field of [
+      "value_raw",
+      "label",
+      "station",
+      "station_name_zh_hant",
+      "station_name_en",
+      "quality_flag",
+    ] as const) {
+      if (item[field] !== undefined) {
+        asString(item[field], `items[${index}].${field}`);
+      }
+    }
+    if (item.source !== undefined) {
+      if (!isRecord(item.source)) {
+        fail(`items[${index}].source 必须是对象`);
+      }
+      asString(item.source.dataset, `items[${index}].source.dataset`);
+      asString(item.source.fetched_at, `items[${index}].source.fetched_at`);
+      if (
+        item.source.mode !== "official" &&
+        item.source.mode !== "imported" &&
+        item.source.mode !== "demo"
+      ) {
+        fail(`items[${index}].source.mode 必须是 official、imported 或 demo`);
+      }
+    }
   });
 
   // ---------- code ----------
@@ -275,6 +308,58 @@ export function parseTraceResponse(payload: unknown): BubbleTrace {
   asBoolean(payload.summary.early_exit_triggered, "summary.early_exit_triggered");
   asArray(payload.summary.final_order, "summary.final_order");
   asNumberArray(payload.summary.final_values, "summary.final_values");
+
+  // ---------- 阶段 4 天气轨迹的可选字段（旧轨迹没有这些字段，仍然通过） ----------
+  if (payload.metric !== undefined && payload.metric !== "tmax" && payload.metric !== "tmin") {
+    fail("metric 必须是 tmax 或 tmin");
+  }
+  for (const field of ["valid_days", "requested_days"] as const) {
+    if (payload[field] !== undefined) {
+      asNumber(payload[field], field);
+    }
+  }
+  if (payload.excluded_dates !== undefined) {
+    asArray(payload.excluded_dates, "excluded_dates").forEach((entry, index) => {
+      const path = `excluded_dates[${index}]`;
+      if (!isRecord(entry)) {
+        fail(`${path} 必须是对象`);
+      }
+      asString(entry.date, `${path}.date`);
+      asString(entry.reason, `${path}.reason`);
+    });
+  }
+  for (const field of ["before_order", "after_order"] as const) {
+    if (payload[field] === undefined) {
+      continue;
+    }
+    asArray(payload[field], field).forEach((entry, index) => {
+      const itemId = asString(entry, `${field}[${index}]`);
+      if (!itemIds.has(itemId)) {
+        fail(`${field}[${index}] 引用了不存在的元素：${itemId}`);
+      }
+    });
+  }
+  for (const field of ["top_hot", "top_cold"] as const) {
+    if (payload[field] === undefined) {
+      continue;
+    }
+    asArray(payload[field], field).forEach((entry, index) => {
+      const path = `${field}[${index}]`;
+      if (!isRecord(entry)) {
+        fail(`${path} 必须是对象`);
+      }
+      asString(entry.date, `${path}.date`);
+      asNumber(entry.value, `${path}.value`);
+      asString(entry.value_raw, `${path}.value_raw`);
+    });
+  }
+  if (payload.single_scan !== undefined) {
+    if (!isRecord(payload.single_scan)) {
+      fail("single_scan 必须是对象");
+    }
+    asNumber(payload.single_scan.comparisons, "single_scan.comparisons");
+    asNumber(payload.single_scan.swaps, "single_scan.swaps");
+  }
 
   return payload as unknown as BubbleTrace;
 }

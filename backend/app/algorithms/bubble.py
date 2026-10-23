@@ -15,11 +15,11 @@ _NULL_RECORDER: Tracer = NullRecorder()
 
 
 def bubble_sort(
-    values: Sequence[int],
+    values: Sequence[float],
     direction: str = "asc",
     early_exit: bool = True,
     tracer: Tracer | None = None,
-) -> list[int]:
+) -> list[float]:
     """冒泡排序：返回排序后的新列表，传入 tracer 时同步产生真实执行轨迹。"""
     recorder: Tracer = tracer if tracer is not None else _NULL_RECORDER
     arr = list(values)

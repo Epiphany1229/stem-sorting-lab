@@ -28,10 +28,36 @@ export interface TraceOptions {
   readonly early_exit: boolean;
 }
 
-/** 输入元素：稳定唯一 id 与数值解耦，重复数值也能区分。 */
+/** 天气轨迹的元素来源（阶段 4 可选字段）。 */
+export interface TraceItemSource {
+  readonly dataset: string;
+  readonly fetched_at: string;
+  readonly mode: "official" | "imported" | "demo";
+}
+
+/** 天气指标：阶段 4 的排序页只使用逐日最高温与最低温。 */
+export type WeatherMetric = "tmax" | "tmin";
+
+/**
+ * 输入元素：稳定唯一 id 与数值解耦，重复数值也能区分。
+ *
+ * 阶段 4 的天气轨迹额外提供可选的展示元数据；阶段 2 的算法轨迹只有 id/value，
+ * 两者都合法，前端不得要求这些可选字段一定存在。
+ */
 export interface TraceItem {
   readonly id: string;
   readonly value: number;
+  /** 原始字符串，保精度显示（如 "30.2"）。 */
+  readonly value_raw?: string;
+  /** 元素对应的日期或标签（如 "2026-09-12"）。 */
+  readonly label?: string;
+  /** 官方站号（如 "HKO"）。 */
+  readonly station?: string;
+  readonly station_name_zh_hant?: string;
+  readonly station_name_en?: string;
+  /** 官方质量标记（C / #）。 */
+  readonly quality_flag?: string;
+  readonly source?: TraceItemSource;
 }
 
 /** 代码行类型；trace 表示插桩行（保留、可折叠/降淡，不删除）。 */
@@ -113,7 +139,26 @@ export interface TraceSummary {
   readonly event_count: number;
 }
 
-/** POST /api/algorithms/bubble/trace 的完整响应。 */
+/** 天气轨迹中被排除的日期（缺失 / 无记录等）。 */
+export interface ExcludedDate {
+  readonly date: string;
+  readonly reason: string;
+}
+
+/** Top 5 温度条目（日期 + 原始精度）。 */
+export interface TopTemperature {
+  readonly date: string;
+  readonly value: number;
+  readonly value_raw: string;
+}
+
+/** O(n) 单次扫描找极值的对照数据（STEM 卡片使用）。 */
+export interface SingleScan {
+  readonly comparisons: number;
+  readonly swaps: number;
+}
+
+/** POST /api/algorithms/bubble/trace 的完整响应（天气轨迹追加可选字段）。 */
 export interface BubbleTrace {
   readonly protocol_version: 1;
   readonly algorithm: "bubble";
@@ -124,6 +169,16 @@ export interface BubbleTrace {
   readonly states: readonly TraceState[];
   readonly events: readonly TraceEvent[];
   readonly summary: TraceSummary;
+  // ---------- 阶段 4 天气轨迹的可选字段；旧轨迹没有它们仍然合法 ----------
+  readonly metric?: WeatherMetric;
+  readonly valid_days?: number;
+  readonly requested_days?: number;
+  readonly excluded_dates?: readonly ExcludedDate[];
+  readonly before_order?: readonly string[];
+  readonly after_order?: readonly string[];
+  readonly top_hot?: readonly TopTemperature[];
+  readonly top_cold?: readonly TopTemperature[];
+  readonly single_scan?: SingleScan;
 }
 
 /** POST /api/algorithms/bubble/trace 的请求体。 */

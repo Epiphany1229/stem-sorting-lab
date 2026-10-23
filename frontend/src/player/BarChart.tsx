@@ -5,7 +5,7 @@
  * 数值标签的坐标由当前快照直接算出，柱体几何没有过渡动画，
  * 因此标签在播放时不会与柱子错位。
  */
-import { useId } from "react";
+import { useId, useState } from "react";
 
 import { BilingualText } from "../i18n/BilingualText";
 import { formatTranslation } from "../i18n/dictionary";
@@ -16,6 +16,8 @@ interface BarChartProps {
   readonly state: TraceState;
   readonly event?: TraceEvent | null;
   readonly reducedMotion?: boolean;
+  /** 天气轨迹的数值单位（例如 "°C"）；阶段 2 的整数轨迹不传。 */
+  readonly unit?: string;
 }
 
 type BarState = "pending" | "compare" | "swap" | "sorted";
@@ -26,6 +28,40 @@ const GLYPHS: Record<BarState, string> = {
   swap: "↔",
   sorted: "✓",
 };
+
+/** 天气轨迹柱子的完整元数据；阶段 2 的元素没有 label 时返回 null。 */
+interface BarItemDetail {
+  readonly dateLabel: string;
+  readonly stationZh: string;
+  readonly stationEn: string;
+  readonly valueText: string;
+  readonly quality: string;
+}
+
+const UNKNOWN_DETAIL = "—";
+
+function formatItemValue(item: TraceItem, fallbackValue: number, unit?: string): string {
+  const raw = item.value_raw ?? String(fallbackValue);
+  return unit ? `${raw} ${unit}` : raw;
+}
+
+/** 柱子底部显示短日期标签（完整日期在悬停与聚焦详情里）。 */
+function shortDateLabel(label: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(label) ? label.slice(5) : label;
+}
+
+function detailOfItem(item: TraceItem | undefined, unit?: string): BarItemDetail | null {
+  if (!item || item.label === undefined) {
+    return null;
+  }
+  return {
+    dateLabel: item.label,
+    stationZh: item.station_name_zh_hant ?? item.station ?? UNKNOWN_DETAIL,
+    stationEn: item.station_name_en ?? item.station ?? UNKNOWN_DETAIL,
+    valueText: formatItemValue(item, item.value, unit),
+    quality: item.quality_flag ?? UNKNOWN_DETAIL,
+  };
+}
 
 const LEGEND_STATES: readonly BarState[] = ["pending", "compare", "swap", "sorted"];
 
@@ -114,12 +150,25 @@ function buildGeometry(
   return { bars, baselineY, plotBottom, scale };
 }
 
-export function BarChart({ items, state, event = null, reducedMotion = false }: BarChartProps) {
+export function BarChart({
+  items,
+  state,
+  event = null,
+  reducedMotion = false,
+  unit,
+}: BarChartProps) {
   const patternPrefix = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const dotsPatternId = `${patternPrefix}-dots`;
   const crossPatternId = `${patternPrefix}-cross`;
   const hatchPatternId = `${patternPrefix}-hatch`;
   const { bars, baselineY, plotBottom } = buildGeometry(items, state, event ?? null);
+  const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+  const itemById = new Map(items.map((item) => [item.id, item] as const));
+  const hasWeatherDetails = items.some((item) => detailOfItem(item, unit) !== null);
+  const focusedItem = focusedItemId === null ? undefined : itemById.get(focusedItemId);
+  const focusedDetail = detailOfItem(focusedItem, unit);
+  // 柱子变多时缩小字号，避免温度/日期标签完全重叠。
+  const compactLabels = bars.length > 16;
 
   // 比较/交换标记画在图表底部：虚线括号 + 图案 + 图标 + 颜色共同区分。
   const comparedIndices = event?.compared_indices ?? [];
@@ -197,6 +246,10 @@ export function BarChart({ items, state, event = null, reducedMotion = false }: 
                   ? hatchPatternId
                   : null;
           const glyphY = bar.height >= 26 ? bar.y + Math.min(bar.height / 2 + 5, bar.height - 6) : bar.y - 4;
+          const item = itemById.get(bar.itemId);
+          const detail = detailOfItem(item, unit);
+          const displayValue = detail ? detail.valueText : bar.value;
+          const dateLabel = detail ? shortDateLabel(detail.dateLabel) : null;
 
           return (
             <g
@@ -206,10 +259,46 @@ export function BarChart({ items, state, event = null, reducedMotion = false }: 
               data-item-id={bar.itemId}
               data-display-index={bar.displayIndex}
               data-state={bar.state}
+              tabIndex={detail ? 0 : undefined}
+              role={detail ? "img" : undefined}
+              aria-label={
+                detail
+                  ? `${detail.dateLabel}｜${detail.stationZh} / ${detail.stationEn}｜${detail.valueText}｜${detail.quality}`
+                  : undefined
+              }
+              onFocus={detail ? () => setFocusedItemId(bar.itemId) : undefined}
+              onBlur={
+                detail
+                  ? () =>
+                      setFocusedItemId((current) => (current === bar.itemId ? null : current))
+                  : undefined
+              }
+              onMouseEnter={detail ? () => setFocusedItemId(bar.itemId) : undefined}
+              onMouseLeave={
+                detail
+                  ? () =>
+                      setFocusedItemId((current) => (current === bar.itemId ? null : current))
+                  : undefined
+              }
             >
               <title>
                 {(() => {
                   // SVG <title> 只能是一条字符串：繁中在上、英文在下一行，保持双语。
+                  if (detail) {
+                    const zhTitle = formatTranslation("weatherSort.bar.title", {
+                      date: detail.dateLabel,
+                      station: detail.stationZh,
+                      value: detail.valueText,
+                      quality: detail.quality,
+                    })["zh-Hant"];
+                    const enTitle = formatTranslation("weatherSort.bar.title", {
+                      date: detail.dateLabel,
+                      station: detail.stationEn,
+                      value: detail.valueText,
+                      quality: detail.quality,
+                    }).en;
+                    return `${zhTitle}\n${enTitle}`;
+                  }
                   const title = formatTranslation("player.bar.title", {
                     id: bar.itemId,
                     value: bar.value,
@@ -253,9 +342,23 @@ export function BarChart({ items, state, event = null, reducedMotion = false }: 
                 data-testid="bar-value"
                 x={bar.centerX}
                 y={bar.labelY}
+                fontSize={compactLabels ? 8 : undefined}
               >
-                {bar.value}
+                {displayValue}
               </text>
+              {dateLabel ? (
+                <text
+                  className="bar-chart__date"
+                  data-testid="bar-label"
+                  x={bar.centerX}
+                  y={VIEW_HEIGHT - 6}
+                  textAnchor="middle"
+                  fontSize={compactLabels ? 7 : 9}
+                  aria-hidden="true"
+                >
+                  {dateLabel}
+                </text>
+              ) : null}
             </g>
           );
         })}
@@ -263,6 +366,57 @@ export function BarChart({ items, state, event = null, reducedMotion = false }: 
         {bracketFor(comparedIndices, plotBottom + 22)}
         {bracketFor(modifiedIndices, plotBottom + 42)}
       </svg>
+
+      {hasWeatherDetails ? (
+        <div
+          className="bar-chart__detail"
+          data-testid="bar-detail"
+          role="status"
+          aria-live="polite"
+        >
+          <p className="bar-chart__detail-title">
+            <BilingualText size="xs" tkey="weatherSort.bar.detailTitle" />
+          </p>
+          {focusedDetail ? (
+            <dl className="bar-chart__detail-grid">
+              <div>
+                <dt>
+                  <BilingualText size="xs" tkey="weatherSort.bar.date" />
+                </dt>
+                <dd>{focusedDetail.dateLabel}</dd>
+              </div>
+              <div>
+                <dt>
+                  <BilingualText size="xs" tkey="weatherSort.bar.station" />
+                </dt>
+                <dd>
+                  <BilingualText
+                    size="xs"
+                    zh={focusedDetail.stationZh}
+                    en={focusedDetail.stationEn}
+                  />
+                </dd>
+              </div>
+              <div>
+                <dt>
+                  <BilingualText size="xs" tkey="weatherSort.bar.value" />
+                </dt>
+                <dd>{focusedDetail.valueText}</dd>
+              </div>
+              <div>
+                <dt>
+                  <BilingualText size="xs" tkey="weatherSort.bar.quality" />
+                </dt>
+                <dd>{focusedDetail.quality}</dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="bar-chart__detail-hint">
+              <BilingualText size="xs" tkey="weatherSort.bar.detailHint" />
+            </p>
+          )}
+        </div>
+      ) : null}
 
       <figcaption className="mt-3">
         <span className="sr-only">

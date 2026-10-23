@@ -266,35 +266,222 @@ export const dictionary = {
     en: "Choose a date range and stations to view the daily temperatures the Hong Kong Observatory can provide retroactively, together with coverage, gaps and update times. Rainfall and humidity have no historical interface, and this page never presents temperature as if it were rainfall.",
   },
 
-  // ---------- 用排序理解气温 ----------
+  // ---------- 阶段 4：用排序理解气温 ----------
   "weatherSort.title": {
     "zh-Hant": "用排序理解最近一個月的氣溫",
     en: "Understand the last month's temperatures through sorting",
   },
   "weatherSort.lead": {
     "zh-Hant":
-      "把每日最高溫或最低溫排成一列，用冒泡排序找出最熱與最冷的日子，並看排序前後的差別。",
-    en: "Line up daily maximum or minimum temperatures and use bubble sort to find the hottest and coldest days, comparing before and after.",
+      "把每日最高溫或最低溫排成一列，用冒泡排序找出最熱與最冷的日子，並看排序前後的差別；日期與溫度都來自香港天文台的逐日觀測。",
+    en: "Line up daily maximum or minimum temperatures and use bubble sort to find the hottest and coldest days, comparing before and after; every date and temperature comes from the Hong Kong Observatory's daily observations.",
   },
-  "weatherSort.planned.1": {
-    "zh-Hant": "日最高溫與日最低溫一鍵切換，可選升序或降序",
-    en: "Switch between daily maximum and minimum temperature, ascending or descending",
+  "weatherSort.sourceNote": {
+    "zh-Hant":
+      "所有排序狀態、日期標籤、Top 5 與解釋都來自後端軌跡；前端不自行排序，也不猜測數值。",
+    en: "All sorting states, date labels, top-5 lists and explanations come from the backend trace; the frontend never sorts or guesses values itself.",
   },
-  "weatherSort.planned.2": {
-    "zh-Hant": "每根柱子保留日期、測站與溫度，交換後仍然正確配對",
-    en: "Each bar keeps its date, station and temperature, and stays correctly paired after a swap",
+  "weatherSort.unitCelsius": {
+    "zh-Hant": "°C",
+    en: "°C",
   },
-  "weatherSort.planned.3": {
-    "zh-Hant": "與冒泡實驗室共用同一個播放器與 Python 程式高亮",
-    en: "Share one player and Python highlighting with the bubble lab",
+
+  // ---------- 阶段 4：/weather 入口按钮 ----------
+  "weatherSort.entry": {
+    "zh-Hant": "用冒泡排序探索這 30 天的氣溫",
+    en: "Explore These 30 Days of Temperatures with Bubble Sort",
   },
-  "weatherSort.planned.4": {
-    "zh-Hant": "排序前後對比、最熱與最冷的日子，以及比較與交換次數",
-    en: "Before-and-after comparison, hottest and coldest days, and comparison and swap counts",
+  "weatherSort.entryHint": {
+    "zh-Hant": "以目前選取的測站、指標與資料窗口開啟排序頁；排序狀態仍全部來自後端軌跡。",
+    en: "Open the sorting page with the current station, metric and data window; every sorting state still comes from the backend trace.",
   },
-  "weatherSort.planned.5": {
-    "zh-Hant": "說明哪些日期因為缺值而被排除",
-    en: "Explain which dates were excluded because of missing values",
+
+  // ---------- 阶段 4：缺失日期提示 ----------
+  "weatherSort.missing.title": {
+    "zh-Hant": "有效天數與缺失日期",
+    en: "Valid days and missing dates",
+  },
+  "weatherSort.missing.line": {
+    "zh-Hant": "{metric}：當前有效天數 {valid} 天（請求 {requested} 天），已排除以下缺失日期：{dates}",
+    en: "{metric}: {valid} valid days out of {requested} requested; excluded missing dates: {dates}",
+  },
+  "weatherSort.missing.none": {
+    "zh-Hant": "{metric}：當前有效天數 {valid} 天（請求 {requested} 天），沒有缺失日期。",
+    en: "{metric}: {valid} valid days out of {requested} requested; no missing dates.",
+  },
+  "weatherSort.missing.loading": {
+    "zh-Hant": "正在讀取 {metric} 的有效天數…",
+    en: "Loading valid days for {metric}…",
+  },
+  "weatherSort.missing.error": {
+    "zh-Hant": "{metric} 的軌跡無法載入。",
+    en: "The {metric} trace could not be loaded.",
+  },
+
+  // ---------- 阶段 4：排序条件 ----------
+  "weatherSort.controls.title": {
+    "zh-Hant": "排序條件",
+    en: "Sorting settings",
+  },
+  "weatherSort.controls.station": {
+    "zh-Hant": "測站",
+    en: "Station",
+  },
+  "weatherSort.controls.stationPlaceholder": {
+    "zh-Hant": "請選擇測站",
+    en: "Choose a station",
+  },
+  "weatherSort.controls.metric": {
+    "zh-Hant": "指標",
+    en: "Metric",
+  },
+  "weatherSort.controls.parallel": {
+    "zh-Hant": "並排比較 tmax 與 tmin",
+    en: "Compare tmax and tmin side by side",
+  },
+  "weatherSort.controls.parallelHint": {
+    "zh-Hant": "開啟後同一窗口會並排顯示兩個播放器，各自有獨立的播放控制。",
+    en: "When on, two players for the same window appear side by side, each with independent playback controls.",
+  },
+  "weatherSort.controls.resetHint": {
+    "zh-Hant": "切換測站、指標、方向、日期或提前結束選項，都會把播放器重置為待開始。",
+    en: "Changing the station, metric, direction, dates or early-exit option resets the player to ready.",
+  },
+  "weatherSort.controls.dateRange": {
+    "zh-Hant": "日期範圍（香港時區自然日）",
+    en: "Date range (Hong Kong calendar days)",
+  },
+
+  // ---------- 阶段 4：播放器与柱子标签 ----------
+  "weatherSort.player.heading": {
+    "zh-Hant": "{metric} 播放器",
+    en: "{metric} player",
+  },
+  "weatherSort.bar.title": {
+    "zh-Hant": "{date}｜{station}｜{value}｜品質標記：{quality}",
+    en: "{date} | {station} | {value} | Quality flag: {quality}",
+  },
+  "weatherSort.bar.detailTitle": {
+    "zh-Hant": "目前聚焦的柱子",
+    en: "Focused bar",
+  },
+  "weatherSort.bar.detailHint": {
+    "zh-Hant": "用 Tab 鍵聚焦柱子，可查看完整日期、測站與品質標記。",
+    en: "Press Tab to focus a bar and see its full date, station and quality flag.",
+  },
+  "weatherSort.bar.date": {
+    "zh-Hant": "完整日期",
+    en: "Full date",
+  },
+  "weatherSort.bar.station": {
+    "zh-Hant": "測站（中英文）",
+    en: "Station (Chinese and English)",
+  },
+  "weatherSort.bar.value": {
+    "zh-Hant": "數值",
+    en: "Value",
+  },
+  "weatherSort.bar.quality": {
+    "zh-Hant": "品質標記",
+    en: "Quality flag",
+  },
+
+  // ---------- 阶段 4：结果区 ----------
+  "weatherSort.results.title": {
+    "zh-Hant": "排序結果",
+    en: "Sorting results",
+  },
+  "weatherSort.results.summary": {
+    "zh-Hant": "冒泡排序：比較 {comparisons} 次、交換 {swaps} 次、{passes} 輪",
+    en: "Bubble sort: {comparisons} comparisons, {swaps} swaps, {passes} passes",
+  },
+  "weatherSort.results.topHot": {
+    "zh-Hant": "Top 5 最熱",
+    en: "Top 5 hottest",
+  },
+  "weatherSort.results.topCold": {
+    "zh-Hant": "Top 5 最冷",
+    en: "Top 5 coldest",
+  },
+  "weatherSort.results.topItem": {
+    "zh-Hant": "{date}｜{value}",
+    en: "{date} | {value}",
+  },
+  "weatherSort.results.temperature": {
+    "zh-Hant": "{value} °C",
+    en: "{value} °C",
+  },
+  "weatherSort.results.before": {
+    "zh-Hant": "排序前（按日期）",
+    en: "Before sorting (by date)",
+  },
+  "weatherSort.results.after": {
+    "zh-Hant": "排序後（按溫度）",
+    en: "After sorting (by temperature)",
+  },
+  "weatherSort.results.orderUnavailable": {
+    "zh-Hant": "這份軌跡沒有提供排序前後的順序。",
+    en: "This trace does not include the before/after order.",
+  },
+  "weatherSort.results.stemTitle": {
+    "zh-Hant": "冒泡排序 vs 單次掃描",
+    en: "Bubble sort vs a single scan",
+  },
+  "weatherSort.results.stemBubble": {
+    "zh-Hant": "冒泡排序：{comparisons} 次比較、{swaps} 次交換",
+    en: "Bubble sort: {comparisons} comparisons, {swaps} swaps",
+  },
+  "weatherSort.results.stemScan": {
+    "zh-Hant": "單次掃描：{comparisons} 次比較、{swaps} 次交換",
+    en: "Single scan: {comparisons} comparisons, {swaps} swaps",
+  },
+  "weatherSort.results.stemNote": {
+    "zh-Hant":
+      "單次掃描只能找出一個極值，不能完成排序；冒泡排序要重複掃描直到所有日期有序。",
+    en: "A single scan only finds one extreme and cannot sort the list; bubble sort must scan repeatedly until every date is in order.",
+  },
+  "weatherSort.results.stemUnavailable": {
+    "zh-Hant": "這份軌跡沒有提供單次掃描的對照數據。",
+    en: "This trace does not include single-scan comparison data.",
+  },
+  "weatherSort.results.topUnavailable": {
+    "zh-Hant": "這份軌跡沒有提供 Top 5 資料。",
+    en: "This trace does not include top-5 data.",
+  },
+
+  // ---------- 阶段 4：页状态 ----------
+  "weatherSort.loading": {
+    "zh-Hant": "正在向後端取得天氣排序軌跡…",
+    en: "Loading the weather sorting trace from the backend…",
+  },
+  "weatherSort.error.title": {
+    "zh-Hant": "無法載入天氣排序軌跡",
+    en: "Could not load the weather sorting trace",
+  },
+  "weatherSort.error.tooFewDays": {
+    "zh-Hant": "此指標在這個窗口內的有效日期少於 2 天，後端拒絕排序。",
+    en: "This metric has fewer than 2 valid dates in this window, so the backend refuses to sort.",
+  },
+  "weatherSort.noValid": {
+    "zh-Hant": "至少需要 2 個有效日期才能排序。",
+    en: "At least 2 valid dates are needed to sort.",
+  },
+  "weatherSort.rangeHint": {
+    "zh-Hant":
+      "直接開啟本頁時，會先用 /api/weather/coverage 的真實窗口；也可以自行選擇日期。",
+    en: "Opening this page directly first uses the real window from /api/weather/coverage; you can also choose dates yourself.",
+  },
+  "weatherSort.rangeMissing": {
+    "zh-Hant": "請選擇開始與結束日期。",
+    en: "Choose start and end dates.",
+  },
+  "weatherSort.stationMissing": {
+    "zh-Hant": "請先選擇測站。",
+    en: "Choose a station first.",
+  },
+  "weatherSort.qualityUnknown": {
+    "zh-Hant": "未提供",
+    en: "Not provided",
   },
 
   // ---------- 十种排序算法学习中心 ----------
@@ -506,8 +693,8 @@ export const dictionary = {
     en: "Current phase",
   },
   "help.phase.body": {
-    "zh-Hant": "階段 3：香港天氣數據探索頁與五類圖表已完成，畫面只使用後端回傳的資料；階段 2 的冒泡排序軌跡播放器可繼續使用。其他九種演算法尚未開始。",
-    en: "Phase 3: the Hong Kong weather explorer and its five chart types are complete and render only data returned by the backend; the phase 2 bubble sort trace player remains available. The other nine algorithms have not started.",
+    "zh-Hant": "階段 4：香港天氣排序頁已完成，可直接把逐日最高溫或最低溫放進階段 2 的冒泡排序播放器；階段 3 的天氣探索頁與五類圖表可繼續使用。其他九種演算法尚未開始。",
+    en: "Phase 4: the Hong Kong weather sorting page is complete and feeds daily maximum or minimum temperatures into the phase 2 bubble sort player; the phase 3 weather explorer and its five chart types remain available. The other nine algorithms have not started.",
   },
 
   // ---------- 阶段 2：冒泡排序播放器 ----------

@@ -91,11 +91,12 @@ def build_bubble_trace(
         ArrayState(
             state_id=state.state_id,
             order=list(state.order),
-            values=list(state.values),
+            # 阶段 2 的输入是整数，这里转换是类型收窄；运行时不改变整数对象
+            values=[int(value) for value in state.values],
         )
         for state in recorder.states
     ]
-    state_values: Mapping[int, tuple[int, ...]] = {
+    state_values: Mapping[int, tuple[float, ...]] = {
         state.state_id: state.values for state in recorder.states
     }
     events = [
@@ -116,7 +117,7 @@ def build_bubble_trace(
         algorithm="bubble",
         direction=direction_value,
         options=BubbleTraceOptions(early_exit=early_exit),
-        items=[TraceItem(id=item.id, value=item.value) for item in items],
+        items=[TraceItem(id=item.id, value=int(item.value)) for item in items],
         code=CodeBlock(
             lines=[
                 CodeLine(
@@ -137,7 +138,7 @@ def build_bubble_trace(
             passes=recorder.passes,
             early_exit_triggered=recorder.early_exit_triggered,
             final_order=list(recorder.final_order),
-            final_values=list(recorder.final_values),
+            final_values=[int(value) for value in recorder.final_values],
             state_count=len(states),
             event_count=len(events),
         ),
@@ -176,7 +177,7 @@ def _normalise_direction(direction: str) -> Direction:
 def _build_event(
     event: RecordedEvent,
     *,
-    state_values: Mapping[int, tuple[int, ...]],
+    state_values: Mapping[int, tuple[float, ...]],
     direction: Direction,
     item_count: int,
     passes: int,
@@ -202,8 +203,8 @@ def _build_event(
             comparison=None
             if comparison is None
             else ComparisonInfo(
-                left=comparison.left,
-                right=comparison.right,
+                left=int(comparison.left),
+                right=int(comparison.right),
                 relation=comparison.relation,
                 will_swap=comparison.will_swap,
             ),
@@ -227,7 +228,7 @@ def _build_event(
 def _build_explanation(
     event: RecordedEvent,
     *,
-    state_values: Mapping[int, tuple[int, ...]],
+    state_values: Mapping[int, tuple[float, ...]],
     direction: Direction,
     item_count: int,
     passes: int,
@@ -306,7 +307,7 @@ def _explain_compare(event: RecordedEvent, *, direction: Direction) -> Explanati
 def _explain_swap(
     event: RecordedEvent,
     *,
-    state_values: Mapping[int, tuple[int, ...]],
+    state_values: Mapping[int, tuple[float, ...]],
     direction: Direction,
 ) -> Explanation:
     left_position, right_position = event.active_indices
@@ -333,7 +334,7 @@ def _explain_swap(
 def _explain_mark_sorted(
     event: RecordedEvent,
     *,
-    state_values: Mapping[int, tuple[int, ...]],
+    state_values: Mapping[int, tuple[float, ...]],
     item_count: int,
 ) -> Explanation:
     pass_index = event.auxiliary_state.pass_index
@@ -360,7 +361,7 @@ def _explain_mark_sorted(
 def _explain_done(
     event: RecordedEvent,
     *,
-    state_values: Mapping[int, tuple[int, ...]],
+    state_values: Mapping[int, tuple[float, ...]],
     passes: int,
     early_exit_triggered: bool,
 ) -> Explanation:
