@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.app.api.algorithms import router as algorithms_router
 from backend.app.api.health import router as health_router
 from backend.app.core.logging import configure_logging
 from backend.app.core.settings import Settings, get_settings
@@ -31,6 +32,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     app.include_router(health_router)
+    app.include_router(algorithms_router)
     return app
 
 

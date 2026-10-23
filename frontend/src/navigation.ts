@@ -26,7 +26,8 @@ export const navItems: readonly NavItem[] = [
     navKey: "nav.lab",
     titleKey: "lab.title",
     descriptionKey: "home.card.lab.desc",
-    status: "inDevelopment",
+    // 阶段 2 已交付：冒泡轨迹播放、代码同步高亮、预测弹窗均可真实使用
+    status: "available",
   },
   {
     path: "/weather",

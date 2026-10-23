@@ -4,9 +4,9 @@
 > 本项目**尚未接入**真实历史数据；文中所有「可用」仅指「本次调查中该端点返回了预期结构」。
 >
 > **验证日期**：2026-10-23（香港时间 Asia/Hong_Kong，观测时段约 13:02–13:20）
-> **调查人**：hko-data-verifier（团队成员）
+> **调查人**：hko-data-verifier（团队成员）；2026-10-23 晚间由 Lead 补做官方 PDF 下载与测站表解析（§5.4）
 > **对应需求**：`docs/PROJECT_REQUIREMENTS.md` 第七、八、九节
-> **请求总量**：本次调查共发起 **27 次**网络请求（含 1 次检索），全程串行、无并发，未做任何压力测试。
+> **请求总量**：首轮调查 **27 次**网络请求（含 1 次检索）；Lead 补做阶段另有 3 次 PDF 下载 + 3 次 API 抽样复核。全程串行、无并发、未做压力测试。
 
 ---
 
@@ -20,7 +20,7 @@
 | 4 | HKO 气候资料 Daily Extract（逐日网页） | **不可用（非 API）** | 页面为 JS 年/月表单 + Go 按钮，静态 HTML 无数据、无 CSV 直链；且 `robots.txt` 对 `/cis/` 为 `Disallow` |
 | 5 | data.gov.hk 数据集页 | **元数据可用，资源不可直取** | 数据集存在，但唯一资源「格式 = API」指向 CSDI 地理信息门户，**未发现托管 CSV/JSON 文件** |
 | 6 | 响应头（ETag / Last-Modified / Retry-After / 限流） | **未验证** | 当前可用通道（`web_fetch`）**不暴露响应头**，无任何可观测证据；禁止臆测 |
-| 7 | 官方 API 说明 PDF | **未能读取** | `web_fetch` 返回 `unsupported content type "application/pdf"`，故官方字段定义**未能逐字核对** |
+| 7 | 官方 API 说明 PDF | **已读取并解析（2026-10-23 补做）** | 用 `httpx(trust_env=False)` 下载英文/繁体/简体三份 PDF（英文版 `Last-Modified: 2025-09-22`），再用 `pypdf` 提取；测站代号表 39 站已逐字核对并写入 §5.4 |
 
 **给项目的最重要一条结论**：需求第七节「不能假定实时接口支持最近一个月完整历史查询」——本次调查**证实了这个担心**。逐日月表有，但存在「整月发布」延迟，因此需求第八节默认的「截至昨日的最近 30 个完整自然日」在**首次部署时无法用官方逐日数据凑齐**（缺口见 §7.3）。这需要产品层面决策，不能靠代码绕过，也不能用实时数据倒推。
 
@@ -49,7 +49,7 @@
 | 限制 | 后果 |
 |---|---|
 | `web_fetch` **不返回响应头** | `ETag`、`Last-Modified`、`Retry-After`、`Content-Type`、限流/配额相关头**全部未验证**。需求第七节要求「适用且服务器支持时使用 ETag/Last-Modified 及条件式请求」——**该能力是否可用，目前无证据**，需后端直连后复核 |
-| `web_fetch` **不支持 `application/pdf`** | 官方 API 说明书（PDF）无法读取，故 `station` 代号完整清单、各 `dataType` 的官方定义与官方声称的年份范围**未能逐字核对** |
+| `web_fetch` **不支持 `application/pdf`** | 当时未能读取官方 PDF；**该空白已于 2026-10-23 用 `httpx(trust_env=False)` 直连补齐**：下载三份 PDF 并用 `pypdf` 提取，测站代号表见 §5.4。仍未逐字核对的是其它未用到的 `dataType` 定义 |
 | `https://data.weather.gov.hk/robots.txt` | 请求未返回内容，而是**跨域重定向到 `https://www.hko.gov.hk`**（`cross-origin redirect ... is not followed automatically`）。即该主机自身 robots 规则**无法确认** |
 | 未做压力测试 | 本次全程串行、单请求，**没有**验证过任何并发上限、配额或限流阈值。文档中不会出现任何「官方配额」断言 |
 
@@ -78,7 +78,7 @@ Disallow: /openData/
 
 | 用途 | 地址 | 本次是否读到 |
 |---|---|---|
-| 官方开放数据 API 说明书（英文 PDF） | `https://data.weather.gov.hk/weatherAPI/doc/HKO_Open_Data_API_Documentation.pdf` | **未读到**（`application/pdf` 不支持） |
+| 官方开放数据 API 说明书（英文 PDF） | `https://data.weather.gov.hk/weatherAPI/doc/HKO_Open_Data_API_Documentation.pdf` | ✅ **已下载并解析**（2026-10-23，581,389 B / 48 页） |
 | 同上（繁体中文） | `https://data.weather.gov.hk/weatherAPI/doc/HKO_Open_Data_API_Documentation_tc.pdf` | 未读到（同上） |
 | 同上（简体中文） | `https://data.weather.gov.hk/weatherAPI/doc/HKO_Open_Data_API_Documentation_sc.pdf` | 未读到（同上） |
 | data.gov.hk 数据集页（逐日最高/平均/最低温） | `https://data.gov.hk/en-data/dataset/hk-hko-rss-daily-temperature-info-hko` | **已读到**（HTTP 200） |
@@ -140,7 +140,8 @@ https://data.weather.gov.hk/weatherAPI/opendata/opendata.php
 | `SHA` | 沙田 / Sha Tin | `"最高氣溫 (攝氏度) - 沙田"` |
 | `TKL` | 打鼓嶺 / Ta Kwu Ling | `"最高氣溫 (攝氏度) - 打鼓嶺"` |
 
-> ⚠️ **`station` 的完整合法代号清单未验证**（PDF 读不到）。上面 5 个只是「实测能被接受」的，**不代表全部**。后端的测站清单**不得**由本文件推断，必须另行从官方文档取得。
+> ✅ **完整清单已于 2026-10-23 补齐**：官方 PDF 给出 **39 个** `station` 代号及中英文名、各站起始年，见 **§5.4**。上面 5 个是早期实测样本，仍然成立。
+> ⚠️ 但**不要**据此推断「行政区 ↔ 测站」映射——官方 PDF 只给站名，没有行政区归属表。
 > ⚠️ 另注：`KP`/`CCH`/`SHA`/`TKL` 是我按真实测站代号尝试后**恰好成功**的，响应自身回显了站名，才确认其含义。**不要**据此反推「某个行政区对应哪个代号」——需求第八节明确禁止凭名称猜测地区映射。
 
 ---
@@ -161,7 +162,7 @@ https://data.weather.gov.hk/weatherAPI/opendata/opendata.php
 | `humidity.data[].place` / `.value` / `.unit` | — | 湿度 | `unit = "percent"` |
 | `rainfall.data[].place` | string | **行政区名**（不是测站） | — |
 | `rainfall.data[].max` | number | 雨量 | `unit = "mm"` |
-| `rainfall.data[].main` | string | 布尔字符串，实测全为 `"FALSE"` | 语义**未验证**（PDF 读不到） |
+| `rainfall.data[].main` | string | 布尔字符串，实测全为 `"FALSE"` | 语义**未验证**（PDF 未给出该字段定义） |
 | `rainfall.startTime` / `endTime` | string | 该雨量统计窗口 | 实测 `11:45` → `12:45`（1 小时窗口） |
 | `uvindex.data[].place` / `.value` / `.desc` | — | 紫外线指数 | 实测 `King's Park` / `7` / `"high"`，无量纲 |
 | `uvindex.recordDesc` | string | 观测窗口描述 | 实测 `"During the past hour"` |
@@ -235,8 +236,76 @@ https://data.weather.gov.hk/weatherAPI/opendata/opendata.php
 | 已验证可用代号 | `HKO`、`KP`、`CCH`、`SHA`、`TKL` | 5 次请求均 200，且 `type` 回显站名（见 §3.2） |
 | 无效代号行为 | 返回参数错误纯文本 | `station=XYZ` → `Please include valid parameters in API request...` |
 | 是否支持「非天文台」测站 | **支持**（至少 4 个非 HKO 站实测成功） | `KP`/`CCH`/`SHA`/`TKL` |
-| 完整站点清单 | **未验证** | PDF 读不到；官方说明书中应有代号表，须人工查阅 |
-| 各站历史起始年份 | **未验证** | 同上。本次只验证了 `HKO` 的年份下限（§8），**不能**假定所有站都一样 |
+| 完整站点清单 | ✅ **已验证（39 站）** | 官方 API 说明书 PDF（2025-09-22 版）逐字提取，见 §5.4 |
+| 各站历史起始年份 | ✅ **已验证（39 站逐站年限）** | 同上；`HKO` 为 1884 起（1940–1946 缺），`YCT` 最晚（2022 起） |
+
+### 5.4 官方测站代号对照表（2026-10-23 从官方 PDF 逐字提取并核对）
+
+**来源与取证过程**（全部可复现）：
+
+| 项目 | 值 |
+|---|---|
+| 英文版 PDF | `https://data.weather.gov.hk/weatherAPI/doc/HKO_Open_Data_API_Documentation.pdf` |
+| 繁体版 PDF | `https://data.weather.gov.hk/weatherAPI/doc/HKO_Open_Data_API_Documentation_tc.pdf` |
+| 简体版 PDF | `https://data.weather.gov.hk/weatherAPI/doc/HKO_Open_Data_API_Documentation_sc.pdf` |
+| 下载方式 | Python 3.10 + `httpx 0.28.1`，`trust_env=False`（本机必须，见 §1） |
+| 文件大小 / 页数 | 英文 **581,389 B / 48 页**；繁体 **908,488 B / 46 页**；简体 984,610 B |
+| 服务器 `Last-Modified` | **Mon, 22 Sep 2025 09:15:39 GMT**（英文版） |
+| 文本提取 | `pypdf 6.21.2` |
+| 解析脚本 | `.tools/reference/parse_stations.py`（不入库）；产物 `.tools/reference/station_table.md` |
+| 适用范围 | `dataType` = `CLMTEMP` / `CLMMAXT` / `CLMMINT`（三者共用同一测站清单） |
+| 抽样 API 复核 | `VP1`、`TMS` 中文名与 API `type` 完全一致；`HKO` 见下方说明 |
+
+**重要说明（API 显示名 ≠ 官方正式名）**：PDF 的正式名是「香港天文台 / Hong Kong Observatory」，但 API 响应 `type` 里简写为「**天文台**」。同理 `VP1` 的 API 文本是「最高氣溫 (攝氏度) - 山頂」。→ 站名应**以本表为准**，API 文本只作对账，不要直接当显示名。
+
+| 代号 | 英文名 | 繁体中文名 | 资料起始年 | 备注 |
+|---|---|---|---|---|
+| CCH | Cheung Chau | 長洲 | 1992 |  |
+| CWB | Clear Water Bay | 清水灣 | 2018 |  |
+| HKA | Hong Kong International Airport | 香港國際機場 | 1997 |  |
+| HKO | Hong Kong Observatory | 香港天文台 | 1884 | 缺 1940–1946 |
+| HKP | Hong Kong Park | 香港公園 | 2007 |  |
+| HKS | Wong Chuk Hang | 黃竹坑 | 1989 |  |
+| HPV | Happy Valley | 跑馬地 | 2008 |  |
+| JKB | Tseung Kwan O | 將軍澳 | 1991 |  |
+| KLT | Kowloon City | 九龍城 | 2008 |  |
+| KP | King's Park | 京士柏 | 1992 |  |
+| KSC | Kau Sai Chau | 滘西洲 | 2008 |  |
+| KTG | Kwun Tong | 觀塘 | 2009 |  |
+| LFS | Lau Fau Shan | 流浮山 | 1985 |  |
+| NGP | Ngong Ping | 昂坪 | 2003 |  |
+| PEN | Peng Chau | 坪洲 | 2004 |  |
+| PLC | Tai Mei Tuk | 大美督 | 1993 |  |
+| SE1 | Kai Tak Runway Park | 啟德跑道公園 | 2014 |  |
+| SEK | Shek Kong | 石崗 | 1996 |  |
+| SHA | Sha Tin | 沙田 | 1984 |  |
+| SKG | Sai Kung | 西貢 | 1993 |  |
+| SKW | Shau Kei Wan | 筲箕灣 | 2007 |  |
+| SSH | Sheung Shui | 上水 | 2004 |  |
+| SSP | Sham Shui Po | 深水埗 | 2010 |  |
+| STY | Stanley | 赤柱 | 2009 |  |
+| TC | Tate's Cairn | 大老山 | 1997 |  |
+| TKL | Ta Kwu Ling | 打鼓嶺 | 1988 |  |
+| TMS | Tai Mo Shan | 大帽山 | 1997 |  |
+| TPO | Tai Po (Conservation Studies Centre) | 大埔（自然環境保護研究中心） | 1999 |  |
+| TU1 | Tuen Mun Children and Juvenile Home | 屯門兒童及青少年院 | 2007 |  |
+| TW | Tsuen Wan Shing Mun Valley | 荃灣城門谷 | 2010 |  |
+| TWN | Tsuen Wan | 荃灣 | 2006 |  |
+| TY1 | New Tsing Yi Station | 新青衣站 | 2010 |  |
+| TYW | Pak Tam Chung (Tsak Yue Wu) | 北潭涌(鯽魚湖) | 1995 |  |
+| VP1 | The Peak | 山頂 | 2003 |  |
+| WGL | Waglan Island | 橫瀾島 | 1989 |  |
+| WLP | Wetland Park | 濕地公園 | 2005 |  |
+| WTS | Wong Tai Sin | 黃大仙 | 2009 |  |
+| YCT | Tai Po (Yuan Chau Tsai Park) | 大埔（元洲仔公園） | 2022 |  |
+| YLP | Yuen Long Park | 元朗公園 | 2015 |  |
+
+**使用限制（实现前必读）**：
+
+1. 本表只对 `CLMTEMP`/`CLMMAXT`/`CLMMINT` 有效。PDF 显示**潮汐类** `dataType`（`HHOT`/`HLT`）使用另一组 14 个站号（`CCH`、`CLK`、`CMW`、`KCT`、`KLW`、`LOP`、`MWC`、`QUB`、`SPW`、`TAO`、`TBT`、`TMW`、`TPK`、`WAG`），**不得混用**。
+2. 实时接口 `rhrread` 返回 27 个气温测站，与本表 39 站**不是同一集合**（实时站名是英文显示名），不可直接按名称做等值匹配。
+3. **行政区映射仍然缺失**：官方 PDF 只给站名，**没有**「测站 → 18 行政区」的映射表。需求第八节要求的行政区维度仍须另找官方来源，**不得**按站名猜测。
+4. 各站起始年差异很大（1984–2022），做「历年同期对比」时必须按站检查年限，否则会拿不存在的数据。
 
 ### 5.3 「官网代表性/总体指标」（需求第七节要求核实）
 
@@ -319,7 +388,7 @@ https://data.weather.gov.hk/weatherAPI/opendata/opendata.php
 
 - **天文台总部（HKO）至少回溯到 1884 年**（1884-09 实测返回完整数据）。**更早年份未测试**，故「下限 = 1884」只能说「已证明不晚于 1884」，**不是**官方声明的起点。
 - 覆盖「最近几年 + 当前可用月」**完全满足教学需求**（本项目只需最近 30 天级别的数据，历史纵深是加分项，可用于「历年同期对比」教学）。
-- **各测站的历史起始年份未验证**：不同站可能短很多。例如实测 `TKL`（打鼓岭）2025-09 有大量 `#`（不完整），说明不同站的数据质量差异很大。
+- **各测站的历史起始年份差异很大**：官方 PDF 给出逐站起始年（§5.4），从 `SHA` 1984 到 `YCT` 2022。例如实测 `TKL`（打鼓岭，1988 起）2025-09 有大量 `#`（不完整），说明不同站的数据质量差异也很大。
 
 ---
 
@@ -363,15 +432,15 @@ https://data.weather.gov.hk/weatherAPI/opendata/opendata.php
 
 | 项目 | 状态 | 原因 |
 |---|---|---|
-| 官方 API 说明书全文（字段定义、全部 `dataType`、`station` 完整代号表） | **未验证** | PDF 无法通过当前通道读取 |
-| 是否存在更细粒度（如逐时/近月逐日）官方端点 | **未验证** | 无法枚举官方 `dataType` 清单；本次**未猜测**任何 `dataType` 名称 |
-| `rformat` 是否还有 `json`/`csv` 以外的取值 | **未验证** | 同上 |
-| `lang=sc` / `lang=tc` 的实际差异 | **未验证** | 未单独测试 |
-| `mintempFrom00To09` 等 4 个空字段的语义 | **未验证** | 官方定义在 PDF 内 |
-| 响应头（ETag/Last-Modified/Retry-After/限流） | **未验证** | `web_fetch` 不暴露响应头 |
-| 各测站历史起始年份、各站 `station` 代号全集 | **未验证** | 同上（PDF） |
+| 官方 API 说明书全文（字段定义、全部 `dataType`、`station` 完整代号表） | **部分已验证**（2026-10-23 更新） | PDF 已下载并解析：**39 个测站代号与中英文名、逐站起始年、CLMTEMP/CLMMAXT/CLMMINT 参数规则已确认**（§5.4）。其余 `dataType`（潮汐/日照/闪电/能见度等）的字段定义**未逐条核对**，且潮汐类站号是另一组 14 个 |
+| 是否存在更细粒度（如逐时/近月逐日）官方端点 | **部分已验证** | PDF 的 `dataType` 清单显示除月表外还有 `HHOT`/`HLT`（潮汐）、`SRS`/`MRS`（日出月出）、`LHL`（闪电）、`LTMV`（能见度）等，但**没有**"最近逐日/逐时气温"的独立端点 |
+| `rformat` 是否还有 `json`/`csv` 以外的取值 | **未验证** | PDF 只列 `json` / `csv` |
+| `lang=sc` / `lang=tc` 的实际差异 | 部分验证 | 下载并解析了三语 PDF（内容等价、语言不同）；接口 `lang` 参数只验证过 `en` |
+| `mintempFrom00To09` 等 4 个空字段的语义 | **未验证** | 属 `weather.php`（实时）字段；PDF 主要描述 `opendata.php` 参数，未找到这 4 个字段的逐字定义 |
+| 响应头（ETag/Last-Modified/Retry-After/限流） | **部分验证** | PDF 文件本身返回了 `Last-Modified`；**API 响应头仍未观测**（`web_fetch` 不暴露） |
+| 各测站历史起始年份、各站 `station` 代号全集 | ✅ **已验证** | §5.4，官方 PDF 逐站年限 |
 | 月表数据的实际发布时点（次月几日） | **未验证** | 只观测到一个时间点 |
-| 风速/风向、能见度等其他指标的官方来源 | **未调查** | 不在本次范围 |
+| 风速/风向、能见度等其他指标的官方来源 | **部分调查** | PDF 中有 `LTMV`（10 分钟平均能见度）端点；**风速风向端点未找到** |
 | 官方「全港平均」指标是否存在 | **未找到** | 已核验的两个端点均无该字段 |
 
 ---
@@ -435,7 +504,7 @@ https://data.weather.gov.hk/weatherAPI/opendata/opendata.php
 | 实时数据（§7） | ✅ 可 | `rhrread` HTTP 200 |
 | 历史观测数据（§7） | ⚠️ 部分 | 逐日月表可取，但**当月缺**（§7.2） |
 | 每日最高温 / 最低温（§7、§9） | ⚠️ 部分 | `CLMMAXT`/`CLMMINT` 可取，但截至上一完整月 |
-| 各测站覆盖（§7） | ⚠️ 部分 | 温度 27 站 + 月表 ≥5 站；**完整清单与各站历史起点未验证** |
+| 各测站覆盖（§7） | ✅ 已核实 | 月表 **39 个测站**（§5.4，含逐站起始年 1984–2022）；实时气温 27 站。**仍缺**：测站→18 行政区映射 |
 | 官方香港代表性/总体指标（§7） | ❌ 未找到 | 两个端点均无「全港平均」字段（§5.3） |
 | 最近一个月可用性（§7） | ❌ **不可** | 缺 22 天（§7.3） |
 | 更新时间及发布延迟（§7） | ⚠️ 部分 | 实时已明确；**月表发布时点未量化**（§7.4） |
@@ -477,7 +546,10 @@ https://data.weather.gov.hk/weatherAPI/opendata/opendata.php
 | 15 | `rformat=csv` | `...&rformat=csv&station=HKO&year=2025&month=9` | **200** | 2 行双语标题 + 字段行 + 30 行数据 + **3 行 legend** | ✅ 可用（有解析陷阱） |
 | 16 | `month` 省略 | `...&station=HKO&year=2025`（无 `month`） | **200** | **365 行**（2025-01-01 … 12-31） | ✅ 返回全年 |
 | 17 | 无效站代号 `XYZ` | `...&station=XYZ&year=2025&month=9` | **200** | 纯文本：`Please include valid parameters in API request...`（非 JSON） | ⚠️ 错 200，需类型校验 |
-| 18 | 官方文档 PDF | `data.weather.gov.hk/.../HKO_Open_Data_API_Documentation.pdf` | — | `Error: unsupported content type "application/pdf"` | ❌ 未能读取 |
+| 18 | 官方文档 PDF（英文） | `data.weather.gov.hk/.../HKO_Open_Data_API_Documentation.pdf` | **200** | 581,389 B；`Last-Modified: Mon, 22 Sep 2025 09:15:39 GMT`；`%PDF-1.7`；48 页 | ✅ 已下载并解析（早期经 `web_fetch` 读失败，改用 Python 直连） |
+| 27 | 官方文档 PDF（繁体 / 简体） | `..._tc.pdf` / `..._sc.pdf` | **200** | 908,488 B / 46 页；984,610 B | ✅ 已下载（提取中文站名用） |
+| 28 | PDF 测站表解析 | 本地 `pypdf 6.21.2` + `.tools/reference/parse_stations.py` | — | 解析出 **39** 个站号、39 个英文名、39 个中文名、39 个起始年；无缺项 | ✅ 见 §5.4 |
+| 29 | 抽样 API 复核站名 | `opendata.php?dataType=CLMMAXT&station=VP1|TMS|HKO&year=2025&month=9` | **200** | `VP1`→「山頂」、`TMS`→「大帽山」与 PDF 一致；`HKO` 的 API 显示名为「天文台」，PDF 正式名为「香港天文台」 | ✅ 一致（含命名差异说明） |
 | 19 | HKO 非商业使用条件 | `www.hko.gov.hk/en/appweb/applink.htm` | **200** | 15 条条件全文（§10.2） | ✅ 已取得 |
 | 20 | Daily Extract | `www.hko.gov.hk/en/cis/dailyExtract.htm` | **200** | 仅外壳：`Back YearMonthGo` + `Trace means rainfall less than 0.05 mm` | ❌ 非 API |
 | 21 | robots.txt（www） | `www.hko.gov.hk/robots.txt` | **200** | `Disallow: /cis/`、`/appweb/`、`/readme/`、`/weatherAPI/` | ✅ 已取得 |
@@ -497,7 +569,7 @@ https://data.weather.gov.hk/weatherAPI/opendata/opendata.php
 4. **质量标记落地**：`C` → 正常；`#` → 标记「不完整」并在图表上区分；`***` → 缺失（不得画成 0）。
 5. **精度**：`Value` 保持原始字符串/`Decimal`，禁止 `int()`。
 6. **配对校验**：同日 `CLMMAXT ≥ CLMMINT`，不满足则记质量问题（需求 §9.5）。
-7. **请勿根据本文件猜 `station` 代号**：先人工查阅官方 PDF 取得完整代号表，再建测站字典。
+7. **测站字典以 §5.4 为唯一来源**：39 个站号来自官方 PDF，不要在代码里另抄一份；行政区映射仍缺，**禁止**按站名猜。
 8. **响应头能力待定**：ETag/Last-Modified 条件式请求、429 的 `Retry-After` 处理，需在后端直连环境实测后再决定是否启用；在此之前按「无条件请求 + 保守间隔」实现。
 9. **TLS 需复测**：本机 curl/IWR 直连失败（§1.1），后端 `httpx` 在部署环境必须先做一次连通性自检。
 

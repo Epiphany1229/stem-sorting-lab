@@ -50,3 +50,31 @@ export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> 
 
   return (await response.json()) as T;
 }
+
+/**
+ * POST JSON 请求。
+ *
+ * 阶段 2 起轨迹通过 POST 提交；和 apiGet 一样，只请求本项目后端，
+ * 网络错误（TypeError）原样抛出，由界面层区分「连不上后端」与「后端拒绝」。
+ */
+export async function apiPost<T>(
+  path: string,
+  body: unknown,
+  signal?: AbortSignal,
+): Promise<T> {
+  const response = await fetch(apiUrl(path), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new ApiError(`API request failed with status ${response.status}`, response.status);
+  }
+
+  return (await response.json()) as T;
+}

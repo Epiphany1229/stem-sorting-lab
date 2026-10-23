@@ -181,8 +181,8 @@ export const dictionary = {
   },
   "home.scope.body": {
     "zh-Hant":
-      "階段 1 只建立專案骨架、七頁導覽與雙語基礎。排序動畫、Python 程式碼高亮與氣象圖表尚未實作，因此相關頁面會標示「開發中」。",
-    en: "Phase 1 builds only the project shell, seven-page navigation and the bilingual foundation. Sorting animations, Python code highlighting and weather charts are not implemented yet, so those pages carry an 'In development' badge.",
+      "階段 2 已完成冒泡排序的軌跡播放器：動畫、Python 程式碼同步高亮與步驟解釋都來自後端真實執行的軌跡。氣象圖表與其他演算法尚未實作。",
+    en: "Phase 2 adds a real trace player for bubble sort: the animation, synchronised Python highlighting and step explanations all come from the trace produced by the backend. Weather charts and the other algorithms are not implemented yet.",
   },
   "home.card.lab.desc": {
     "zh-Hant": "用數字卡片一步一步看冒泡排序怎麼比較與交換。",
@@ -526,8 +526,334 @@ export const dictionary = {
     en: "Current phase",
   },
   "help.phase.body": {
-    "zh-Hant": "階段 1：專案骨架、七頁導覽與雙語基礎。排序視覺化、程式碼同步與氣象圖表尚未開始。",
-    en: "Phase 1: project shell, seven-page navigation and the bilingual foundation. Sorting visualisation, code synchronisation and weather charts have not started yet.",
+    "zh-Hant": "階段 2：冒泡排序軌跡播放器、Python 程式碼同步高亮與教學預測彈窗已完成。氣象圖表與其他九種演算法尚未開始。",
+    en: "Phase 2: the bubble sort trace player, synchronised Python highlighting and the teaching prediction dialog are complete. Weather charts and the other nine algorithms have not started yet.",
+  },
+
+  // ---------- 阶段 2：冒泡排序播放器 ----------
+  "player.region": {
+    "zh-Hant": "排序播放器",
+    en: "Sorting player",
+  },
+  "player.controls.title": {
+    "zh-Hant": "播放控制",
+    en: "Playback controls",
+  },
+  "player.chart.title": {
+    "zh-Hant": "數字柱狀圖",
+    en: "Number bars",
+  },
+  "player.chart.label": {
+    "zh-Hant": "目前 {count} 個數字的柱狀圖",
+    en: "Bar chart of the current {count} numbers",
+  },
+  "player.bar.title": {
+    "zh-Hant": "元素 {id}，數值 {value}",
+    en: "Element {id}, value {value}",
+  },
+  "player.legend.title": {
+    "zh-Hant": "圖例",
+    en: "Legend",
+  },
+  "player.legend.pending": {
+    "zh-Hant": "待處理",
+    en: "Waiting",
+  },
+  "player.legend.compare": {
+    "zh-Hant": "正在比較",
+    en: "Being compared",
+  },
+  "player.legend.swap": {
+    "zh-Hant": "正在交換",
+    en: "Being swapped",
+  },
+  "player.legend.sorted": {
+    "zh-Hant": "已排好序",
+    en: "Sorted",
+  },
+  "player.code.title": {
+    "zh-Hant": "Python 原始碼",
+    en: "Python source code",
+  },
+  "player.code.highlightSummary": {
+    "zh-Hant": "目前高亮的程式行：{lines}",
+    en: "Highlighted code lines: {lines}",
+  },
+  "player.explanation.title": {
+    "zh-Hant": "這一步發生什麼事",
+    en: "What happens in this step",
+  },
+  "player.idleHint": {
+    "zh-Hant": "按「開始播放」或「下一步」，逐步觀看冒泡排序。",
+    en: "Press 'Start playing' or 'Next step' to walk through bubble sort.",
+  },
+  "player.progress": {
+    "zh-Hant": "已播放 {step} / {total} 步",
+    en: "Played {step} of {total} steps",
+  },
+  "player.announce.step": {
+    "zh-Hant": "第 {step} 步，共 {total} 步。",
+    en: "Step {step} of {total}.",
+  },
+  "player.phase.idle": {
+    "zh-Hant": "待開始",
+    en: "Ready",
+  },
+  "player.phase.playing": {
+    "zh-Hant": "播放中",
+    en: "Playing",
+  },
+  "player.phase.paused": {
+    "zh-Hant": "已暫停",
+    en: "Paused",
+  },
+  "player.phase.finished": {
+    "zh-Hant": "已完成",
+    en: "Finished",
+  },
+  "player.play": {
+    "zh-Hant": "開始播放",
+    en: "Start playing",
+  },
+  "player.pause": {
+    "zh-Hant": "暫停",
+    en: "Pause",
+  },
+  "player.resume": {
+    "zh-Hant": "繼續播放",
+    en: "Resume playing",
+  },
+  "player.replay": {
+    "zh-Hant": "重新播放",
+    en: "Play again",
+  },
+  "player.next": {
+    "zh-Hant": "下一步",
+    en: "Next step",
+  },
+  "player.prev": {
+    "zh-Hant": "上一步",
+    en: "Previous step",
+  },
+  "player.reset": {
+    "zh-Hant": "重置",
+    en: "Reset",
+  },
+  "player.speed.label": {
+    "zh-Hant": "播放速度",
+    en: "Playback speed",
+  },
+  "player.metric.comparisons": {
+    "zh-Hant": "比較次數",
+    en: "Comparisons",
+  },
+  "player.metric.swaps": {
+    "zh-Hant": "交換次數",
+    en: "Swaps",
+  },
+  "player.metric.writes": {
+    "zh-Hant": "寫入次數",
+    en: "Writes",
+  },
+  "player.metric.pass": {
+    "zh-Hant": "目前輪次",
+    en: "Current pass",
+  },
+  "player.passValue": {
+    "zh-Hant": "第 {pass} 輪",
+    en: "Pass {pass}",
+  },
+  "player.keyboardHint": {
+    "zh-Hant": "鍵盤：空白鍵播放或暫停，左右方向鍵上一步或下一步。",
+    en: "Keyboard: Space plays or pauses; Left and Right move between steps.",
+  },
+  "player.sourceNote": {
+    "zh-Hant": "所有畫面狀態、程式行高亮與解說都來自後端回傳的軌跡；前端不會自行推導排序過程。",
+    en: "Every visual state, code highlight and explanation comes from the trace returned by the backend; the frontend never derives the sorting process itself.",
+  },
+
+  // ---------- 阶段 2：加载与错误 ----------
+  "trace.loading": {
+    "zh-Hant": "正在向後端取得排序軌跡…",
+    en: "Loading the sorting trace from the backend…",
+  },
+  "trace.empty": {
+    "zh-Hant": "後端回傳的軌跡沒有任何事件，無法播放。",
+    en: "The backend trace has no events, so it cannot be played.",
+  },
+  "trace.error.title": {
+    "zh-Hant": "無法載入排序軌跡",
+    en: "Could not load the sorting trace",
+  },
+  "trace.error.network": {
+    "zh-Hant": "連不上後端伺服器。請確認後端已啟動，然後再試一次。",
+    en: "Could not reach the backend server. Make sure it is running, then try again.",
+  },
+  "trace.error.invalidInput": {
+    "zh-Hant": "送出的數列不符合規則，請檢查後再試一次。",
+    en: "The submitted list does not meet the rules. Please check it and try again.",
+  },
+  "trace.error.notFound": {
+    "zh-Hant": "後端找不到這個演算法。",
+    en: "The backend does not provide this algorithm.",
+  },
+  "trace.error.server": {
+    "zh-Hant": "後端發生錯誤，請稍後再試一次。",
+    en: "The backend reported an error. Please try again later.",
+  },
+  "trace.error.invalidResponse": {
+    "zh-Hant": "後端回應的軌跡格式不符合協定，請回報這個問題。",
+    en: "The trace response does not match the protocol. Please report this problem.",
+  },
+  "trace.retry": {
+    "zh-Hant": "重新載入",
+    en: "Reload",
+  },
+
+  // ---------- 阶段 2：输入区 ----------
+  "lab.input.title": {
+    "zh-Hant": "數列輸入",
+    en: "Input list",
+  },
+  "lab.input.random": {
+    "zh-Hant": "隨機 10 個數字",
+    en: "Random 10 numbers",
+  },
+  "lab.input.customLabel": {
+    "zh-Hant": "自訂數列",
+    en: "Custom list",
+  },
+  "lab.input.hint": {
+    "zh-Hant": "用逗號或空格分隔 2 至 30 個整數，數值介於 -1000 與 1000。",
+    en: "Separate 2 to 30 integers with commas or spaces; each between -1000 and 1000.",
+  },
+  "lab.input.apply": {
+    "zh-Hant": "套用數列",
+    en: "Use this list",
+  },
+  "lab.input.error.empty": {
+    "zh-Hant": "請先輸入至少 2 個整數。",
+    en: "Please enter at least 2 integers.",
+  },
+  "lab.input.error.count": {
+    "zh-Hant": "整數數量必須介於 2 與 30 之間。",
+    en: "The list must contain between 2 and 30 integers.",
+  },
+  "lab.input.error.notInteger": {
+    "zh-Hant": "只能用整數，請用逗號或空格分隔。",
+    en: "Only integers are allowed; separate them with commas or spaces.",
+  },
+  "lab.input.error.range": {
+    "zh-Hant": "每個整數必須介於 -1000 與 1000 之間。",
+    en: "Each integer must be between -1000 and 1000.",
+  },
+  "lab.currentValues": {
+    "zh-Hant": "目前數列：{values}",
+    en: "Current list: {values}",
+  },
+  "lab.direction.title": {
+    "zh-Hant": "排序方向",
+    en: "Sort direction",
+  },
+  "lab.direction.asc": {
+    "zh-Hant": "升序",
+    en: "Ascending",
+  },
+  "lab.direction.desc": {
+    "zh-Hant": "降序",
+    en: "Descending",
+  },
+  "lab.earlyExit": {
+    "zh-Hant": "提前結束優化",
+    en: "Early-exit optimisation",
+  },
+  "lab.earlyExit.hint": {
+    "zh-Hant": "若某一輪沒有交換，就提前結束。",
+    en: "Stop early when a pass makes no swaps.",
+  },
+  "lab.mode.title": {
+    "zh-Hant": "學習模式",
+    en: "Learning mode",
+  },
+  "lab.mode.guided": {
+    "zh-Hant": "引導模式",
+    en: "Guided mode",
+  },
+  "lab.mode.guided.hint": {
+    "zh-Hant": "每次比較前，先預測兩個數字是否需要交換。",
+    en: "Predict whether two numbers need swapping before each comparison.",
+  },
+  "lab.mode.free": {
+    "zh-Hant": "自由實驗",
+    en: "Free exploration",
+  },
+  "lab.mode.free.hint": {
+    "zh-Hant": "直接觀看完整播放，不做預測。",
+    en: "Watch the full trace without predictions.",
+  },
+
+  // ---------- 阶段 2：代码面板 ----------
+  "code.trace.show": {
+    "zh-Hant": "顯示插樁行",
+    en: "Show instrumentation lines",
+  },
+  "code.trace.hide": {
+    "zh-Hant": "隱藏插樁行",
+    en: "Hide instrumentation lines",
+  },
+  "code.trace.note": {
+    "zh-Hant": "插樁行是演算法用來記錄軌跡的程式碼；行號保持不變。",
+    en: "Instrumentation lines record the trace; line numbers stay unchanged.",
+  },
+
+  // ---------- 阶段 2：教学预测弹窗 ----------
+  "prediction.title": {
+    "zh-Hant": "教學預測",
+    en: "Prediction",
+  },
+  "prediction.question": {
+    "zh-Hant": "下一步這兩個數需要交換嗎？",
+    en: "Do these two numbers need to be swapped?",
+  },
+  "prediction.help": {
+    "zh-Hant": "只根據畫面上這兩個數字判斷，答錯也沒關係。",
+    en: "Judge from the two numbers shown; a wrong guess is fine.",
+  },
+  "prediction.option.swap": {
+    "zh-Hant": "需要",
+    en: "Yes, swap them",
+  },
+  "prediction.option.keep": {
+    "zh-Hant": "不需要",
+    en: "No, keep them",
+  },
+  "prediction.correct": {
+    "zh-Hant": "答對了！",
+    en: "Correct!",
+  },
+  "prediction.incorrect": {
+    "zh-Hant": "答錯了，看看下面的解釋。",
+    en: "Not quite. Read the explanation below.",
+  },
+  "prediction.answer.swap": {
+    "zh-Hant": "正確答案：需要交換。",
+    en: "Correct answer: they need to be swapped.",
+  },
+  "prediction.answer.keep": {
+    "zh-Hant": "正確答案：不需要交換。",
+    en: "Correct answer: no swap is needed.",
+  },
+  "prediction.continue": {
+    "zh-Hant": "繼續",
+    en: "Continue",
+  },
+  "prediction.close": {
+    "zh-Hant": "關閉預測",
+    en: "Close prediction",
+  },
+  "prediction.explanation.title": {
+    "zh-Hant": "這一步的解釋",
+    en: "Explanation of this step",
   },
 
   // ---------- 页脚署名 ----------
@@ -560,4 +886,29 @@ export function zh(key: TranslationKey): string {
 /** 英文文案。 */
 export function en(key: TranslationKey): string {
   return dictionary[key].en;
+}
+
+/**
+ * 取出带占位符的双语条目并填入参数（例如 {step} / {total}）。
+ *
+ * 占位符只出现在字典文案里，组件不会硬编码任何中文模板。
+ */
+export function formatTranslation(
+  key: TranslationKey,
+  values: Readonly<Record<string, string | number>>,
+): Translation {
+  const entry = dictionary[key];
+  return {
+    "zh-Hant": fillPlaceholders(entry["zh-Hant"], values),
+    en: fillPlaceholders(entry.en, values),
+  };
+}
+
+function fillPlaceholders(
+  template: string,
+  values: Readonly<Record<string, string | number>>,
+): string {
+  return template.replace(/\{(\w+)\}/g, (match, name: string) =>
+    Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : match,
+  );
 }
