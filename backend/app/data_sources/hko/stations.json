@@ -1,0 +1,289 @@
+{
+  "dataset": "HKO daily temperature station registry",
+  "source_document": "HKO_Open_Data_API_Documentation.pdf",
+  "source_last_modified": "2025-09-22T09:15:39Z",
+  "source_section": "dataType=CLMTEMP 测站表（CLMMAXT/CLMMINT 共用）",
+  "extracted_at": "2026-10-23",
+  "extraction_script": ".tools/reference/parse_stations.py",
+  "verified_against_api": [
+    "VP1",
+    "TMS",
+    "HKO"
+  ],
+  "note": "行政区映射官方未提供，本文件不含行政区字段。",
+  "stations": [
+    {
+      "id": "CCH",
+      "name_en": "Cheung Chau",
+      "name_zh_hant": "長洲",
+      "start_year": 1992,
+      "exclude_years": null
+    },
+    {
+      "id": "CWB",
+      "name_en": "Clear Water Bay",
+      "name_zh_hant": "清水灣",
+      "start_year": 2018,
+      "exclude_years": null
+    },
+    {
+      "id": "HKA",
+      "name_en": "Hong Kong International Airport",
+      "name_zh_hant": "香港國際機場",
+      "start_year": 1997,
+      "exclude_years": null
+    },
+    {
+      "id": "HKO",
+      "name_en": "Hong Kong Observatory",
+      "name_zh_hant": "香港天文台",
+      "start_year": 1884,
+      "exclude_years": "Exclude 1940 - 1946"
+    },
+    {
+      "id": "HKP",
+      "name_en": "Hong Kong Park",
+      "name_zh_hant": "香港公園",
+      "start_year": 2007,
+      "exclude_years": null
+    },
+    {
+      "id": "HKS",
+      "name_en": "Wong Chuk Hang",
+      "name_zh_hant": "黃竹坑",
+      "start_year": 1989,
+      "exclude_years": null
+    },
+    {
+      "id": "HPV",
+      "name_en": "Happy Valley",
+      "name_zh_hant": "跑馬地",
+      "start_year": 2008,
+      "exclude_years": null
+    },
+    {
+      "id": "JKB",
+      "name_en": "Tseung Kwan O",
+      "name_zh_hant": "將軍澳",
+      "start_year": 1991,
+      "exclude_years": null
+    },
+    {
+      "id": "KLT",
+      "name_en": "Kowloon City",
+      "name_zh_hant": "九龍城",
+      "start_year": 2008,
+      "exclude_years": null
+    },
+    {
+      "id": "KP",
+      "name_en": "King's Park",
+      "name_zh_hant": "京士柏",
+      "start_year": 1992,
+      "exclude_years": null
+    },
+    {
+      "id": "KSC",
+      "name_en": "Kau Sai Chau",
+      "name_zh_hant": "滘西洲",
+      "start_year": 2008,
+      "exclude_years": null
+    },
+    {
+      "id": "KTG",
+      "name_en": "Kwun Tong",
+      "name_zh_hant": "觀塘",
+      "start_year": 2009,
+      "exclude_years": null
+    },
+    {
+      "id": "LFS",
+      "name_en": "Lau Fau Shan",
+      "name_zh_hant": "流浮山",
+      "start_year": 1985,
+      "exclude_years": null
+    },
+    {
+      "id": "NGP",
+      "name_en": "Ngong Ping",
+      "name_zh_hant": "昂坪",
+      "start_year": 2003,
+      "exclude_years": null
+    },
+    {
+      "id": "PEN",
+      "name_en": "Peng Chau",
+      "name_zh_hant": "坪洲",
+      "start_year": 2004,
+      "exclude_years": null
+    },
+    {
+      "id": "PLC",
+      "name_en": "Tai Mei Tuk",
+      "name_zh_hant": "大美督",
+      "start_year": 1993,
+      "exclude_years": null
+    },
+    {
+      "id": "SE1",
+      "name_en": "Kai Tak Runway Park",
+      "name_zh_hant": "啟德跑道公園",
+      "start_year": 2014,
+      "exclude_years": null
+    },
+    {
+      "id": "SEK",
+      "name_en": "Shek Kong",
+      "name_zh_hant": "石崗",
+      "start_year": 1996,
+      "exclude_years": null
+    },
+    {
+      "id": "SHA",
+      "name_en": "Sha Tin",
+      "name_zh_hant": "沙田",
+      "start_year": 1984,
+      "exclude_years": null
+    },
+    {
+      "id": "SKG",
+      "name_en": "Sai Kung",
+      "name_zh_hant": "西貢",
+      "start_year": 1993,
+      "exclude_years": null
+    },
+    {
+      "id": "SKW",
+      "name_en": "Shau Kei Wan",
+      "name_zh_hant": "筲箕灣",
+      "start_year": 2007,
+      "exclude_years": null
+    },
+    {
+      "id": "SSH",
+      "name_en": "Sheung Shui",
+      "name_zh_hant": "上水",
+      "start_year": 2004,
+      "exclude_years": null
+    },
+    {
+      "id": "SSP",
+      "name_en": "Sham Shui Po",
+      "name_zh_hant": "深水埗",
+      "start_year": 2010,
+      "exclude_years": null
+    },
+    {
+      "id": "STY",
+      "name_en": "Stanley",
+      "name_zh_hant": "赤柱",
+      "start_year": 2009,
+      "exclude_years": null
+    },
+    {
+      "id": "TC",
+      "name_en": "Tate's Cairn",
+      "name_zh_hant": "大老山",
+      "start_year": 1997,
+      "exclude_years": null
+    },
+    {
+      "id": "TKL",
+      "name_en": "Ta Kwu Ling",
+      "name_zh_hant": "打鼓嶺",
+      "start_year": 1988,
+      "exclude_years": null
+    },
+    {
+      "id": "TMS",
+      "name_en": "Tai Mo Shan",
+      "name_zh_hant": "大帽山",
+      "start_year": 1997,
+      "exclude_years": null
+    },
+    {
+      "id": "TPO",
+      "name_en": "Tai Po (Conservation Studies Centre)",
+      "name_zh_hant": "大埔（自然環境保護研究中心）",
+      "start_year": 1999,
+      "exclude_years": null
+    },
+    {
+      "id": "TU1",
+      "name_en": "Tuen Mun Children and Juvenile Home",
+      "name_zh_hant": "屯門兒童及青少年院",
+      "start_year": 2007,
+      "exclude_years": null
+    },
+    {
+      "id": "TW",
+      "name_en": "Tsuen Wan Shing Mun Valley",
+      "name_zh_hant": "荃灣城門谷",
+      "start_year": 2010,
+      "exclude_years": null
+    },
+    {
+      "id": "TWN",
+      "name_en": "Tsuen Wan",
+      "name_zh_hant": "荃灣",
+      "start_year": 2006,
+      "exclude_years": null
+    },
+    {
+      "id": "TY1",
+      "name_en": "New Tsing Yi Station",
+      "name_zh_hant": "新青衣站",
+      "start_year": 2010,
+      "exclude_years": null
+    },
+    {
+      "id": "TYW",
+      "name_en": "Pak Tam Chung (Tsak Yue Wu)",
+      "name_zh_hant": "北潭涌(鯽魚湖)",
+      "start_year": 1995,
+      "exclude_years": null
+    },
+    {
+      "id": "VP1",
+      "name_en": "The Peak",
+      "name_zh_hant": "山頂",
+      "start_year": 2003,
+      "exclude_years": null
+    },
+    {
+      "id": "WGL",
+      "name_en": "Waglan Island",
+      "name_zh_hant": "橫瀾島",
+      "start_year": 1989,
+      "exclude_years": null
+    },
+    {
+      "id": "WLP",
+      "name_en": "Wetland Park",
+      "name_zh_hant": "濕地公園",
+      "start_year": 2005,
+      "exclude_years": null
+    },
+    {
+      "id": "WTS",
+      "name_en": "Wong Tai Sin",
+      "name_zh_hant": "黃大仙",
+      "start_year": 2009,
+      "exclude_years": null
+    },
+    {
+      "id": "YCT",
+      "name_en": "Tai Po (Yuan Chau Tsai Park)",
+      "name_zh_hant": "大埔（元洲仔公園）",
+      "start_year": 2022,
+      "exclude_years": null
+    },
+    {
+      "id": "YLP",
+      "name_en": "Yuen Long Park",
+      "name_zh_hant": "元朗公園",
+      "start_year": 2015,
+      "exclude_years": null
+    }
+  ]
+}

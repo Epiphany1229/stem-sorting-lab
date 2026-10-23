@@ -34,7 +34,8 @@ export const navItems: readonly NavItem[] = [
     navKey: "nav.weather",
     titleKey: "weather.title",
     descriptionKey: "home.card.weather.desc",
-    status: "inDevelopment",
+    // 阶段 3 已交付：覆盖率、5 类图表、CSV 导入与演示模式
+    status: "available",
   },
   {
     path: "/weather-sort",

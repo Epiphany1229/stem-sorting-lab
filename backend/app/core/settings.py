@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     external_fetch_enabled: bool = True
     # 天文台开放数据接口基址（固定可信地址，服务端不提供任意 URL 抓取能力）
     hko_base_url: str = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php"
+    # 逐日历史月表接口基址（CLMMAXT / CLMMINT / CLMTEMP 共用）
+    hko_opendata_url: str = "https://data.weather.gov.hk/weatherAPI/opendata/opendata.php"
     # 同一上游资源的抓取冷却时间（秒），用于合并并发请求、避免重复访问
     fetch_cooldown_seconds: int = 300
     # 每日上游请求总预算（次），超出后拒绝并给出可理解提示
@@ -51,6 +53,24 @@ class Settings(BaseSettings):
     fetch_cache_ttl_seconds: int = 900
     # 连续失败达到该次数后熔断，暂停访问上游
     fetch_circuit_failure_threshold: int = 5
+    # 同主机两次请求之间的最小间隔（秒）；合规取数硬要求 ≥ 3 秒
+    fetch_min_interval_seconds: float = 3.0
+    # 附加到最小间隔上的随机抖动上限（秒），避免形成固定节奏
+    fetch_jitter_seconds: float = 0.6
+    # 5xx / 超时的额外重试次数上限（指数退避）
+    fetch_max_retries: int = 3
+    # 指数退避的基准秒数（第 n 次重试等待 base * 2**n 秒）
+    fetch_retry_backoff_seconds: float = 1.0
+    # 收到 403 后熔断的时长（分钟）；熔断期间不再自动抓取
+    circuit_breaker_minutes: float = 30.0
+    # 单 worker 抓取租约的有效期（秒）；跨进程保证同时只有一个抓取者
+    fetch_lease_seconds: float = 120.0
+    # 是否允许演示模式（读取 sample_data/demo 下的官方快照，只读、不落库）
+    demo_mode_enabled: bool = True
+    # 官方 39 站字典路径；留空表示使用包内置的 stations.json
+    station_registry_path: str = ""
+    # 演示数据样本路径（相对仓库根目录或绝对路径）
+    demo_data_path: str = "sample_data/demo/hko_demo_2026-09.csv"
 
     # ---------- HTTP 客户端 ----------
     # 是否读取系统代理环境变量；本机实测必须为 false（系统代理会导致 TLS 中断）

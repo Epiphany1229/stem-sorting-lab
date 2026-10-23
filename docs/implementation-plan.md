@@ -260,11 +260,14 @@ sample_data/ 官方文件样本（用于离线解析测试）
 - 验收（Lead 独立复跑）：后端 `pytest` **63 passed**（含 10 个 Hypothesis 属性测试：结果等于 `sorted()`、元素多重集不变、状态链自洽、指标分账、行 ID 可解析、可重复性、提前结束、finalized 覆盖全部、compare 元数据、排列不变性）；`ruff` / `mypy`（25 files）通过；前端 `vitest` **76 passed**、`tsc --noEmit` 通过、`build` 381ms；**跨栈回归** 4 个用例直接消费后端真实轨迹 JSON。
 - 已知边界（如实记录）：`early_exit_triggered` 在 n=2 时为 `false`（只存在一轮，无语义上的"提前"）；冒泡只产生 compare/swap/mark_sorted/done 四类事件（`write` 已实现但本算法不触发）；未做浏览器目视验收（属阶段 6）。
 
-### 阶段 3 · 官方天气数据接入 + 质量说明 + 互动图表
+### 阶段 3 · 官方天气数据接入 + 质量说明 + 互动图表 ✅ 已完成（2026-10-23）
 
-- 交付：HKO 客户端（限速/缓存/条件式请求/熔断/日志）；日数据入库；覆盖率与来源页；5 类图表（折线/柱状/直方/散点/环形）+ 悬停/图例/缩放/数据表；CSV 导出；演示模式隔离。
-- 验收：模拟 429/Retry-After/403/超时/缓存命中/熔断；并发多用户只触发一次上游请求；缺失数据有提示；`最高温 ≥ 最低温` 校验；降雨"微量"独立解释。
-- 依赖：`docs/data-sources.md` 的实测结论；本机出网/TLS 问题（见 R1）。
+- 设计：`docs/weather-data-design.md`（Schema、接口信封、reason 集合、降雨/湿度限定）。
+- 后端已交付：`data_sources/hko/{limiter,client,registry}.py`（`trust_env=False`、并发 1、≥3s+jitter、429 `Retry-After` 挂起、403 熔断、ETag/Last-Modified、预算、租约）、`models/weather.py`（8 表）、`services/{hko_ingest,weather_import,weather_service}.py`、`api/{weather,sources}.py`、`cli.py`（`init-db`/`ingest --dry-run`）、`tests/` 44 个离线测试。
+- 前端已交付：`features/weather/`（validation/api/transform、5 类 Plotly 图表、覆盖率面板、39 站选择器、数据表、CSV 导入、冷却刷新、demo/imported 横幅）、`WeatherPage` 重写、字典 +180 键。
+- 验收（Lead 独立复跑）：后端 `pytest` **107 passed**、`ruff` 干净、`mypy`（含测试 44 files）通过；真实联网冒烟 2 请求写入 546 行；真实 API 实测 39 站 / anchor=2026-09-30 / coverage 30/30 / `value_raw:"34.2"` / bins `[2,7,15,6]` / export 6 列；前端 `vitest` **153 passed**、`tsc`、`build` 通过；**天气跨栈回归** 6 用例消费真实 API 响应。
+- 与设计的偏差（已确认合理）：DB 惰性初始化（避免 import 副作用，另有 `init-db`）；multipart 手工解析（环境无 `python-multipart`，`pyproject` 禁改）；读接口在"未尝试抓取"时返回 `no_cache` 而非伪造 `not_published`；`hourly_observation` 表已建但未接 rhrread 采集。
+- 已知边界：降雨/湿度无历史接口 → 柱状图用日最高温对比、散点用 `tmax` vs `tmean` 并显式标注；Plotly 使主 chunk 约 5.2 MB。
 
 ### 阶段 4 · 真实气温排序（复用同一播放器，**仅冒泡排序**）
 
@@ -369,8 +372,7 @@ sample_data/ 官方文件样本（用于离线解析测试）
 
 ## 8. 下一步
 
-1. ✅ 阶段 0–2 完成：工具链、骨架与 7 页双语导航、冒泡真实轨迹 + SVG 播放器 + 代码同步 + 预测弹窗（后端 63 / 前端 76 测试全绿）。
-2. ✅ D-3 关闭：`httpx` 需 `trust_env=False`（实测 200/30 行）。
-3. ✅ 官方 API PDF 已解析，39 站代号表入 `docs/data-sources.md` §5.4；剩余空白：测站→行政区映射。
-4. 🔜 **阶段 3（下一步）**：HKO 客户端（`trust_env=False` + 并发 1 + 3s 间隔 + 缓存 + 熔断）、月表入库与质量标记、5 类互动图表、覆盖率与来源页、CSV 导入与演示模式隔离。
-5. ⏳ 阶段 4–6：真实气温排序（仅冒泡）、其余九种算法、浏览器与无障碍验收。
+1. ✅ 阶段 0–3 完成：工具链、骨架与双语导航、冒泡真实轨迹 + 播放器、HKO 安全取数与天气探索页（后端 107 / 前端 153 测试全绿）。
+2. 🔜 **阶段 4（下一步）**：天气数据排序页——复用同一轨迹协议与播放器，仅冒泡排序；`tmax`/`tmin` 一键切换、升降序、测站与日期范围、并排比较、缺口日期明示；元素保留 ID/日期/测站/来源。
+3. ⏳ 阶段 4 可顺带接入：`hourly_observation` 的 rhrread 累积采集 + 降雨/湿度查询接口（届时图表从"回退指标"切到真实指标）。
+4. ⏳ 阶段 5–6：其余九种算法、浏览器/无障碍/性能验收。

@@ -181,16 +181,16 @@ export const dictionary = {
   },
   "home.scope.body": {
     "zh-Hant":
-      "階段 2 已完成冒泡排序的軌跡播放器：動畫、Python 程式碼同步高亮與步驟解釋都來自後端真實執行的軌跡。氣象圖表與其他演算法尚未實作。",
-    en: "Phase 2 adds a real trace player for bubble sort: the animation, synchronised Python highlighting and step explanations all come from the trace produced by the backend. Weather charts and the other algorithms are not implemented yet.",
+      "階段 2 已完成冒泡排序的軌跡播放器：動畫、Python 程式碼同步高亮與步驟解釋都來自後端真實執行的軌跡。階段 3 加入香港天氣數據探索頁與五類圖表：可回溯的每日氣溫、資料覆蓋率與缺口；降雨與濕度只有接口位置，不以氣溫冒充。其他演算法尚未實作。",
+    en: "Phase 2 delivers the bubble sort trace player: the animation, synchronised Python highlighting and step explanations all come from the trace produced by the backend. Phase 3 adds the Hong Kong weather explorer and five chart types covering retroactive daily temperatures, coverage and gaps; rainfall and humidity only have reserved slots and are never faked with temperature. The other algorithms are not implemented yet.",
   },
   "home.card.lab.desc": {
     "zh-Hant": "用數字卡片一步一步看冒泡排序怎麼比較與交換。",
     en: "Watch bubble sort compare and swap numbers, one step at a time.",
   },
   "home.card.weather.desc": {
-    "zh-Hant": "選擇日期與測站，探索香港天文台的氣溫、濕度與雨量。",
-    en: "Pick a date range and stations to explore temperature, humidity and rainfall from the Hong Kong Observatory.",
+    "zh-Hant": "選擇日期與測站，探索香港天文台可回溯的每日氣溫、資料覆蓋率與缺口。",
+    en: "Pick a date range and stations to explore retroactive daily temperatures, data coverage and gaps from the Hong Kong Observatory.",
   },
   "home.card.weatherSort.desc": {
     "zh-Hant": "把最近 30 天的氣溫排成一列，找出最熱與最冷的日子。",
@@ -262,28 +262,8 @@ export const dictionary = {
   },
   "weather.lead": {
     "zh-Hant":
-      "選擇日期範圍與測站，查看香港天文台的氣溫、相對濕度與雨量，並確認資料覆蓋率與更新時間。",
-    en: "Choose a date range and stations to view temperature, relative humidity and rainfall from the Hong Kong Observatory, together with data coverage and update times.",
-  },
-  "weather.planned.1": {
-    "zh-Hant": "日期範圍與測站選擇，並顯示實際起止日期",
-    en: "Date range and station selection, showing the actual start and end dates",
-  },
-  "weather.planned.2": {
-    "zh-Hant": "多測站比較與資料覆蓋率說明",
-    en: "Multi-station comparison with data coverage notes",
-  },
-  "weather.planned.3": {
-    "zh-Hant": "折線、柱狀、直方、散點與佔比圖表，支援圖例開關與懸停提示",
-    en: "Line, bar, histogram, scatter and share charts with legend toggles and hover hints",
-  },
-  "weather.planned.4": {
-    "zh-Hant": "圖表下方的可存取資料表與 CSV 匯出",
-    en: "An accessible data table below each chart, plus CSV export",
-  },
-  "weather.planned.5": {
-    "zh-Hant": "每張圖都標明資料來源、更新時間與缺失天數",
-    en: "Every chart states its data source, update time and number of missing days",
+      "選擇日期範圍與測站，查看香港天文台可回溯的每日氣溫，並確認資料覆蓋率、缺口與更新時間。降雨與濕度沒有歷史介面，本頁不會用氣溫冒充。",
+    en: "Choose a date range and stations to view the daily temperatures the Hong Kong Observatory can provide retroactively, together with coverage, gaps and update times. Rainfall and humidity have no historical interface, and this page never presents temperature as if it were rainfall.",
   },
 
   // ---------- 用排序理解气温 ----------
@@ -526,8 +506,8 @@ export const dictionary = {
     en: "Current phase",
   },
   "help.phase.body": {
-    "zh-Hant": "階段 2：冒泡排序軌跡播放器、Python 程式碼同步高亮與教學預測彈窗已完成。氣象圖表與其他九種演算法尚未開始。",
-    en: "Phase 2: the bubble sort trace player, synchronised Python highlighting and the teaching prediction dialog are complete. Weather charts and the other nine algorithms have not started yet.",
+    "zh-Hant": "階段 3：香港天氣數據探索頁與五類圖表已完成，畫面只使用後端回傳的資料；階段 2 的冒泡排序軌跡播放器可繼續使用。其他九種演算法尚未開始。",
+    en: "Phase 3: the Hong Kong weather explorer and its five chart types are complete and render only data returned by the backend; the phase 2 bubble sort trace player remains available. The other nine algorithms have not started.",
   },
 
   // ---------- 阶段 2：冒泡排序播放器 ----------
@@ -868,6 +848,794 @@ export const dictionary = {
   "footer.license": {
     "zh-Hant": "使用條款與署名要求依資料來源公布為準。",
     en: "Terms of use and attribution follow what the data sources publish.",
+  },
+
+  // ---------- 阶段 3：天气数据模式与横幅 ----------
+  "weather.mode.label": {
+    "zh-Hant": "資料模式",
+    en: "Data mode",
+  },
+  "weather.mode.official": {
+    "zh-Hant": "官方資料",
+    en: "Official data",
+  },
+  "weather.mode.demo": {
+    "zh-Hant": "示範資料",
+    en: "Demo data",
+  },
+  "weather.mode.imported": {
+    "zh-Hant": "匯入資料",
+    en: "Imported data",
+  },
+  "weather.mode.demoToggle": {
+    "zh-Hant": "示範模式",
+    en: "Demo mode",
+  },
+  "weather.mode.demoHint": {
+    "zh-Hant": "開啟後所有查詢都加上 mode=demo，只讀取固定的官方快照，不會寫入資料庫。",
+    en: "When on, every query adds mode=demo and reads only the fixed official snapshot; nothing is written to the database.",
+  },
+  "weather.mode.importedHint": {
+    "zh-Hant": "目前檢視上傳的官方 CSV 資料，與官方資料分開儲存與標註。",
+    en: "You are viewing uploaded official CSV data, stored and labelled separately from official data.",
+  },
+  "weather.mode.backToOfficial": {
+    "zh-Hant": "返回官方資料",
+    en: "Back to official data",
+  },
+  "weather.banner.warning": {
+    "zh-Hant": "這不是官方即時資料，請不要當作最新觀測。",
+    en: "This is not official live data; do not treat it as the latest observations.",
+  },
+  "weather.banner.noticeLabel": {
+    "zh-Hant": "後端說明",
+    en: "Backend notice",
+  },
+  "weather.banner.sourceLabel": {
+    "zh-Hant": "資料來源",
+    en: "Data source",
+  },
+  "weather.banner.fetchedAt": {
+    "zh-Hant": "抓取時間",
+    en: "Fetched at",
+  },
+
+  // ---------- 阶段 3：覆盖率 ----------
+  "weather.coverage.title": {
+    "zh-Hant": "資料覆蓋率",
+    en: "Data coverage",
+  },
+  "weather.coverage.windowLabel": {
+    "zh-Hant": "實際資料窗口",
+    en: "Actual data window",
+  },
+  "weather.coverage.windowValue": {
+    "zh-Hant": "{start} 至 {end}，共 {days} 天",
+    en: "{start} to {end}, {days} days in total",
+  },
+  "weather.coverage.daysWithData": {
+    "zh-Hant": "有效天數",
+    en: "Days with data",
+  },
+  "weather.coverage.daysMissing": {
+    "zh-Hant": "缺失天數",
+    en: "Missing days",
+  },
+  "weather.coverage.lastAvailable": {
+    "zh-Hant": "最後可用日",
+    en: "Last available date",
+  },
+  "weather.coverage.anchorLabel": {
+    "zh-Hant": "窗口錨點",
+    en: "Window anchor",
+  },
+  "weather.coverage.perStationTitle": {
+    "zh-Hant": "各測站與指標覆蓋",
+    en: "Coverage by station and metric",
+  },
+  "weather.coverage.metric": {
+    "zh-Hant": "指標",
+    en: "Metric",
+  },
+  "weather.coverage.firstDate": {
+    "zh-Hant": "首個可用日",
+    en: "First available date",
+  },
+  "weather.coverage.lastDate": {
+    "zh-Hant": "最後可用日",
+    en: "Last available date",
+  },
+  "weather.coverage.missingDates": {
+    "zh-Hant": "缺失日期數",
+    en: "Missing dates",
+  },
+  "weather.coverage.incompleteDates": {
+    "zh-Hant": "不完整日期數",
+    en: "Incomplete dates",
+  },
+  "weather.coverage.none": {
+    "zh-Hant": "所選範圍內尚未取得任何有效觀測，原因見下方說明。",
+    en: "No valid observations exist in the selected range yet; see the reason below.",
+  },
+  "weather.coverage.reasonLabel": {
+    "zh-Hant": "沒有資料的原因",
+    en: "Why there is no data",
+  },
+  "weather.coverage.reasonCode": {
+    "zh-Hant": "原始原因代碼",
+    en: "Raw reason code",
+  },
+  "weather.coverage.sourcesTitle": {
+    "zh-Hant": "來源與抓取時間",
+    en: "Sources and fetch times",
+  },
+  "weather.coverage.fetchedAt": {
+    "zh-Hant": "抓取時間",
+    en: "Fetched at",
+  },
+  "weather.coverage.loading": {
+    "zh-Hant": "正在讀取覆蓋率…",
+    en: "Loading coverage…",
+  },
+  "weather.coverage.dayUnit": {
+    "zh-Hant": "{days} 天",
+    en: "{days} days",
+  },
+
+  // ---------- 阶段 3：固定原因集合 ----------
+  "weather.reason.not_published": {
+    "zh-Hant": "官方當月月表尚未發布，這不是錯誤，請稍後再試。",
+    en: "The official monthly table for this month has not been published yet; this is not an error, so try again later.",
+  },
+  "weather.reason.na_no_history": {
+    "zh-Hant": "這個指標沒有官方歷史介面，無法回溯，只能從部署後開始累積。",
+    en: "This metric has no official historical interface. It cannot be retrieved retroactively and only accumulates after deployment.",
+  },
+  "weather.reason.cooldown": {
+    "zh-Hant": "重新抓取正在冷卻中，請稍後再試。",
+    en: "Refreshing is cooling down; please try again shortly.",
+  },
+  "weather.reason.circuit_open": {
+    "zh-Hant": "官方來源暫時熔斷，自動抓取已停止。",
+    en: "The official source is temporarily circuit-broken; automatic fetching has stopped.",
+  },
+  "weather.reason.budget_exhausted": {
+    "zh-Hant": "今日抓取額度已用完，明天再試。",
+    en: "Today's fetch budget is exhausted; try again tomorrow.",
+  },
+  "weather.reason.disabled": {
+    "zh-Hant": "外部抓取開關已關閉。",
+    en: "External fetching is disabled.",
+  },
+  "weather.reason.no_cache": {
+    "zh-Hant": "本機沒有可用的快取資料。",
+    en: "There is no usable cached data on this machine.",
+  },
+  "weather.reason.station_out_of_range": {
+    "zh-Hant": "測站代號不在官方名單內。",
+    en: "The station code is not in the official list.",
+  },
+  "weather.reason.unknown": {
+    "zh-Hant": "後端回報了未知原因，詳情請看原始原因代碼。",
+    en: "The backend reported an unknown reason; see the raw reason code for details.",
+  },
+
+  // ---------- 阶段 3：重新抓取 ----------
+  "weather.refresh.title": {
+    "zh-Hant": "重新抓取官方資料",
+    en: "Refresh official data",
+  },
+  "weather.refresh.button": {
+    "zh-Hant": "請求重新抓取",
+    en: "Request refresh",
+  },
+  "weather.refresh.pending": {
+    "zh-Hant": "正在請求重新抓取…",
+    en: "Requesting a refresh…",
+  },
+  "weather.refresh.accepted": {
+    "zh-Hant": "已接受：送出 {requests} 個請求，寫入 {rows} 列。",
+    en: "Accepted: {requests} requests made and {rows} rows upserted.",
+  },
+  "weather.refresh.rejected": {
+    "zh-Hant": "這次重新抓取沒有執行，原因如下。",
+    en: "This refresh was not performed; the reason is below.",
+  },
+  "weather.refresh.cooldown": {
+    "zh-Hant": "冷卻中，還剩 {seconds} 秒（下次可用：{time}）。",
+    en: "Cooling down, {seconds} seconds left (next allowed: {time}).",
+  },
+  "weather.refresh.remainingBudget": {
+    "zh-Hant": "今日剩餘額度：{budget} 次",
+    en: "Remaining budget today: {budget} requests",
+  },
+  "weather.refresh.failed": {
+    "zh-Hant": "重新抓取請求失敗。",
+    en: "The refresh request failed.",
+  },
+  "weather.refresh.hint": {
+    "zh-Hant": "「重新抓取」不會繞過冷卻、熔斷或每日額度。",
+    en: "Refresh never bypasses cooldowns, circuit breaks or the daily budget.",
+  },
+
+  // ---------- 阶段 3：查询控件 ----------
+  "weather.controls.title": {
+    "zh-Hant": "查詢條件",
+    en: "Query settings",
+  },
+  "weather.controls.dateRange": {
+    "zh-Hant": "日期範圍（香港時區自然日）",
+    en: "Date range (Hong Kong calendar days)",
+  },
+  "weather.controls.startDate": {
+    "zh-Hant": "開始日期",
+    en: "Start date",
+  },
+  "weather.controls.endDate": {
+    "zh-Hant": "結束日期",
+    en: "End date",
+  },
+  "weather.controls.metrics": {
+    "zh-Hant": "指標",
+    en: "Metrics",
+  },
+  "weather.controls.metric.tmax": {
+    "zh-Hant": "日最高溫",
+    en: "Daily maximum temperature",
+  },
+  "weather.controls.metric.tmin": {
+    "zh-Hant": "日最低溫",
+    en: "Daily minimum temperature",
+  },
+  "weather.controls.metric.tmean": {
+    "zh-Hant": "日平均溫",
+    en: "Daily mean temperature",
+  },
+  "weather.controls.metric.humidity": {
+    "zh-Hant": "相對濕度",
+    en: "Relative humidity",
+  },
+  "weather.controls.dateInvalid": {
+    "zh-Hant": "開始日期與結束日期必須成對填寫，且開始日期不能晚於結束日期。",
+    en: "The start and end dates must both be set, and the start cannot be after the end.",
+  },
+  "weather.controls.hint": {
+    "zh-Hant": "留空日期則使用後端依錨點回推的預設窗口；畫面上永遠顯示後端回傳的真實起止日期。",
+    en: "Leave the dates empty to use the backend's default window derived from the anchor; the real start and end dates returned by the backend are always shown.",
+  },
+  "weather.controls.primaryStationHint": {
+    "zh-Hant": "直方圖、散點圖與環形圖以第一個已選測站為主；可用多測站比較折線與柱狀圖。",
+    en: "The histogram, scatter and donut charts use the first selected station; the line and bar charts compare multiple stations.",
+  },
+  "weather.controls.export": {
+    "zh-Hant": "匯出目前查詢 CSV",
+    en: "Export current query as CSV",
+  },
+
+  // ---------- 阶段 3：测站选择 ----------
+  "weather.stations.title": {
+    "zh-Hant": "測站選擇（可多選比較）",
+    en: "Station selection (multi-select for comparison)",
+  },
+  "weather.stations.filter": {
+    "zh-Hant": "篩選測站名稱或代號",
+    en: "Filter by station name or code",
+  },
+  "weather.stations.count": {
+    "zh-Hant": "已選 {selected} / {total} 站",
+    en: "{selected} of {total} stations selected",
+  },
+  "weather.stations.unavailable": {
+    "zh-Hant": "此窗口暫無資料",
+    en: "No data in this window",
+  },
+  "weather.stations.startYear": {
+    "zh-Hant": "資料起始年 {year}",
+    en: "Data from {year}",
+  },
+  "weather.stations.availableDays": {
+    "zh-Hant": "可用 {days} 天",
+    en: "{days} days available",
+  },
+  "weather.stations.selectAll": {
+    "zh-Hant": "全選目前篩選結果",
+    en: "Select all filtered stations",
+  },
+  "weather.stations.clear": {
+    "zh-Hant": "清除選擇",
+    en: "Clear selection",
+  },
+  "weather.stations.noneSelected": {
+    "zh-Hant": "請至少選擇一個測站。",
+    en: "Select at least one station.",
+  },
+  "weather.stations.notice": {
+    "zh-Hant": "測站名稱與代號來自官方名單；官方未提供測站與行政區的對應，本頁不做猜測。",
+    en: "Station names and codes come from the official list. The official source provides no station-to-district mapping, so this page does not guess one.",
+  },
+  "weather.stations.loading": {
+    "zh-Hant": "正在讀取測站名單…",
+    en: "Loading the station list…",
+  },
+  "weather.stations.empty": {
+    "zh-Hant": "後端回傳的測站名單是空的。",
+    en: "The backend returned an empty station list.",
+  },
+
+  // ---------- 阶段 3：图表通用 ----------
+  "weather.chart.legendTitle": {
+    "zh-Hant": "圖例",
+    en: "Legend",
+  },
+  "weather.chart.empty": {
+    "zh-Hant": "暫無可用資料",
+    en: "No data available",
+  },
+  "weather.chart.emptyBody": {
+    "zh-Hant": "這張圖需要至少一筆有效觀測；目前查詢範圍內沒有可用資料。",
+    en: "This chart needs at least one valid observation; none is available in the current range.",
+  },
+  "weather.chart.metricNote": {
+    "zh-Hant": "本圖實際指標：{metric}",
+    en: "Actual metric of this chart: {metric}",
+  },
+  "weather.chart.samples": {
+    "zh-Hant": "有效樣本：{count} 個",
+    en: "Valid samples: {count}",
+  },
+  "weather.chart.sourceNote": {
+    "zh-Hant": "圖表只使用後端回傳的資料；缺口不插值，也不以氣溫冒充雨量或濕度。",
+    en: "Charts use only data returned by the backend; gaps are never interpolated and temperature is never presented as rainfall or humidity.",
+  },
+  "weather.chart.line.title": {
+    "zh-Hant": "氣溫趨勢折線圖",
+    en: "Temperature trend line chart",
+  },
+  "weather.chart.line.desc": {
+    "zh-Hant": "所選測站的每日最高溫與最低溫；缺失日期保持斷開，不以直線連接。",
+    en: "Daily maximum and minimum temperatures for the selected stations; missing dates stay disconnected and are never joined by a straight line.",
+  },
+  "weather.chart.line.aria": {
+    "zh-Hant": "{stations} 個測站在 {start} 至 {end} 的每日氣溫折線圖",
+    en: "Line chart of daily temperatures for {stations} stations from {start} to {end}",
+  },
+  "weather.chart.line.hover": {
+    "zh-Hant": "{station}｜{metric}｜%{x}：%{customdata} °C",
+    en: "{station} | {metric} | %{x}: %{customdata} °C",
+  },
+  "weather.chart.bar.titleFallback": {
+    "zh-Hant": "所選測站日最高溫對比",
+    en: "Daily maximum temperature comparison by station",
+  },
+  "weather.chart.bar.descFallback": {
+    "zh-Hant": "階段 3 沒有降雨歷史介面，因此本圖顯示各站每日最高溫對比；這不是降雨資料。",
+    en: "Phase 3 has no historical rainfall interface, so this chart compares daily maximum temperatures by station; it is not rainfall data.",
+  },
+  "weather.chart.bar.titleRainfall": {
+    "zh-Hant": "每日降雨量柱狀圖",
+    en: "Daily rainfall bar chart",
+  },
+  "weather.chart.bar.descRainfall": {
+    "zh-Hant": "顯示部署後已累積的每日降雨量（毫米）；沒有紀錄的日期保持空缺。",
+    en: "Daily rainfall totals collected since deployment, in millimetres; days without records stay empty.",
+  },
+  "weather.chart.bar.ariaFallback": {
+    "zh-Hant": "{stations} 個測站在 {start} 至 {end} 的每日最高溫柱狀圖（非降雨資料）",
+    en: "Bar chart of daily maximum temperatures for {stations} stations from {start} to {end} (not rainfall data)",
+  },
+  "weather.chart.bar.ariaRainfall": {
+    "zh-Hant": "{stations} 個測站在 {start} 至 {end} 的每日降雨量柱狀圖",
+    en: "Bar chart of daily rainfall for {stations} stations from {start} to {end}",
+  },
+  "weather.chart.bar.hoverFallback": {
+    "zh-Hant": "{station}｜%{x}：%{customdata} °C",
+    en: "{station} | %{x}: %{customdata} °C",
+  },
+  "weather.chart.bar.hoverRainfall": {
+    "zh-Hant": "{station}｜%{x}：%{customdata} 毫米",
+    en: "{station} | %{x}: %{customdata} mm",
+  },
+  "weather.chart.bar.noteRainfall": {
+    "zh-Hant": "本圖實際指標：每日降雨量（毫米）",
+    en: "Actual metric of this chart: daily rainfall (mm)",
+  },
+  "weather.chart.hist.title": {
+    "zh-Hant": "日最高溫分布直方圖",
+    en: "Daily maximum temperature histogram",
+  },
+  "weather.chart.hist.desc": {
+    "zh-Hant": "所選測站有效日最高溫的分布；區間由教學程式依資料範圍等分，不是官方標準。",
+    en: "Distribution of valid daily maximum temperatures for the selected stations; bins are split evenly by the teaching app, not by an official standard.",
+  },
+  "weather.chart.hist.aria": {
+    "zh-Hant": "{stations} 個測站共 {samples} 個有效日最高溫樣本的分布直方圖",
+    en: "Histogram of {samples} valid daily maximum temperature samples across {stations} stations",
+  },
+  "weather.chart.hist.hover": {
+    "zh-Hant": "{station}｜%{x} °C：%{y} 天",
+    en: "{station} | %{x} °C: %{y} days",
+  },
+  "weather.chart.hist.binRange": {
+    "zh-Hant": "溫度區間",
+    en: "Temperature range",
+  },
+  "weather.chart.hist.binCount": {
+    "zh-Hant": "區間數",
+    en: "Bins",
+  },
+  "weather.chart.hist.stationSamples": {
+    "zh-Hant": "{station}：{count} 個樣本",
+    en: "{station}: {count} samples",
+  },
+  "weather.chart.scatter.title": {
+    "zh-Hant": "同日最高溫與平均溫散點圖",
+    en: "Same-day maximum vs mean temperature scatter chart",
+  },
+  "weather.chart.scatter.descMean": {
+    "zh-Hant": "階段 3 沒有濕度歷史介面，因此本圖顯示同日的日最高溫（橫軸）與日平均溫（縱軸）；這不是濕度資料。",
+    en: "Phase 3 has no humidity history, so this chart plots same-day daily maximum (x) against daily mean (y) temperature; it is not humidity data.",
+  },
+  "weather.chart.scatter.descHumidity": {
+    "zh-Hant": "顯示同日的日最高溫（橫軸）與相對濕度（縱軸）；只有已累積的觀測才會出現。",
+    en: "Plots same-day daily maximum temperature (x) against relative humidity (y); only accumulated observations appear.",
+  },
+  "weather.chart.scatter.aria": {
+    "zh-Hant": "{stations} 個測站的同日最高溫與平均溫散點圖（非濕度資料）",
+    en: "Scatter chart of same-day maximum and mean temperatures for {stations} stations (not humidity data)",
+  },
+  "weather.chart.scatter.ariaHumidity": {
+    "zh-Hant": "{stations} 個測站的同日最高溫與相對濕度散點圖",
+    en: "Scatter chart of same-day maximum temperature and relative humidity for {stations} stations",
+  },
+  "weather.chart.scatter.hoverMean": {
+    "zh-Hant": "{station}｜%{text}｜最高 %{x} °C，平均 %{y} °C",
+    en: "{station} | %{text} | max %{x} °C, mean %{y} °C",
+  },
+  "weather.chart.scatter.hoverHumidity": {
+    "zh-Hant": "{station}｜%{text}｜最高 %{x} °C，濕度 %{y}%",
+    en: "{station} | %{text} | max %{x} °C, humidity %{y}%",
+  },
+  "weather.chart.scatter.noteMean": {
+    "zh-Hant": "本圖實際指標：日最高溫（橫軸）與日平均溫（縱軸），不是濕度。",
+    en: "Actual metrics of this chart: daily maximum (x) and daily mean (y) temperature, not humidity.",
+  },
+  "weather.chart.scatter.noteHumidity": {
+    "zh-Hant": "本圖實際指標：日最高溫（橫軸）與相對濕度（縱軸）。",
+    en: "Actual metrics of this chart: daily maximum temperature (x) and relative humidity (y).",
+  },
+  "weather.chart.scatter.xTitle": {
+    "zh-Hant": "日最高溫（°C）",
+    en: "Daily maximum (°C)",
+  },
+  "weather.chart.scatter.yTitleMean": {
+    "zh-Hant": "日平均溫（°C）",
+    en: "Daily mean (°C)",
+  },
+  "weather.chart.scatter.yTitleHumidity": {
+    "zh-Hant": "相對濕度（%）",
+    en: "Relative humidity (%)",
+  },
+  "weather.chart.donut.title": {
+    "zh-Hant": "有效觀測日的溫度區間佔比",
+    en: "Share of valid observation days by temperature range",
+  },
+  "weather.chart.donut.desc": {
+    "zh-Hant": "只表達「有效觀測日中不同溫度區間的天數佔比」，不是氣溫數值佔比；區間閾值、有效樣本量與缺失天數都列在下方。",
+    en: "Shows only the share of valid observation days that fall into each temperature range, not a share of temperature values; bin thresholds, valid sample size and missing days are listed below.",
+  },
+  "weather.chart.donut.aria": {
+    "zh-Hant": "{station} 的有效觀測日按 {bins} 個溫度區間的天數佔比環形圖，有效樣本 {valid} 天，缺失 {missing} 天",
+    en: "Donut chart of valid observation days for {station} across {bins} temperature ranges; {valid} valid days and {missing} missing days",
+  },
+  "weather.chart.donut.validDays": {
+    "zh-Hant": "有效樣本量",
+    en: "Valid samples",
+  },
+  "weather.chart.donut.missingDays": {
+    "zh-Hant": "缺失天數",
+    en: "Missing days",
+  },
+  "weather.chart.donut.threshold": {
+    "zh-Hant": "區間閾值",
+    en: "Bin thresholds",
+  },
+  "weather.chart.donut.share": {
+    "zh-Hant": "佔比",
+    en: "Share",
+  },
+  "weather.chart.donut.center": {
+    "zh-Hant": "有效 {valid} 天",
+    en: "Valid {valid} days",
+  },
+  "weather.chart.donut.centerSub": {
+    "zh-Hant": "缺失 {missing} 天",
+    en: "Missing {missing} days",
+  },
+  "weather.chart.donut.hover": {
+    "zh-Hant": "%{label}：%{value} 天（%{percent}）",
+    en: "%{label}: %{value} days (%{percent})",
+  },
+  "weather.chart.donut.metricLabel": {
+    "zh-Hant": "測站：{station}｜指標：{metric}",
+    en: "Station: {station} | Metric: {metric}",
+  },
+  "weather.chart.donut.validMissing": {
+    "zh-Hant": "有效樣本 {valid} 天｜缺失 {missing} 天",
+    en: "Valid samples {valid} days | Missing {missing} days",
+  },
+  "weather.chart.axisDate": {
+    "zh-Hant": "日期",
+    en: "Date",
+  },
+  "weather.chart.axisTemperature": {
+    "zh-Hant": "氣溫（°C）",
+    en: "Temperature (°C)",
+  },
+  "weather.chart.axisDays": {
+    "zh-Hant": "天數",
+    en: "Days",
+  },
+  "weather.chart.axisShare": {
+    "zh-Hant": "佔比",
+    en: "Share",
+  },
+
+  // ---------- 阶段 3：数据表 ----------
+  "weather.table.empty": {
+    "zh-Hant": "暫無可用資料",
+    en: "No data available",
+  },
+  "weather.table.reason": {
+    "zh-Hant": "原因：{reason}",
+    en: "Reason: {reason}",
+  },
+  "weather.table.rowCount": {
+    "zh-Hant": "共 {count} 列",
+    en: "{count} rows",
+  },
+  "weather.table.station": {
+    "zh-Hant": "測站",
+    en: "Station",
+  },
+  "weather.table.date": {
+    "zh-Hant": "日期",
+    en: "Date",
+  },
+  "weather.table.value": {
+    "zh-Hant": "數值",
+    en: "Value",
+  },
+  "weather.table.metric": {
+    "zh-Hant": "指標",
+    en: "Metric",
+  },
+  "weather.table.unit": {
+    "zh-Hant": "單位",
+    en: "Unit",
+  },
+  "weather.table.quality": {
+    "zh-Hant": "品質標記",
+    en: "Quality flag",
+  },
+  "weather.table.share": {
+    "zh-Hant": "天數佔比",
+    en: "Share of days",
+  },
+  "weather.table.total": {
+    "zh-Hant": "合計",
+    en: "Total",
+  },
+  "weather.table.rainfall": {
+    "zh-Hant": "每日降雨量（毫米）",
+    en: "Daily rainfall (mm)",
+  },
+  "weather.table.temperature": {
+    "zh-Hant": "氣溫",
+    en: "Temperature",
+  },
+  "weather.table.line": {
+    "zh-Hant": "行號",
+    en: "Line",
+  },
+  "weather.table.errorReason": {
+    "zh-Hant": "原因",
+    en: "Reason",
+  },
+  "weather.table.errorDetail": {
+    "zh-Hant": "詳細內容",
+    en: "Detail",
+  },
+  "weather.table.dataset": {
+    "zh-Hant": "資料集",
+    en: "Dataset",
+  },
+  "weather.table.endpoint": {
+    "zh-Hant": "介面地址",
+    en: "Endpoint",
+  },
+  "weather.table.fetchedAt": {
+    "zh-Hant": "抓取時間",
+    en: "Fetched at",
+  },
+  "weather.table.mode": {
+    "zh-Hant": "模式",
+    en: "Mode",
+  },
+  "weather.table.daysWithData": {
+    "zh-Hant": "有效天數",
+    en: "Days with data",
+  },
+  "weather.table.firstDate": {
+    "zh-Hant": "首個可用日",
+    en: "First available date",
+  },
+  "weather.table.lastDate": {
+    "zh-Hant": "最後可用日",
+    en: "Last available date",
+  },
+  "weather.table.missingCount": {
+    "zh-Hant": "缺失日期數",
+    en: "Missing dates",
+  },
+  "weather.table.incompleteCount": {
+    "zh-Hant": "不完整日期數",
+    en: "Incomplete dates",
+  },
+  "weather.table.lineCaption": {
+    "zh-Hant": "氣溫折線圖的可存取資料表",
+    en: "Accessible data table for the temperature line chart",
+  },
+  "weather.table.barCaption": {
+    "zh-Hant": "日最高溫對比的可存取資料表（不是降雨資料）",
+    en: "Accessible data table for the daily maximum temperature comparison (not rainfall data)",
+  },
+  "weather.table.barRainfallCaption": {
+    "zh-Hant": "每日降雨量的可存取資料表",
+    en: "Accessible data table for daily rainfall",
+  },
+  "weather.table.histCaption": {
+    "zh-Hant": "日最高溫分布的可存取資料表",
+    en: "Accessible data table for the daily maximum temperature distribution",
+  },
+  "weather.table.scatterCaption": {
+    "zh-Hant": "同日最高溫與平均溫的可存取資料表",
+    en: "Accessible data table for same-day maximum and mean temperatures",
+  },
+  "weather.table.scatterHumidityCaption": {
+    "zh-Hant": "同日最高溫與相對濕度的可存取資料表",
+    en: "Accessible data table for same-day maximum temperature and relative humidity",
+  },
+  "weather.table.donutCaption": {
+    "zh-Hant": "溫度區間天數與佔比的可存取資料表",
+    en: "Accessible data table for days and share per temperature range",
+  },
+  "weather.table.coverageCaption": {
+    "zh-Hant": "各測站與指標覆蓋率的可存取資料表",
+    en: "Accessible data table for coverage by station and metric",
+  },
+  "weather.table.sourcesCaption": {
+    "zh-Hant": "資料來源與抓取時間的可存取資料表",
+    en: "Accessible data table for data sources and fetch times",
+  },
+  "weather.table.importErrorsCaption": {
+    "zh-Hant": "CSV 匯入錯誤明細的可存取資料表",
+    en: "Accessible data table for CSV import error details",
+  },
+
+  // ---------- 阶段 3：CSV 导入 ----------
+  "weather.import.title": {
+    "zh-Hant": "匯入官方 CSV",
+    en: "Import official CSV",
+  },
+  "weather.import.desc": {
+    "zh-Hant": "接受官方 rformat=csv 原始格式（雙語標題 2 行、欄位行、資料列、legend 3 行）或規範 5 欄格式；逐行驗證日期、站號、數值精度與品質標記。",
+    en: "Accepts the official rformat=csv raw format (two bilingual title rows, a field row, data rows and three legend rows) or the canonical five-column format; every row is validated for date, station code, numeric precision and quality flag.",
+  },
+  "weather.import.fileLabel": {
+    "zh-Hant": "選擇 CSV 檔案",
+    en: "Choose a CSV file",
+  },
+  "weather.import.submit": {
+    "zh-Hant": "上傳並驗證",
+    en: "Upload and validate",
+  },
+  "weather.import.pending": {
+    "zh-Hant": "正在上傳與驗證…",
+    en: "Uploading and validating…",
+  },
+  "weather.import.acceptedRows": {
+    "zh-Hant": "成功匯入 {count} 列",
+    en: "{count} rows accepted",
+  },
+  "weather.import.skippedRows": {
+    "zh-Hant": "略過 {count} 列",
+    en: "{count} rows skipped",
+  },
+  "weather.import.detectedFormat": {
+    "zh-Hant": "偵測到的格式：{format}",
+    en: "Detected format: {format}",
+  },
+  "weather.import.format.official": {
+    "zh-Hant": "官方原始 CSV",
+    en: "Official raw CSV",
+  },
+  "weather.import.format.canonical": {
+    "zh-Hant": "規範 5 欄 CSV",
+    en: "Canonical five-column CSV",
+  },
+  "weather.import.errorsTitle": {
+    "zh-Hant": "錯誤明細",
+    en: "Error details",
+  },
+  "weather.import.errorsCount": {
+    "zh-Hant": "共 {count} 個錯誤",
+    en: "{count} errors",
+  },
+  "weather.import.noFile": {
+    "zh-Hant": "請先選擇一個 CSV 檔案。",
+    en: "Choose a CSV file first.",
+  },
+  "weather.import.success": {
+    "zh-Hant": "匯入完成，已切換到「匯入資料」檢視。",
+    en: "Import finished; the page switched to the imported-data view.",
+  },
+  "weather.import.failed": {
+    "zh-Hant": "匯入失敗。",
+    en: "The import failed.",
+  },
+  "weather.import.modeHint": {
+    "zh-Hant": "匯入的資料與官方資料分開儲存與標註；匯入後請用 mode=imported 檢視。",
+    en: "Imported data is stored and labelled separately from official data; view it with mode=imported after import.",
+  },
+  "weather.import.errorLine": {
+    "zh-Hant": "第 {line} 行",
+    en: "Line {line}",
+  },
+
+  // ---------- 阶段 3：页面通用与错误 ----------
+  "weather.page.dataNote": {
+    "zh-Hant": "本頁只顯示後端回傳的資料；非官方資料（示範或匯入）一定顯示常駐橫幅，缺資料時顯示具體原因。",
+    en: "This page shows only data returned by the backend. Non-official data (demo or imported) always shows a persistent banner, and missing data always shows a specific reason.",
+  },
+  "weather.page.loading": {
+    "zh-Hant": "正在向後端取得天氣資料…",
+    en: "Loading weather data from the backend…",
+  },
+  "weather.page.chartsTitle": {
+    "zh-Hant": "五類圖表與可存取資料表",
+    en: "Five chart types with accessible data tables",
+  },
+  "weather.page.chartsLead": {
+    "zh-Hant": "每張圖都標明實際指標、有效樣本與缺失天數；下方固定附上可鍵盤瀏覽的資料表。",
+    en: "Every chart states its actual metric, valid samples and missing days, with a keyboard-accessible data table below it.",
+  },
+  "weather.page.emptySelection": {
+    "zh-Hant": "請先選擇至少一個測站，圖表才會載入。",
+    en: "Select at least one station before the charts can load.",
+  },
+  "weather.error.title": {
+    "zh-Hant": "無法載入天氣資料",
+    en: "Could not load weather data",
+  },
+  "weather.error.network": {
+    "zh-Hant": "連不上後端伺服器。請確認後端已啟動，然後再試一次。",
+    en: "Could not reach the backend server. Make sure it is running, then try again.",
+  },
+  "weather.error.invalidInput": {
+    "zh-Hant": "查詢參數不符合規則（422），請檢查日期、站號與指標。",
+    en: "The query parameters are invalid (422); check the dates, station codes and metrics.",
+  },
+  "weather.error.server": {
+    "zh-Hant": "後端發生錯誤，請稍後再試一次。",
+    en: "The backend reported an error; please try again later.",
+  },
+  "weather.error.invalidResponse": {
+    "zh-Hant": "後端回應的格式不符合介面契約，請回報這個問題。",
+    en: "The response does not match the interface contract; please report this problem.",
+  },
+  "weather.error.retry": {
+    "zh-Hant": "重新載入",
+    en: "Reload",
   },
 } as const satisfies Record<string, Translation>;
 

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./player.css";
+@import "./weather.css";
 
 /*
  * 全局样式。注释使用简体中文；界面文案全部来自 i18n 字典（繁体中文 + 英文）。

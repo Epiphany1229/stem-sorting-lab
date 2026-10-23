@@ -78,3 +78,28 @@ export async function apiPost<T>(
 
   return (await response.json()) as T;
 }
+
+/**
+ * POST multipart/form-data 请求（阶段 3 的 CSV 导入使用）。
+ *
+ * 不能手动设置 Content-Type：浏览器需要自己补上带 boundary 的头。
+ */
+export async function apiPostForm<T>(
+  path: string,
+  formData: FormData,
+  signal?: AbortSignal,
+): Promise<T> {
+  const response = await fetch(apiUrl(path), {
+    method: "POST",
+    headers: { Accept: "application/json" },
+    body: formData,
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new ApiError(`API request failed with status ${response.status}`, response.status);
+  }
+
+  return (await response.json()) as T;
+}
+

@@ -1,0 +1,675 @@
+{
+  "mode": "official",
+  "notice": null,
+  "window": {
+    "start": "2026-09-01",
+    "end": "2026-09-30",
+    "anchor": "2026-09-30",
+    "requested_days": 30
+  },
+  "coverage": {
+    "days_with_data": 30,
+    "days_missing": 0,
+    "last_available_date": "2026-09-30",
+    "per_station": [
+      {
+        "station_id": "HKO",
+        "metric": "tmax",
+        "days_with_data": 30,
+        "first_date": "2026-09-01",
+        "last_date": "2026-09-30",
+        "missing_dates": [],
+        "incomplete_dates": []
+      },
+      {
+        "station_id": "HKO",
+        "metric": "tmin",
+        "days_with_data": 30,
+        "first_date": "2026-09-01",
+        "last_date": "2026-09-30",
+        "missing_dates": [],
+        "incomplete_dates": []
+      },
+      {
+        "station_id": "KP",
+        "metric": "tmax",
+        "days_with_data": 0,
+        "first_date": null,
+        "last_date": null,
+        "missing_dates": [
+          "2026-09-01",
+          "2026-09-02",
+          "2026-09-03",
+          "2026-09-04",
+          "2026-09-05",
+          "2026-09-06",
+          "2026-09-07",
+          "2026-09-08",
+          "2026-09-09",
+          "2026-09-10",
+          "2026-09-11",
+          "2026-09-12",
+          "2026-09-13",
+          "2026-09-14",
+          "2026-09-15",
+          "2026-09-16",
+          "2026-09-17",
+          "2026-09-18",
+          "2026-09-19",
+          "2026-09-20",
+          "2026-09-21",
+          "2026-09-22",
+          "2026-09-23",
+          "2026-09-24",
+          "2026-09-25",
+          "2026-09-26",
+          "2026-09-27",
+          "2026-09-28",
+          "2026-09-29",
+          "2026-09-30"
+        ],
+        "incomplete_dates": []
+      },
+      {
+        "station_id": "KP",
+        "metric": "tmin",
+        "days_with_data": 0,
+        "first_date": null,
+        "last_date": null,
+        "missing_dates": [
+          "2026-09-01",
+          "2026-09-02",
+          "2026-09-03",
+          "2026-09-04",
+          "2026-09-05",
+          "2026-09-06",
+          "2026-09-07",
+          "2026-09-08",
+          "2026-09-09",
+          "2026-09-10",
+          "2026-09-11",
+          "2026-09-12",
+          "2026-09-13",
+          "2026-09-14",
+          "2026-09-15",
+          "2026-09-16",
+          "2026-09-17",
+          "2026-09-18",
+          "2026-09-19",
+          "2026-09-20",
+          "2026-09-21",
+          "2026-09-22",
+          "2026-09-23",
+          "2026-09-24",
+          "2026-09-25",
+          "2026-09-26",
+          "2026-09-27",
+          "2026-09-28",
+          "2026-09-29",
+          "2026-09-30"
+        ],
+        "incomplete_dates": []
+      }
+    ]
+  },
+  "reason": null,
+  "precision_policy": "raw_string",
+  "data": [
+    {
+      "obs_date": "2026-09-01",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "28.7",
+      "value": 28.7,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-01",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "26.3",
+      "value": 26.3,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-02",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "31.8",
+      "value": 31.8,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-02",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "25.7",
+      "value": 25.7,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-03",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "30.1",
+      "value": 30.1,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-03",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "25.9",
+      "value": 25.9,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-04",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "31.0",
+      "value": 31.0,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-04",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "26.4",
+      "value": 26.4,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-05",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "32.2",
+      "value": 32.2,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-05",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.0",
+      "value": 27.0,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-06",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "30.7",
+      "value": 30.7,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-06",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "25.7",
+      "value": 25.7,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-07",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "30.3",
+      "value": 30.3,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-07",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.0",
+      "value": 27.0,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-08",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "32.7",
+      "value": 32.7,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-08",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.5",
+      "value": 27.5,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-09",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "32.2",
+      "value": 32.2,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-09",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.5",
+      "value": 27.5,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-10",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "31.9",
+      "value": 31.9,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-10",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "26.2",
+      "value": 26.2,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-11",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "32.6",
+      "value": 32.6,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-11",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "25.5",
+      "value": 25.5,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-12",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "33.1",
+      "value": 33.1,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-12",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.1",
+      "value": 27.1,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-13",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "31.7",
+      "value": 31.7,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-13",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.7",
+      "value": 27.7,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-14",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "28.7",
+      "value": 28.7,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-14",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "26.1",
+      "value": 26.1,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-15",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "31.4",
+      "value": 31.4,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-15",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "26.4",
+      "value": 26.4,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-16",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "31.5",
+      "value": 31.5,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-16",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.4",
+      "value": 27.4,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-17",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "31.4",
+      "value": 31.4,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-17",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.0",
+      "value": 27.0,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-18",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "31.7",
+      "value": 31.7,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-18",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.1",
+      "value": 27.1,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-19",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "33.2",
+      "value": 33.2,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-19",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.1",
+      "value": 27.1,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-20",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "33.1",
+      "value": 33.1,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-20",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.6",
+      "value": 27.6,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-21",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "33.0",
+      "value": 33.0,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-21",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.8",
+      "value": 27.8,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-22",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "30.2",
+      "value": 30.2,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-22",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "28.0",
+      "value": 28.0,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-23",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "31.9",
+      "value": 31.9,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-23",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.6",
+      "value": 27.6,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-24",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "32.2",
+      "value": 32.2,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-24",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.3",
+      "value": 27.3,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-25",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "32.5",
+      "value": 32.5,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-25",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.5",
+      "value": 27.5,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-26",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "32.1",
+      "value": 32.1,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-26",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "26.5",
+      "value": 26.5,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-27",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "32.7",
+      "value": 32.7,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-27",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "27.1",
+      "value": 27.1,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-28",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "32.5",
+      "value": 32.5,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-28",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "28.3",
+      "value": 28.3,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-29",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "33.1",
+      "value": 33.1,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-29",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "28.7",
+      "value": 28.7,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-30",
+      "station_id": "HKO",
+      "metric": "tmax",
+      "value_raw": "34.2",
+      "value": 34.2,
+      "unit": "°C",
+      "quality_flag": "C"
+    },
+    {
+      "obs_date": "2026-09-30",
+      "station_id": "HKO",
+      "metric": "tmin",
+      "value_raw": "28.8",
+      "value": 28.8,
+      "unit": "°C",
+      "quality_flag": "C"
+    }
+  ],
+  "sources": [
+    {
+      "dataset": "CLMMAXT",
+      "endpoint": "https://data.weather.gov.hk/weatherAPI/opendata/opendata.php?dataType=CLMMAXT&lang=en&rformat=json&station=HKO&year=2026",
+      "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+      "last_modified": null,
+      "mode": "official"
+    },
+    {
+      "dataset": "CLMMINT",
+      "endpoint": "https://data.weather.gov.hk/weatherAPI/opendata/opendata.php?dataType=CLMMINT&lang=en&rformat=json&station=HKO&year=2026",
+      "fetched_at": "2026-10-23T12:29:28.228057+00:00",
+      "last_modified": null,
+      "mode": "official"
+    }
+  ]
+}

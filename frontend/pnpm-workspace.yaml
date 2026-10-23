@@ -4,3 +4,5 @@
 #   会触发 stack overflow（pnpm 12.15.0 + Windows 沙箱的已知问题，非项目代码问题）
 verifyDepsBeforeRun: false
 nodeLinker: hoisted
+allowBuilds:
+  es5-ext: false
