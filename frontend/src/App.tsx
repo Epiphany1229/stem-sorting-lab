@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 
 import { queryClient } from "./api/client";
 import AppLayout from "./layouts/AppLayout";
+import AlgorithmDetailPage from "./pages/AlgorithmDetailPage";
 import AlgorithmsPage from "./pages/AlgorithmsPage";
 import HelpPage from "./pages/HelpPage";
 import HomePage from "./pages/HomePage";
@@ -25,6 +26,7 @@ export function AppRoutes() {
         <Route path="weather" element={<WeatherPage />} />
         <Route path="weather-sort" element={<WeatherSortPage />} />
         <Route path="algorithms" element={<AlgorithmsPage />} />
+        <Route path="algorithms/:id" element={<AlgorithmDetailPage />} />
         <Route path="sources" element={<SourcesPage />} />
         <Route path="help" element={<HelpPage />} />
         <Route path="*" element={<NotFoundPage />} />

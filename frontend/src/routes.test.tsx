@@ -1,10 +1,14 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import App from "./App";
 import { dictionary } from "./i18n/dictionary";
 import { navItems } from "./navigation";
+import {
+  algorithmListFixture,
+  algorithmListResponse,
+} from "./features/algorithms/__tests__/fixtures";
 
 function renderRoute(path: string) {
   return render(
@@ -43,8 +47,22 @@ describe("七个页面路由", () => {
 });
 
 describe("算法中心", () => {
-  it("列出全部十种算法，并各自标注状态", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("从后端清单列出全部十种算法，并分别标注可用与开发中", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        json: async () => algorithmListResponse(),
+      }) as unknown as Response),
+    );
+
     renderRoute("/algorithms");
+    await screen.findByTestId("algorithm-list");
 
     const expectedNames = [
       "冒泡排序",
@@ -63,14 +81,20 @@ describe("算法中心", () => {
       expect(screen.getAllByRole("heading", { level: 3, name })).toHaveLength(1);
     }
 
-    // 十个「開發中」状态徽标都渲染出来，不隐藏未完成项。
-    const algorithmItems = expectedNames
-      .map((name) => screen.getAllByRole("heading", { level: 3, name })[0]?.closest("li"))
-      .filter((item): item is HTMLLIElement => item instanceof HTMLLIElement);
-    expect(algorithmItems).toHaveLength(10);
-
-    for (const item of algorithmItems) {
-      expect(item).toHaveTextContent("開發中");
+    // 十个入口全部渲染，不隐藏未完成项；状态来自后端元数据。
+    for (const metadata of algorithmListFixture) {
+      const item = screen.getByTestId(`algorithm-item-${metadata.id}`);
+      expect(item).toBeInTheDocument();
+      if (metadata.status === "available") {
+        expect(item).toHaveTextContent("可用");
+        expect(screen.getByTestId(`algorithm-link-${metadata.id}`)).toHaveAttribute(
+          "href",
+          `/algorithms/${metadata.id}`,
+        );
+      } else {
+        expect(item).toHaveTextContent("開發中");
+        expect(item.querySelector("a")).toBeNull();
+      }
     }
   });
 });

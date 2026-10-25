@@ -209,8 +209,8 @@ def _explain_compare(
     if comparison is None:  # pragma: no cover - compare 事件必然带 comparison
         raise RuntimeError("compare 事件缺少 comparison 辅助信息")
     left_position, right_position = event.active_indices
-    left_point = _point_at(before.order, left_position, points_by_id)
-    right_point = _point_at(before.order, right_position, points_by_id)
+    left_point = _point_at(before.complete_order(), left_position, points_by_id)
+    right_point = _point_at(before.complete_order(), right_position, points_by_id)
     order_zh, order_en = _order_words(direction)
     left_zh = f"{_zh_date(left_point.obs_date)}的 {_degree(left_point)}"
     right_zh = f"{_zh_date(right_point.obs_date)}的 {_degree(right_point)}"
@@ -256,8 +256,8 @@ def _explain_swap(
 ) -> Explanation:
     """swap 事件：说明哪两天的位置被交换、哪个温度被往前移。"""
     left_position, right_position = event.active_indices
-    left_point = _point_at(before.order, left_position, points_by_id)
-    right_point = _point_at(before.order, right_position, points_by_id)
+    left_point = _point_at(before.complete_order(), left_position, points_by_id)
+    right_point = _point_at(before.complete_order(), right_position, points_by_id)
     order_zh, order_en = _order_words(direction)
     if direction == "asc":
         moved = right_point if right_point.value < left_point.value else left_point
@@ -297,7 +297,7 @@ def _explain_mark_sorted(
             en="Start pass 1: compare adjacent days from left to right.",
         )
     finalized_position = total_days - pass_index
-    finalized = _point_at(before.order, finalized_position, points_by_id)
+    finalized = _point_at(before.complete_order(), finalized_position, points_by_id)
     extreme_zh = "最高" if direction == "asc" else "最低"
     extreme_en = "highest" if direction == "asc" else "lowest"
     return Explanation(
@@ -338,7 +338,8 @@ def _explain_done(
             ),
         )
     final_state = states[event.state_after_id]
-    tail = _point_at(final_state.order, len(final_state.order) - 1, points_by_id)
+    final_order = final_state.complete_order()
+    tail = _point_at(final_order, len(final_order) - 1, points_by_id)
     hottest = direction == "asc"
     return Explanation(
         key="weather.done.complete",
@@ -573,8 +574,8 @@ def build_weather_trace(
         states=[
             WeatherArrayState(
                 state_id=state.state_id,
-                order=list(state.order),
-                values=[float(value) for value in state.values],
+                order=list(state.complete_order()),
+                values=[float(value) for value in state.numeric_values()],
             )
             for state in recorder.states
         ],

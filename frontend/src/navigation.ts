@@ -50,7 +50,8 @@ export const navItems: readonly NavItem[] = [
     navKey: "nav.algorithms",
     titleKey: "algorithms.title",
     descriptionKey: "home.card.algorithms.desc",
-    status: "inDevelopment",
+    // 阶段 5A 起：列表页可用；具体算法按「可用 / 開發中」状态区分
+    status: "available",
   },
   {
     path: "/sources",

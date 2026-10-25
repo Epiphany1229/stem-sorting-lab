@@ -83,9 +83,11 @@ const DEFAULT_MIN_SLOT = 26;
 const STAGGER_STEP = 6;
 const DATE_STAGGER_STEP = 8;
 const MIN_BAR_HEIGHT = 8;
+/** 空槽固定高度：order 为 null 时必须保留位置并让空槽可见（契约 §3.1）。 */
+const EMPTY_SLOT_HEIGHT = 56;
 
 interface BarGeometry {
-  readonly itemId: string;
+  readonly itemId: string | null;
   readonly value: number;
   readonly displayIndex: number;
   readonly state: BarState;
@@ -96,6 +98,8 @@ interface BarGeometry {
   readonly labelY: number;
   readonly dateY: number;
   readonly stagger: number;
+  /** 契约 §3.1 的空槽：order 为 null，必须保留位置并画成显式空槽。 */
+  readonly empty: boolean;
 }
 
 interface ChartGeometry {
@@ -120,7 +124,14 @@ function buildGeometry(
   event: TraceEvent | null,
 ): ChartGeometry {
   const count = Math.max(state.order.length, 1);
-  const values = state.order.map((_, index) => state.values[index] ?? 0);
+  const itemById = new Map(items.map((item) => [item.id, item] as const));
+  // 空槽位置（order 为 null）不参与数值 domain，避免把 0 当成学生数据。
+  const values = state.order.map((itemId, index) => {
+    if (itemId === null) {
+      return 0;
+    }
+    return state.values[index] ?? itemById.get(itemId)?.value ?? 0;
+  });
   const domainMin = Math.min(0, ...values);
   const domainMaxRaw = Math.max(0, ...values);
   // 全相同值时 domain 会退化，用 1 做兜底，避免除零与零高度柱。
@@ -147,10 +158,11 @@ function buildGeometry(
   const modified = new Set(event?.modified_indices ?? []);
   const finalized = new Set(event?.finalized_indices ?? []);
 
-  const itemById = new Map(items.map((item) => [item.id, item] as const));
-
   const bars = state.order.map((itemId, displayIndex) => {
-    const value = state.values[displayIndex] ?? itemById.get(itemId)?.value ?? 0;
+    const empty = itemId === null;
+    const value = empty
+      ? 0
+      : (state.values[displayIndex] ?? itemById.get(itemId)?.value ?? 0);
 
     let stateOfBar: BarState = "pending";
     if (modified.has(displayIndex)) {
@@ -162,7 +174,8 @@ function buildGeometry(
     }
 
     const magnitude = Math.abs(value) * scale;
-    const height = Math.max(magnitude, MIN_BAR_HEIGHT);
+    // 空槽给固定可见高度，保证「保留位置」且不会被误认为零值柱子。
+    const height = empty ? EMPTY_SLOT_HEIGHT : Math.max(magnitude, MIN_BAR_HEIGHT);
     const centerX = MARGIN_LEFT + slotWidth * (displayIndex + 0.5);
     const y = value < 0 ? baselineY : baselineY - height;
     // 奇偶错层：只上下错开几像素，文字仍然水平。
@@ -186,6 +199,7 @@ function buildGeometry(
       labelY,
       dateY,
       stagger,
+      empty,
     };
   });
 
@@ -300,8 +314,10 @@ export function BarChart({
           />
 
           {bars.map((bar) => {
-            const patternId =
-              bar.state === "compare"
+            const emptySlot = bar.empty;
+            const patternId = emptySlot
+              ? null
+              : bar.state === "compare"
                 ? dotsPatternId
                 : bar.state === "swap"
                   ? crossPatternId
@@ -309,7 +325,7 @@ export function BarChart({
                     ? hatchPatternId
                     : null;
             const glyphY = bar.height >= 26 ? bar.y + Math.min(bar.height / 2 + 5, bar.height - 6) : bar.y - 4;
-            const item = itemById.get(bar.itemId);
+            const item = bar.itemId === null ? undefined : itemById.get(bar.itemId);
             const detail = detailOfItem(item, unit);
             // 柱顶只显示纯数字：单位统一放在画布上方的「單位：°C」提示里。
             const displayValue = item?.value_raw ?? String(bar.value);
@@ -317,21 +333,24 @@ export function BarChart({
 
             return (
               <g
-                key={bar.itemId}
+                key={`${bar.displayIndex}-${bar.itemId ?? "hole"}`}
                 className={`bar-chart__bar-group bar-chart__bar-group--${bar.state}`}
                 data-testid="bar"
-                data-item-id={bar.itemId}
+                data-item-id={bar.itemId ?? ""}
+                data-empty={emptySlot ? "true" : "false"}
                 data-display-index={bar.displayIndex}
                 data-state={bar.state}
                 data-center-x={Math.round(bar.centerX * 10) / 10}
                 data-label-stagger={bar.stagger > 0 ? "1" : "0"}
                 style={{ transform: `translateX(${bar.centerX}px)` }}
                 tabIndex={detail ? 0 : undefined}
-                role={detail ? "img" : undefined}
+                role={emptySlot || detail ? "img" : undefined}
                 aria-label={
-                  detail
-                    ? `${detail.dateLabel}｜${detail.stationZh} / ${detail.stationEn}｜${detail.valueText}｜${detail.quality}`
-                    : undefined
+                  emptySlot
+                    ? "空槽 / Hole"
+                    : detail
+                      ? `${detail.dateLabel}｜${detail.stationZh} / ${detail.stationEn}｜${detail.valueText}｜${detail.quality}`
+                      : undefined
                 }
                 onFocus={detail ? () => setFocusedItemId(bar.itemId) : undefined}
                 onBlur={
@@ -350,6 +369,10 @@ export function BarChart({
               >
                 <title>
                   {(() => {
+                    // 契约 §3.1：空槽必须显式呈现，不跳过、不伪造数值。
+                    if (emptySlot) {
+                      return "空槽 / Hole";
+                    }
                     // SVG <title> 只能是一条字符串：繁中在上、英文在下一行，保持双语。
                     if (detail) {
                       const zhTitle = formatTranslation("weatherSort.bar.title", {
@@ -367,7 +390,7 @@ export function BarChart({
                       return `${zhTitle}\n${enTitle}`;
                     }
                     const title = formatTranslation("player.bar.title", {
-                      id: bar.itemId,
+                      id: bar.itemId ?? "",
                       value: bar.value,
                     });
                     return `${title["zh-Hant"]}\n${title.en}`;
@@ -375,12 +398,13 @@ export function BarChart({
                 </title>
                 <rect
                   data-testid="bar-shape"
-                  className="bar-chart__bar"
+                  className={emptySlot ? "bar-chart__bar bar-chart__bar--empty" : "bar-chart__bar"}
                   x={-bar.width / 2}
                   y={bar.y}
                   width={bar.width}
                   height={bar.height}
                   rx={7}
+                  style={emptySlot ? { fill: "none", strokeDasharray: "6 4" } : undefined}
                 />
                 {patternId ? (
                   <rect
@@ -393,7 +417,7 @@ export function BarChart({
                     fill={`url(#${patternId})`}
                   />
                 ) : null}
-                {bar.height >= 26 ? (
+                {!emptySlot && bar.height >= 26 ? (
                   <text
                     className="bar-chart__glyph"
                     data-testid="bar-glyph"
@@ -412,7 +436,7 @@ export function BarChart({
                   y={bar.labelY}
                   textAnchor="middle"
                 >
-                  {displayValue}
+                  {emptySlot ? "__" : displayValue}
                 </text>
                 {dateLabel ? (
                   <text

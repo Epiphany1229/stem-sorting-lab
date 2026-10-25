@@ -90,14 +90,14 @@ def build_bubble_trace(
     states = [
         ArrayState(
             state_id=state.state_id,
-            order=list(state.order),
+            order=list(state.complete_order()),
             # 阶段 2 的输入是整数，这里转换是类型收窄；运行时不改变整数对象
-            values=[int(value) for value in state.values],
+            values=[int(value) for value in state.numeric_values()],
         )
         for state in recorder.states
     ]
     state_values: Mapping[int, tuple[float, ...]] = {
-        state.state_id: state.values for state in recorder.states
+        state.state_id: state.numeric_values() for state in recorder.states
     }
     events = [
         _build_event(

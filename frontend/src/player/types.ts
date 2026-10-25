@@ -78,7 +78,11 @@ export interface CodeBlock {
 /** 状态快照：order 与 values 一一对应，前端直接渲染，不重新推导。 */
 export interface TraceState {
   readonly state_id: number;
-  readonly order: readonly string[];
+  /**
+   * 每个下标的元素 id；契约 §3.1 允许用 null 表示「空槽」（插入/希尔右移期间）。
+   * 空槽必须保留下标位置渲染，不得跳过。
+   */
+  readonly order: readonly (string | null)[];
   readonly values: readonly number[];
 }
 
@@ -87,7 +91,12 @@ export interface Comparison {
   readonly left: number;
   readonly right: number;
   readonly relation: Relation;
-  readonly will_swap: boolean;
+  /**
+   * 阶段 2/4（冒泡）：后端计算「是否需要交换」。
+   * 阶段 5A：只有冒泡提供 will_swap；其余算法只提供 left/right/relation，
+   * 此时预测题降级为事实性比较，前端绝不自行推导。
+   */
+  readonly will_swap?: boolean;
 }
 
 /** 算法专属状态；冒泡排序固定提供前三个字段。 */

@@ -16,6 +16,13 @@ import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 import { useTracePlayback, type PlaybackPhase } from "./useTracePlayback";
 import type { BubbleTrace, TraceEvent, TraceState } from "./types";
 
+export interface PlayerPassMetricOverride {
+  /** 指标名称（双语，由调用方提供，例如「合併段數 / Merge steps」）。 */
+  readonly label: { readonly "zh-Hant": string; readonly en: string };
+  /** 按当前事件计算要显示的数字；返回 null 时显示「—」。 */
+  readonly compute: (event: TraceEvent | null) => number | null;
+}
+
 interface TracePlayerProps {
   readonly trace: BubbleTrace;
   /** 在代码面板下方常驻内联比较区（/lab 与 /weather-sort 都使用）。 */
@@ -31,6 +38,12 @@ interface TracePlayerProps {
     readonly event: TraceEvent | null;
     readonly state: TraceState;
   }) => ReactNode;
+  /**
+   * 阶段 5：可选的「輪次」指标覆盖。
+   * 归并排序没有 mark_sorted（passes=0），学习页用它显示「合併段數」；
+   * 不传时沿用原来的「第 N 輪」逻辑，阶段 2/4 页面行为不变。
+   */
+  readonly passMetric?: PlayerPassMetricOverride;
 }
 
 const SPEED_OPTIONS: readonly number[] = [0.5, 1, 1.5, 2];
@@ -53,7 +66,13 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
   );
 }
 
-export function TracePlayer({ trace, inlinePrompt = false, unit, renderAux }: TracePlayerProps) {
+export function TracePlayer({
+  trace,
+  inlinePrompt = false,
+  unit,
+  renderAux,
+  passMetric,
+}: TracePlayerProps) {
   const reducedMotion = usePrefersReducedMotion();
   const playback = useTracePlayback(trace);
   const { phase, step, total, currentEvent, currentState } = playback;
@@ -98,6 +117,7 @@ export function TracePlayer({ trace, inlinePrompt = false, unit, renderAux }: Tr
 
   const metrics = currentEvent?.metrics ?? { comparisons: 0, swaps: 0, writes: 0 };
   const passNumber = (currentEvent?.auxiliary_state.pass_index ?? 0) + 1;
+  const customPassValue = passMetric ? passMetric.compute(currentEvent) : null;
   const progress = formatTranslation("player.progress", { step, total });
   const passValue = formatTranslation("player.passValue", { pass: passNumber });
 
@@ -223,10 +243,22 @@ export function TracePlayer({ trace, inlinePrompt = false, unit, renderAux }: Tr
           </div>
           <div>
             <dt>
-              <BilingualText size="xs" tkey="player.metric.pass" />
+              {passMetric ? (
+                <BilingualText
+                  size="xs"
+                  zh={passMetric.label["zh-Hant"]}
+                  en={passMetric.label.en}
+                />
+              ) : (
+                <BilingualText size="xs" tkey="player.metric.pass" />
+              )}
             </dt>
             <dd data-testid="metric-pass">
-              <BilingualText size="xs" zh={passValue["zh-Hant"]} en={passValue.en} />
+              {passMetric ? (
+                (customPassValue ?? "—")
+              ) : (
+                <BilingualText size="xs" zh={passValue["zh-Hant"]} en={passValue.en} />
+              )}
             </dd>
           </div>
         </dl>

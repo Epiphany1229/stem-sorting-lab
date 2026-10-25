@@ -114,6 +114,11 @@ Content-Type: application/json
 - **不变量**：`event.state_after_id` 是下一个事件的 `state_before_id`（尾部事件除外）。
 - `compare` 类事件 `before == after`；`swap` / `write` 类事件 `before != after`（交换事件必须能还原前后状态）。
 - 前端**不得**自行交换数组元素来推进动画，必须直接渲染 `states[...]`。
+- **空槽（hole）**：插入/希尔等在"抽出待插入元素、元素右移"期间，`states[].order` 允许用 `null` 表示当前空槽（该下标的元素正被持有在 `auxiliary_state.key_value`/`key_index`）。约束：
+  - 同一 `order` 中每个 item id **至多出现一次**（禁止重复 id）；
+  - `null` 至多一个（单空槽实现）；`states[].values` 在同一位置也必须是 `null`（不得填 0）；
+  - 最终 `done` 时的 order 必须是全部输入 id 的完整排列。
+  前端渲染时把 `null` 画成显式空槽（不得跳过导致下标错位）。
 
 ### 3.2 事件类型（阶段 2 至少实现前 5 种，其余为后续算法预留）
 

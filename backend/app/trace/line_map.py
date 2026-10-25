@@ -17,7 +17,9 @@ import ast
 import inspect
 import io
 import tokenize
+from collections.abc import Callable
 from dataclasses import dataclass
+from types import ModuleType
 
 from backend.app.algorithms import bubble as bubble_module
 from backend.app.schemas.trace import LineKind
@@ -63,6 +65,8 @@ class LineMapping:
     event_type: EventType
     emit_lineno: int
     target_lineno: int
+    # 同类型插桩的调用点序号（0 起）：阶段 2 的冒泡每种事件只有一个调用点
+    site: int = 0
 
 
 @dataclass(frozen=True)
@@ -271,3 +275,243 @@ def build_bubble_line_map() -> BubbleLineMap:
 
 # 导入期建立映射：失败会直接阻止应用启动，而不是带着错误映射运行。
 BUBBLE_LINE_MAP = build_bubble_line_map()
+
+
+# ====================================================================== 阶段 5 通用映射
+
+# 插桩调用属性名 → 协议事件类型（阶段 5 新增 write 变体 / select / partition / merge）。
+_GENERIC_EMIT_EVENT_TYPES: dict[str, EventType] = {
+    "emit_compare": "compare",
+    "emit_swap": "swap",
+    "emit_write": "write",
+    "emit_write_shift": "write",
+    "emit_write_place": "write",
+    "emit_write_buffer": "write",
+    "emit_write_assign": "write",
+    "emit_select": "select",
+    "emit_partition": "partition",
+    "emit_merge": "merge",
+    "emit_mark_sorted": "mark_sorted",
+    "emit_done": "done",
+}
+
+# 映射方向：next = 下一条同块语句；prev = 上一条同块语句；loop = 最近的 for/while。
+_NEXT_MAPPED_EVENTS: frozenset[EventType] = frozenset(
+    {"compare", "select", "partition", "merge", "done"}
+)
+_PREV_MAPPED_EVENTS: frozenset[EventType] = frozenset({"swap", "write"})
+_LOOP_MAPPED_EVENTS: frozenset[EventType] = frozenset({"mark_sorted"})
+
+# 目标语句允许的 AST 节点类型（导入期校验，防止插桩漂移）。
+_GENERIC_TARGETS: dict[EventType, tuple[type[ast.stmt], ...]] = {
+    "compare": (ast.If, ast.While),
+    "swap": (ast.Assign,),
+    "write": (ast.Assign,),
+    "select": (ast.Assign,),
+    "partition": (ast.AugAssign, ast.Assign),
+    "merge": (ast.While, ast.For, ast.If, ast.Assign),
+    "mark_sorted": (ast.For, ast.While),
+    "done": (ast.Return,),
+}
+
+
+@dataclass(frozen=True)
+class AlgorithmLineMap:
+    """阶段 5 算法函数的源码行与插桩映射（行号为模块绝对行号）。"""
+
+    lines: tuple[SourceLine, ...]
+    mappings: tuple[LineMapping, ...]
+
+    @property
+    def line_groups(self) -> dict[tuple[EventType, int], tuple[int, int]]:
+        """(事件类型, 调用点序号) → (插桩行, 目标语义行)。"""
+        return {
+            (mapping.event_type, mapping.site): (
+                mapping.emit_lineno,
+                mapping.target_lineno,
+            )
+            for mapping in self.mappings
+        }
+
+
+def _generic_emit_event_type(stmt: ast.stmt) -> EventType | None:
+    """若语句是 ``recorder.emit_*`` 调用，返回对应事件类型。"""
+    if not isinstance(stmt, ast.Expr):
+        return None
+    call = stmt.value
+    if not isinstance(call, ast.Call):
+        return None
+    func = call.func
+    if not isinstance(func, ast.Attribute):
+        return None
+    return _GENERIC_EMIT_EVENT_TYPES.get(func.attr)
+
+
+def _load_module_source_lines(module: ModuleType) -> list[str]:
+    """读取模块源码（模块级从文件第 1 行开始，保证 AST 行号是绝对行号）。"""
+    source_lines, start_lineno = inspect.getsourcelines(module)
+    if start_lineno != 0:
+        raise LineMapError(f"模块 {module.__name__} 的源码行号偏移异常")
+    return [line.rstrip("\n") for line in source_lines]
+
+
+def _find_top_level_function(tree: ast.Module, function_name: str) -> ast.FunctionDef:
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == function_name:
+            return node
+    raise LineMapError(f"模块中找不到顶层函数 {function_name}")
+
+
+def _docstring_linenos_in_range(tree: ast.Module, first: int, last: int) -> set[int]:
+    """收集函数行范围内所有函数/类文档字符串占用的行号（展示时清空）。"""
+    linenos: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        body = node.body
+        if not body:
+            continue
+        first_stmt = body[0]
+        if not isinstance(first_stmt, ast.Expr):
+            continue
+        value = first_stmt.value
+        if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
+            continue
+        start = first_stmt.lineno
+        if not first <= start <= last:
+            continue
+        end = first_stmt.end_lineno or start
+        linenos.update(range(start, end + 1))
+    return linenos
+
+
+class _GenericLineMapBuilder:
+    """按设计文档 §2 的规则表遍历函数体，建立插桩映射。"""
+
+    def __init__(self) -> None:
+        self._mappings: list[LineMapping] = []
+        self._site_counters: dict[EventType, int] = {}
+
+    def build(self, function_node: ast.FunctionDef) -> tuple[LineMapping, ...]:
+        self._visit_block(function_node.body, enclosing_loop=None)
+        return tuple(self._mappings)
+
+    def _visit_block(
+        self,
+        block: list[ast.stmt],
+        *,
+        enclosing_loop: ast.For | ast.While | None,
+    ) -> None:
+        for position, stmt in enumerate(block):
+            event_type = _generic_emit_event_type(stmt)
+            if event_type is not None:
+                self._register(event_type, stmt, block, position, enclosing_loop)
+            self._visit_statement(stmt, enclosing_loop=enclosing_loop)
+
+    def _visit_statement(
+        self,
+        stmt: ast.stmt,
+        *,
+        enclosing_loop: ast.For | ast.While | None,
+    ) -> None:
+        inner_loop: ast.For | ast.While | None = (
+            stmt if isinstance(stmt, (ast.For, ast.While)) else enclosing_loop
+        )
+        for field_name in ("body", "orelse", "finalbody"):
+            child_block = getattr(stmt, field_name, None)
+            if isinstance(child_block, list):
+                self._visit_block(child_block, enclosing_loop=inner_loop)
+
+    def _register(
+        self,
+        event_type: EventType,
+        emit_stmt: ast.stmt,
+        block: list[ast.stmt],
+        position: int,
+        enclosing_loop: ast.For | ast.While | None,
+    ) -> None:
+        if event_type in _LOOP_MAPPED_EVENTS:
+            if enclosing_loop is None:
+                raise LineMapError(
+                    f"{event_type} 插桩（第 {emit_stmt.lineno} 行）必须位于 for/while 循环体内"
+                )
+            target: ast.stmt = enclosing_loop
+        elif event_type in _NEXT_MAPPED_EVENTS:
+            if position + 1 >= len(block):
+                raise LineMapError(
+                    f"{event_type} 插桩（第 {emit_stmt.lineno} 行）缺少下一条同块语句"
+                )
+            target = block[position + 1]
+        else:
+            if position == 0:
+                raise LineMapError(
+                    f"{event_type} 插桩（第 {emit_stmt.lineno} 行）缺少上一条同块语句"
+                )
+            target = block[position - 1]
+        expected_types = _GENERIC_TARGETS[event_type]
+        if not isinstance(target, expected_types):
+            expected_names = " / ".join(node_type.__name__ for node_type in expected_types)
+            raise LineMapError(
+                f"{event_type} 插桩（第 {emit_stmt.lineno} 行）映射到的第 {target.lineno} 行"
+                f"应为 {expected_names}，实际为 {type(target).__name__}"
+            )
+        site = self._site_counters.get(event_type, 0)
+        self._site_counters[event_type] = site + 1
+        self._mappings.append(
+            LineMapping(
+                event_type=event_type,
+                emit_lineno=emit_stmt.lineno,
+                target_lineno=target.lineno,
+                site=site,
+            )
+        )
+
+
+def build_line_map(module: ModuleType, function: Callable[..., object]) -> AlgorithmLineMap:
+    """为任意算法模块的顶层函数建立行映射；失败即抛 LineMapError。
+
+    ``code.lines`` 只包含该函数本体（含嵌套函数），去掉注释与文档字符串，
+    ``lineno`` 保持模块绝对行号，因此与其他协议字段的行号语义一致。
+    """
+    source_lines = _load_module_source_lines(module)
+    module_source = "\n".join(source_lines)
+    function_name = getattr(function, "__name__", None)
+    if not isinstance(function_name, str):
+        raise LineMapError("无法取得算法函数名")
+    function_lines, function_start = inspect.getsourcelines(function)
+    function_end = function_start + len(function_lines) - 1
+    if function_start < 1 or function_end < function_start:
+        raise LineMapError(f"无法定位函数 {function_name} 的源码行范围")
+
+    tree = ast.parse(module_source)
+    function_node = _find_top_level_function(tree, function_name)
+    if function_node.lineno != function_start:
+        raise LineMapError(
+            f"函数 {function_name} 的 AST 起始行 {function_node.lineno} 与 "
+            f"inspect 行号 {function_start} 不一致"
+        )
+    mappings = _GenericLineMapBuilder().build(function_node)
+    emit_linenos = {mapping.emit_lineno for mapping in mappings}
+    for mapping in mappings:
+        for lineno in (mapping.emit_lineno, mapping.target_lineno):
+            if not function_start <= lineno <= function_end:
+                raise LineMapError(
+                    f"{mapping.event_type} 的行映射（第 {lineno} 行）落在展示函数范围之外"
+                )
+    comment_columns = _comment_columns(module_source)
+    docstring_linenos = _docstring_linenos_in_range(tree, function_start, function_end)
+    lines = tuple(
+        SourceLine(
+            lineno=lineno,
+            text=_display_text(
+                text,
+                lineno=lineno,
+                comment_columns=comment_columns,
+                docstring_linenos=docstring_linenos,
+            ),
+            kind="trace" if lineno in emit_linenos else "normal",
+        )
+        for lineno, text in enumerate(source_lines, start=1)
+        if function_start <= lineno <= function_end
+    )
+    return AlgorithmLineMap(lines=lines, mappings=mappings)

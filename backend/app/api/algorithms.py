@@ -1,12 +1,22 @@
-"""算法轨迹路由：阶段 2 的冒泡轨迹 + 阶段 4 的真实天气轨迹。"""
+"""算法轨迹路由：冒泡轨迹 + 天气轨迹 + 阶段 5 通用算法中心端点。"""
 
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
 from backend.app.api.weather_deps import AppSettingsDep, DatabaseDep
+from backend.app.schemas.algorithm_trace import (
+    AlgorithmListResponse,
+    AlgorithmTraceRequest,
+    AlgorithmTraceResponse,
+)
 from backend.app.schemas.trace import BubbleTraceRequest, TraceResponse
 from backend.app.schemas.weather_trace import WeatherTraceRequest, WeatherTraceResponse
+from backend.app.services.algorithm_trace_service import (
+    UnknownAlgorithmError,
+    build_algorithm_list,
+    build_algorithm_trace,
+)
 from backend.app.services.trace_service import (
     TraceValidationError,
     build_bubble_trace,
@@ -71,5 +81,39 @@ def create_weather_trace(
             direction=payload.direction,
             early_exit=payload.options.early_exit,
         )
+    except TraceValidationError as exc:
+        raise _validation_error(exc) from exc
+
+
+@router.get(
+    "",
+    response_model=AlgorithmListResponse,
+    summary="算法清單與教學元數據",
+)
+def list_algorithms() -> AlgorithmListResponse:
+    """返回 10 个算法（7 个可用 + 3 个开发中）及复杂度/稳定性等元数据。"""
+    return build_algorithm_list()
+
+
+@router.post(
+    "/{algorithm_id}/trace",
+    response_model=AlgorithmTraceResponse,
+    response_model_exclude_none=True,
+    summary="通用算法真實執行軌跡",
+)
+def create_algorithm_trace(
+    algorithm_id: str,
+    payload: AlgorithmTraceRequest,
+) -> AlgorithmTraceResponse:
+    """按 algorithm_id 真实执行算法并返回协议轨迹；未知/未实现返回 404。"""
+    try:
+        return build_algorithm_trace(
+            algorithm_id=algorithm_id,
+            values=payload.values,
+            direction=payload.direction,
+            early_exit=payload.options.early_exit,
+        )
+    except UnknownAlgorithmError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except TraceValidationError as exc:
         raise _validation_error(exc) from exc

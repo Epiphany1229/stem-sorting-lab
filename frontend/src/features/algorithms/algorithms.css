@@ -1,0 +1,669 @@
+/*
+ * 阶段 5A：算法中心、学习页与六种专属辅助视觉的样式。
+ * 只使用 tokens.css 里的设计变量；颜色之外还有文字、符号、形状与连线，
+ * 因此不依赖颜色单独传达状态。减少动态时只取消过渡，逻辑不变。
+ */
+
+/* ---------- 算法中心列表 ---------- */
+.algo-intro {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-card);
+  background: var(--color-primary-soft);
+}
+
+.algo-intro__legend {
+  margin: 0.5rem 0 0;
+  color: var(--color-ink-soft);
+}
+
+.algo-list {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.algo-card-item {
+  min-width: 0;
+}
+
+.algo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.algo-card--available:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.algo-card--planned {
+  border-style: dashed;
+  background: color-mix(in srgb, var(--color-surface) 70%, var(--color-canvas));
+  cursor: not-allowed;
+}
+
+.algo-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.algo-card__index {
+  margin-top: 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+}
+
+.algo-card__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.algo-card__name {
+  margin: 0;
+}
+
+.algo-card__tagline {
+  margin: 0.35rem 0 0;
+  color: var(--color-ink-soft);
+}
+
+.algo-card__cta {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-primary-strong);
+}
+
+.algo-card--planned .algo-card__cta {
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+/* ---------- 学习页页头 ---------- */
+.algo-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.algo-breadcrumbs a {
+  color: var(--color-primary-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.algo-detail__title {
+  margin: 0;
+}
+
+.algo-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-primary-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.algo-source-note {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
+/* ---------- 算法事实面板 ---------- */
+.algo-meta__grid {
+  display: grid;
+  gap: 0.9rem 1.5rem;
+  margin: 0.75rem 0 0;
+}
+
+.algo-meta__grid dt {
+  margin-bottom: 0.2rem;
+}
+
+.algo-meta__grid dd {
+  margin: 0;
+}
+
+.algo-meta__defaults {
+  margin: 0.9rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-ink-soft);
+}
+
+/* ---------- 输入控件 ---------- */
+.algo-controls__grid {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 0.9rem;
+}
+
+.algo-controls__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.algo-controls__custom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.algo-controls__custom-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.algo-controls__hint {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
+.algo-controls__error {
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  border-left: 4px solid var(--color-swap);
+  border-radius: var(--radius-chip);
+  background: var(--color-swap-soft);
+}
+
+.algo-controls__current {
+  margin: 0;
+  color: var(--color-ink-soft);
+}
+
+.algo-controls__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  margin-top: 0.4rem;
+}
+
+.algo-controls__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+}
+
+.algo-controls__early-exit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* ---------- 练习 ---------- */
+.algo-practice__prompt {
+  margin: 0.5rem 0 0;
+  color: var(--color-ink-muted);
+}
+
+.algo-practice__question {
+  margin: 0.6rem 0;
+}
+
+.algo-practice__details summary {
+  cursor: pointer;
+  color: var(--color-primary-strong);
+  font-weight: 600;
+}
+
+.algo-practice__answer {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-chip);
+  background: var(--color-primary-soft);
+}
+
+/* ---------- 专属辅助视觉通用 ---------- */
+.algo-aux {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-surface) 75%, var(--color-canvas));
+}
+
+.algo-aux__title {
+  margin: 0;
+}
+
+.algo-aux__hint,
+.algo-aux__legend {
+  margin: 0.35rem 0 0;
+  color: var(--color-ink-muted);
+}
+
+.algo-aux__idle {
+  margin: 0.6rem 0 0;
+  padding: 0.5rem 0.7rem;
+  border-left: 4px solid var(--color-compare);
+  border-radius: var(--radius-chip);
+  background: var(--color-compare-soft);
+}
+
+.algo-aux__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.4rem;
+  margin: 0.75rem 0 0;
+}
+
+.algo-aux__fact dt {
+  margin-bottom: 0.15rem;
+}
+
+.algo-aux__fact dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.algo-aux__missing {
+  margin: 0.7rem 0 0;
+  padding: 0.45rem 0.65rem;
+  border-left: 4px solid var(--color-swap);
+  border-radius: var(--radius-chip);
+  background: var(--color-swap-soft);
+}
+
+.algo-aux__figure {
+  margin: 0.7rem 0 0;
+  overflow-x: auto;
+}
+
+.algo-aux__figure:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-chip);
+}
+
+.algo-aux__subtitle {
+  margin: 0.9rem 0 0.4rem;
+}
+
+.algo-aux__note {
+  margin: 0.45rem 0 0;
+  color: var(--color-ink-soft);
+}
+
+.algo-aux__grid {
+  display: grid;
+  row-gap: 0.55rem;
+  align-items: end;
+  min-width: min(100%, 40rem);
+}
+
+.algo-aux__held {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.8rem;
+  margin: 0.75rem 0 0.25rem;
+  padding: 0.45rem 0.8rem;
+  border: 2px solid var(--color-compare);
+  border-radius: var(--radius-card);
+  background: var(--color-compare-soft);
+}
+
+.algo-aux__held-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.algo-aux__held-move,
+.algo-aux__held-label {
+  color: var(--color-ink-soft);
+}
+
+/* ---------- 阵列单元格（HTML 图） ---------- */
+.algo-cells {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.2rem 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.algo-cell {
+  position: relative;
+  display: flex;
+  flex: 0 0 3.2rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 4.4rem;
+  padding: 1rem 0.25rem 0.4rem;
+  border: 2px solid var(--color-border-strong);
+  border-radius: 0.55rem;
+  background: var(--color-surface-raised);
+  font-variant-numeric: tabular-nums;
+}
+
+.algo-cell__index {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-ink-muted);
+}
+
+.algo-cell__marker {
+  position: absolute;
+  top: 0.1rem;
+  right: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.algo-cell__value {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.algo-cell--candidate {
+  border-color: var(--color-compare);
+  background: var(--color-compare-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-compare) 28%, transparent);
+}
+
+.algo-cell--active {
+  border-color: var(--color-compare);
+  background: var(--color-compare-soft);
+}
+
+.algo-cell--pivot {
+  border-color: var(--color-swap);
+  background: var(--color-swap-soft);
+}
+
+.algo-cell--settled {
+  border-color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.algo-cell--hole {
+  border-style: dashed;
+  border-color: var(--color-swap);
+  background: var(--color-swap-soft);
+}
+
+.algo-cell--muted,
+.algo-cell--dimmed {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+/* ---------- 归并：buffer 与区间括号 ---------- */
+.algo-aux__buffer {
+  margin-top: 1rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-chip);
+  background: color-mix(in srgb, var(--color-surface-raised) 80%, var(--color-canvas));
+}
+
+.algo-aux__buffer-title {
+  margin: 0 0 0.4rem;
+}
+
+.algo-aux__buffer-empty {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
+.algo-merge__bracket,
+.algo-quick__bracket {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  height: 1.5rem;
+  padding-top: 0.05rem;
+  border-top: 2px solid var(--color-primary);
+  border-right: 2px solid var(--color-primary);
+  border-left: 2px solid var(--color-primary);
+  border-radius: 0.4rem 0.4rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-primary-strong);
+}
+
+.algo-merge__mid {
+  height: 1.7rem;
+  border-left: 2px dashed var(--color-compare);
+}
+
+.algo-quick__partition-line {
+  height: 1.7rem;
+  border-left: 2px dashed var(--color-swap);
+}
+
+/* ---------- 希尔排序 SVG ---------- */
+.algo-shell {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 40rem;
+}
+
+.algo-shell__rect {
+  fill: var(--color-surface-raised);
+  stroke: var(--color-border-strong);
+  stroke-width: 2;
+}
+
+.algo-shell__cell--current .algo-shell__rect {
+  stroke: var(--color-compare);
+  stroke-width: 4;
+  fill: var(--color-compare-soft);
+}
+
+.algo-shell__cell--group-0 .algo-shell__rect {
+  fill: color-mix(in srgb, var(--color-primary) 9%, var(--color-surface-raised));
+}
+
+.algo-shell__cell--group-1 .algo-shell__rect {
+  fill: color-mix(in srgb, var(--color-compare) 12%, var(--color-surface-raised));
+}
+
+.algo-shell__cell--group-2 .algo-shell__rect {
+  fill: color-mix(in srgb, var(--color-swap) 10%, var(--color-surface-raised));
+}
+
+.algo-shell__cell--group-3 .algo-shell__rect {
+  fill: color-mix(in srgb, var(--color-success) 10%, var(--color-surface-raised));
+}
+
+.algo-shell__bracket {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 2;
+}
+
+.algo-shell__group--current .algo-shell__bracket {
+  stroke: var(--color-compare);
+  stroke-width: 3.5;
+}
+
+.algo-shell__group[data-group-index="1"] .algo-shell__bracket {
+  stroke: var(--color-compare);
+}
+
+.algo-shell__group[data-group-index="2"] .algo-shell__bracket {
+  stroke: var(--color-swap);
+}
+
+.algo-shell__group[data-group-index="3"] .algo-shell__bracket {
+  stroke: var(--color-success);
+}
+
+.algo-shell text,
+.algo-heap text {
+  font-family: var(--font-sans);
+}
+
+.algo-shell__index {
+  text-anchor: middle;
+  font-size: 11px;
+  fill: var(--color-ink-muted);
+}
+
+.algo-shell__value {
+  text-anchor: middle;
+  font-size: 15px;
+  font-weight: 700;
+  fill: var(--color-ink);
+}
+
+.algo-shell__marker {
+  text-anchor: middle;
+  font-size: 13px;
+  font-weight: 800;
+  fill: var(--color-ink);
+}
+
+.algo-shell__group-label,
+.algo-shell__group-tag {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--color-primary-strong);
+}
+
+.algo-shell__group-tag {
+  text-anchor: end;
+  fill: var(--color-ink-muted);
+}
+
+/* ---------- 堆排序 SVG ---------- */
+.algo-heap {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 40rem;
+}
+
+.algo-heap__edge {
+  stroke: var(--color-border-strong);
+  stroke-width: 2;
+}
+
+.algo-heap__edge--active {
+  stroke: var(--color-compare);
+  stroke-width: 4;
+}
+
+.algo-heap__circle {
+  fill: var(--color-surface-raised);
+  stroke: var(--color-border-strong);
+  stroke-width: 2;
+}
+
+.algo-heap__node--current .algo-heap__circle {
+  fill: var(--color-compare-soft);
+  stroke: var(--color-compare);
+  stroke-width: 4;
+}
+
+.algo-heap__node--parent .algo-heap__circle {
+  fill: var(--color-primary-soft);
+  stroke: var(--color-primary);
+  stroke-width: 3;
+}
+
+.algo-heap__node--child .algo-heap__circle {
+  fill: var(--color-success-soft);
+  stroke: var(--color-success);
+  stroke-width: 3;
+}
+
+.algo-heap__node--removed .algo-heap__circle {
+  fill: transparent;
+  stroke-dasharray: 4 3;
+  opacity: 0.6;
+}
+
+.algo-heap__value {
+  text-anchor: middle;
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--color-ink);
+}
+
+.algo-heap__index {
+  text-anchor: middle;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--color-ink-muted);
+}
+
+.algo-heap__marker {
+  text-anchor: middle;
+  font-size: 14px;
+  font-weight: 800;
+  fill: var(--color-ink);
+}
+
+.algo-heap__out-label {
+  text-anchor: middle;
+  font-size: 10px;
+  fill: var(--color-ink-muted);
+}
+
+/* ---------- 响应式 ---------- */
+@media (min-width: 768px) {
+  .algo-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .algo-meta__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .algo-controls__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- 减少动态 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .algo-card,
+  .algo-aux,
+  .algo-aux *,
+  .algo-shell *,
+  .algo-heap * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
