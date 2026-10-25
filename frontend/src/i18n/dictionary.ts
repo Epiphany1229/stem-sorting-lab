@@ -30,6 +30,10 @@ export const dictionary = {
     "zh-Hant": "載入中…",
     en: "Loading…",
   },
+  "common.routeLoading": {
+    "zh-Hant": "正在載入頁面…",
+    en: "Loading page…",
+  },
   "common.error": {
     "zh-Hant": "載入失敗，請稍後再試。",
     en: "Loading failed. Please try again later.",

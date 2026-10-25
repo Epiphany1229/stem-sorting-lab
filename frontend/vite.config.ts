@@ -15,6 +15,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Cloudflare Tunnel / 自定义域名穿透开发端口时，避免 Vite 的 host 校验拦截。
+    allowedHosts: true,
     // 开发阶段把 /api 转发到本项目的 FastAPI 后端；后续阶段再按需加代理规则。
     proxy: {
       "/api": {
@@ -26,6 +28,20 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: true,
+    // Plotly 体积很大且只有天气页会用到：单独拆成独立 chunk，
+    // 首屏主 chunk 不含 Plotly，访问天气页时才加载。
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: "plotly",
+              test: /node_modules[\\/]plotly\.js-dist-min/,
+            },
+          ],
+        },
+      },
+    },
   },
   test: {
     environment: "jsdom",

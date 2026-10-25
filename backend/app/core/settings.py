@@ -91,6 +91,12 @@ class Settings(BaseSettings):
     # auto_sync_stations 只用于“是否需要同步”的核心站判断，不限制写入范围。
     auto_sync_write_all_mapped: bool = True
 
+    # ---------- 单端口前端静态托管（阶段 6 演示部署） ----------
+    # 是否由 FastAPI 同时托管 frontend/dist（开发环境可关闭，改用 Vite dev server）
+    serve_frontend: bool = True
+    # 前端构建产物目录（相对仓库根解析；不存在时不做任何挂载，行为保持不变）
+    frontend_dist_dir: str = "frontend/dist"
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

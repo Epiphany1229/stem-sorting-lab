@@ -21,14 +21,16 @@ function renderRoute(path: string) {
 describe("七个页面路由", () => {
   const pageCases = navItems.map((item) => [item.path, dictionary[item.titleKey]["zh-Hant"]] as const);
 
-  it.each(pageCases)("%s 有明确的 h1 页面标题", (path, title) => {
+  it.each(pageCases)("%s 有明确的 h1 页面标题", async (path, title) => {
     renderRoute(path);
 
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(title);
+    // 懒加载页面会先显示 Suspense fallback，再异步挂载真实页面。
+    await expect(screen.findByRole("heading", { level: 1 })).resolves.toHaveTextContent(title);
   });
 
-  it.each(pageCases)("%s 有当前位置与返回入口", (path) => {
+  it.each(pageCases)("%s 有当前位置与返回入口", async (path) => {
     renderRoute(path);
+    await screen.findByRole("heading", { level: 1 });
 
     // 面包屑：当前项带 aria-current="page"
     const current = document.querySelector('[aria-current="page"]');
@@ -38,8 +40,9 @@ describe("七个页面路由", () => {
     expect(screen.getAllByRole("link", { name: /^(返回首頁|回到頁首)$/ }).length).toBeGreaterThan(0);
   });
 
-  it.each(pageCases)("%s 出现在顶部导航里", (path) => {
+  it.each(pageCases)("%s 出现在顶部导航里", async (path) => {
     renderRoute(path);
+    await screen.findByRole("heading", { level: 1 });
 
     const nav = screen.getAllByRole("navigation")[0];
     expect(nav).toBeDefined();

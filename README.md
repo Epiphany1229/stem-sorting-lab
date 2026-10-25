@@ -17,19 +17,19 @@
 | 3 | 官方天气数据接入 + 数据质量 + 互动图表 | ✅ 完成 |
 | 4 | 用真实气温做排序（**仅冒泡排序**） | ✅ 完成 |
 | 5 | 其余九种算法 + 专属可视化 | ✅ **已完成（范围收敛为 7 种比较类排序）**：冒泡/选择/插入/希尔/归并/快速/堆 |
-| 6 | 浏览器验收、无障碍、性能、文档完善 | ⬜ 未开始 |
+| 6 | 浏览器验收、无障碍、性能、文档完善 | ✅ 完成（文档/测试门禁/分包/单端口托管；Playwright 截图未执行，见限制） |
 
 **已实现（可真实使用）**：
 
 - 后端 `POST /api/algorithms/bubble/trace`：真实执行 `bubble_sort` 产生协议 v1 轨迹（状态快照、比较/交换/写入分账、双语模板解释），支持升/降序与提前结束优化。
-- 前端 `/lab`：SVG 柱状图、播放/暂停/上一步/下一步/重置/调速、引导模式与自由实验模式、Python 代码行组同步高亮（插桩行可折叠且行号不漂移）、"下一步这两个数需要交换吗？"预测弹窗（可用键盘、Esc 关闭、焦点归还）。
-- **天气数据（阶段 3）**：HKO 安全抓取客户端（`trust_env=False`、并发 1、≥3s + jitter、429 `Retry-After` 挂起、403 熔断、ETag/Last-Modified 条件请求、每日预算、单 worker 租约）、SQLite 落库（保留 `value_raw` 原始字符串精度、质量标记 `C`/`#`/`***`）、CLI 入库、8 个天气/来源接口、官方 CSV 导入与演示模式隔离。
-- 前端 `/weather`：日期范围、39 站多选、覆盖率与真实窗口、5 类 Plotly 图表（折线/柱状/直方/散点/环形）、双语悬停、数据表、CSV 导入报告、刷新冷却显示、非 official 模式常驻横幅。
-- **真实气温排序 `/weather-sort`（阶段 4）**：`/weather` 顶部入口按钮；`tmax`/`tmin` 一键切换（各自有效天数与缺失日期）、升降序、测站与日期范围、并排比较开关；**复用**阶段 2 播放器（播放/暂停/上一步/下一步/重置/调速、Python 行组高亮、内联比较区），零重写排序逻辑；柱上显示纯数字温度与日期标签，悬停/聚焦看完整日期、测站中英文名、质量标记；Top5 最热/最冷、排序前后对比、比较/交换/轮次、冒泡 vs 单次扫描 STEM 卡片。
+- 前端 `/lab`：全宽 SVG 柱状图、播放/暂停/上一步/下一步/重置/调速、Python 核心循环代码行组同步高亮、代码面板下方常驻内联比较问答区。
+- **天气数据（阶段 3）**：HKO 安全抓取客户端（`trust_env=False`、并发 1、≥3s + jitter、429 `Retry-After` 挂起、403 熔断、ETag/Last-Modified 条件请求、每日预算、单 worker 租约）、SQLite 落库（保留 `value_raw` 原始字符串精度、质量标记 `C`/`#`/`***`）、CLI 入库、8 个天气/来源接口、演示模式隔离；**自动同步**：启动自检 + 每 24h 静默检查并补齐最近数据（`AUTO_SYNC_*` 控制）。
+- 前端 `/weather`：39 站多选（自动隐藏无数据站）、按测站锚定的真实 30 天窗口、覆盖率与官方来源声明、4 类 Plotly 图表（折线/柱状/直方/环形）、双语悬停与数据表（默认折叠 5 行）、**无日期选择/无抓取入口/无导出**。
+- **真实气温排序 `/weather-sort`（阶段 4）**：`/weather` 顶部入口按钮；`tmax`/`tmin` 一键切换（各自有效天数与缺失日期）、升降序、测站与并排比较开关（固定最近 30 天，无日期选择）；复用阶段 2 播放器；柱上纯数字温度 + 短日期，悬停/聚焦看完整信息；Top5 最热/最冷、排序前后对比、比较/交换/轮次、冒泡 vs 单次扫描 STEM 卡片。
 - **比较类排序学习中心（阶段 5，7 种）**：冒泡、选择、插入、希尔、归并、快速、堆；每种都有唯一真实 Python 源码 + AST 行号映射、同步代码高亮、双语逐步解释、复杂度/空间/稳定性/适用条件与练习；专属可视化：选择（最小值候选）、插入（持牌槽位）、希尔（gap 分组）、归并（区间 + 辅助合并区）、快速（枢轴/边界指针）、堆（数组与二叉堆 SVG 联动）。
 - 跨栈回归：前端直接消费**后端真实输出**做测试（轨迹 JSON、天气 API JSON、天气排序轨迹、算法清单与轨迹）。
 
-**尚未实现（不要误认为已有）**：其余九种算法、shadcn/ui 具体组件、ESLint、Playwright 浏览器截图验收；降雨/湿度的查询接口仍缺（RYES 日雨量已可由 CLI 回填，但未接入页面）。
+**尚未实现 / 未执行（不要误认为已有）**：计数/桶/基数排序（产品正式收敛，不做）；shadcn/ui 具体组件（仅地基）；ESLint；Playwright 三视口截图验收（本机无浏览器自动化，未执行）；降雨/湿度查询接口未在页面暴露（RYES 日雨量可 CLI 回填）。
 
 ---
 
@@ -39,7 +39,7 @@
 backend/app/          FastAPI 应用（api / core / algorithms / schemas / services / data_sources / models）
 frontend/             React + TS + Vite 前端
   src/i18n/           BilingualText 组件与 zh-Hant/en 字典
-  src/pages/          7 个页面 + 404
+  src/pages/          7 个页面 + 404（重页面路由懒加载分包）
   src/styles/         设计 tokens（颜色/字体/间距/圆角/阴影/动效/焦点）
   src/data/           10 种算法元数据（含实现状态）
 tests/                后端测试（pytest）
@@ -104,7 +104,7 @@ pnpm dev                                           # 默认 http://localhost:517
 
 > `frontend/package.json` 的脚本用 `node --require ./scripts/sandbox-guard.cjs` 包了一层：当前沙箱禁止管道 stdio 派生子进程，Vite 在 Windows 上的 `net use` 探测会抛 EPERM。**这只是本机沙箱兼容层**，普通终端下可以直接 `vite` / `vitest`。
 
-### 3. 首次导入真实天气数据（可选，需要联网）
+### 4. 首次导入真实天气数据（可选，需要联网）
 
 ```powershell
 # 抓取 HKO 2026 全年逐日最高/最低温并入库（每请求间隔 ≥3 秒）
@@ -121,7 +121,7 @@ uv run python -m backend.app.cli ingest-rainfall --start 2026-09-01 --end 2026-0
 - 抓取受预算/冷却/熔断约束；失败会返回原因，不会静默使用演示数据
 - 演示模式样本在 `sample_data/demo/`（真实官方快照，来源见该目录 README），页面需手动开启且常驻「示範資料」标识
 
-### 4. 质量门禁
+### 5. 质量门禁
 
 ```powershell
 # 后端（工作区根目录）
@@ -140,22 +140,49 @@ pnpm build
 
 | 命令 | 结果 |
 |---|---|
-| `uv run pytest -q` | `401 passed, 1 warning`（含算法轨迹/Hypothesis/天气/抓取测试，全部离线 MockTransport） |
+| `uv run pytest -q` | `450 passed, 1 warning`（算法轨迹/Hypothesis/天气/抓取/单端口托管，全部离线 MockTransport） |
 | `uv run ruff check .` | `All checks passed!` |
-| `uv run mypy backend tests` | `Success: no issues found in 63 source files`（strict，无 `# type: ignore`） |
-| `pnpm test:run` | `Test Files 34 passed / 1 skipped`、`Tests 234 passed + 6 skipped` |
-| `pnpm build` | `✓ built in 2.44s`（Plotly 主 chunk 约 5.26 MB，阶段 6 做路由懒加载分包） |
+| `uv run mypy backend tests` | `Success: no issues found in 71 source files`（strict，无 `# type: ignore`） |
+| `pnpm test:run` | `Test Files 35 passed / 1 skipped`、`Tests 239 passed + 6 skipped` |
+| `pnpm build` | `✓ built in 2.90s`；**首屏入口 chunk 373.89 kB（gzip 117.33 kB）**，Plotly 独立 chunk 4.64 MB 仅在天气页加载 |
 | `pnpm exec tsc --noEmit` | 通过（无输出） |
-| 真实算法链路 | catalog **7 项全 available**；7 算法轨迹均 200 且最终排序正确；`code.lines` 只含核心循环（冒泡 10 行、选择 11、归并 13、堆 16，无 `def`/`return`/注释，事件行引用 0 悬空） |
-| 真实天气链路 | 默认窗口**按请求测站自身最新日期锚定**：HKO/KP = 09-25～10-24（30/30）、未映射站 VP1 = 09-01～09-30（30/30）、HKO+VP1 共同锚点 09-30；TPO 无数据不展示；自动同步已启用（24h 自检） |
-| 跨栈回归 | 轨迹/天气/天气排序/算法清单与轨迹均消费真实后端输出 |
+| 单端口实测（uvicorn 8000） | `/`、`/weather-sort`、`/algorithms/heap`、`/lab` → 200 HTML；`/api/health` 200 JSON；`/docs` 200；`/api/unknown` 404 JSON；`/assets/*` 200；`index.html` 不预加载 Plotly |
+
+### 6. 单端口构建 + Cloudflare Tunnel 公网演示（0 成本）
+
+适用于「本地运行、临时对外演示」：**一个 uvicorn 端口同时提供前端页面与 API**，用 Cloudflare 快速隧道穿透，无需服务器、无需域名。
+
+```powershell
+# ① 构建前端（路由懒加载后 Plotly 独立 chunk，首屏不再下载 5MB）
+cd frontend
+pnpm install
+pnpm build            # 产出 frontend/dist
+
+# ② 回到仓库根，启动后端（会自动托管 frontend/dist）
+cd ..
+uv run uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --workers 1
+
+# ③ 另开终端，创建临时公网隧道（需已安装 cloudflared）
+cloudflared tunnel --url http://127.0.0.1:8000
+# 终端会输出一个 https://xxxx.trycloudflare.com 地址，直接分享
+```
+
+要点：
+
+- **单个 worker**：SQLite 是单写者，且自动同步后台任务应只有一个实例（多 worker 会各自跑同步循环）。
+- 后端只在 `frontend/dist` **存在时**才挂载静态资源与 SPA fallback；不存在时仍按纯 API 运行（可用 Vite 开发模式，见第 3 节）。
+- `/api/*`、`/docs`、`/openapi.json` 优先，其余路径返回 `index.html`（前端路由刷新不会 404）。
+- 首次启动会自动补最近数据（RYES 逐日、约 35 次请求 × 3 秒，需几分钟；页面可先行打开，数据逐步出现）。
+- 临时隧道地址**每次重启都会变化**，且 Cloudflare 免费隧道有连接数与带宽限制，只适合演示，不适合正式长期服务。
+- 数据库 `app.db` 与自动同步都跑在本机；关闭终端即停止服务。
+- 演示前建议确认 `AUTO_SYNC_ENABLED=true`，这样每天自动更新最近数据（受 HKO 官方月表发布节奏限制）。
 
 ---
 
 ## 数据来源与许可
 
 - 官方资料：香港天文台开放数据 API（`https://data.weather.gov.hk/weatherAPI/opendata/`）。
-- **尚未接入**真实数据；数据可行性、实测字段、测站覆盖、许可与限制见 [`docs/data-sources.md`](docs/data-sources.md)。
+- **已接入真实官方数据**：39 站逐日气温（月表 `CLMMAXT/CLMMINT/CLMTEMP`）+ RYES 日报补齐最近日期；数据字段、测站覆盖、许可与限制见 [`docs/data-sources.md`](docs/data-sources.md)。
 - **测站代号表已核实**：官方 API 说明书 PDF（2025-09-22 版）解析出 **39 个测站**的代号、中英文名与逐站起始年（`docs/data-sources.md` §5.4），并抽样用 API 复核。行政区 ↔ 测站映射官方未提供，代码中**不得猜测**。
 - 已知关键约束：逐日最高/最低温只有**月表**渠道（每月发布），**当月返回空数组**；因此"截至昨日 30 天"会有结构性缺口。产品已确认：**以最后可用日为锚点回推"最近有数据的 30 天"**，并在界面显示真实起止日期与"当月数据尚未发布"。
 - 许可要求：须署名香港天文台、复现其免责声明、不得出售数据（本项目为非商业教学用途）。
@@ -166,10 +193,10 @@ pnpm build
 
 | 决策 | 内容 |
 |---|---|
-| 默认窗口 | 以最后可用日为锚点，回推"最近有数据的 30 天"；界面显示起止日期 + 当月未发布提示 |
+| 默认窗口 | **按请求测站自身最新有效温度日期锚定**，回推 30 天；多站取共同最新日期；界面显示真实起止日期 |
 | 注释语言 | 源码内部注释简体中文；学生可见代码/步骤繁中在上 + 英文在下 |
-| 算法入口 | 十种算法**全部列出**并标注状态，不隐藏未完成项 |
-| 天气数据排序 | **仅冒泡排序**；其余九种用教学小数据 |
+| 算法入口 | **7 种比较类排序**全部列出（不做计数/桶/基数） |
+| 天气数据排序 | **仅冒泡排序**；其余 6 种用教学小数据 |
 
 ---
 

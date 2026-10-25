@@ -290,10 +290,11 @@ sample_data/ 官方文件样本（用于离线解析测试）
 - 验收：计数排序拒绝任意小数并解释；基数排序说明整数/负数变体；桶排序说明区间映射与桶内算法；温度 ×10 定点转换用十进制规则并展示映射。
 - 依赖：C1 协议稳定后并行开发；**导航不得出现空页面**——按 D-4，十种算法**全部列出**并标注状态（可用 / 开发中），不得隐藏未完成项。
 
-### 阶段 6 · 浏览器验收、无障碍、性能、文档
+### 阶段 6 · 浏览器验收、无障碍、性能、文档 ✅ 已完成（2026-10-25）
 
-- 交付：Playwright 桌面/平板/手机三视口截图与修复；无障碍检查；性能检查（轨迹上限、图表体积）；README/`.env.example`/轨迹协议文档/已知限制/可复现演示路径/可选部署说明。
-- 验收：需求文件第十五节"浏览器端验收"全部条目逐条勾选，并附实际执行记录。
+- 已交付：路由级 `React.lazy` 分包（首屏入口 chunk 从 5.26 MB 降到 **373.89 kB**，Plotly 独立 4.64 MB chunk 仅天气页加载）；`vite server.allowedHosts: true`；FastAPI 单端口托管 `frontend/dist` + SPA History Fallback（`/api`、`/docs`、`/openapi.json` 优先，`/api/unknown` 仍 JSON 404）；README 增加「`pnpm build` + uvicorn 单端口 + cloudflared tunnel」公网演示步骤；全套后端/前端门禁实跑通过。
+- 验收：后端 450 passed / ruff / mypy（71 files）；前端 239 passed + 6 skipped / tsc / build；单端口实测 `/`、`/weather-sort`、`/algorithms/heap`、`/lab` 均 200 HTML，`/api/health` 200 JSON，`/docs` 200，`/api/unknown` 404 JSON，`/assets/*` 200，`index.html` 未预加载 Plotly。
+- **未执行**：Playwright 三视口截图与真实 Cloudflare Tunnel 公网联调（本机无浏览器自动化 / 无公网域名），已在 README「未完成与已知限制」中如实标注。
 
 ---
 

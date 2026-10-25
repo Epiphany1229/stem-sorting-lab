@@ -376,3 +376,14 @@
     border-color: var(--color-primary);
   }
 }
+
+/* ---------- 阶段 6：路由懒加载 fallback ---------- */
+.route-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-block: 2rem;
+  color: var(--color-ink-muted);
+  text-align: center;
+}
