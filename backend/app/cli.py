@@ -32,6 +32,10 @@ from backend.app.data_sources.hko.ryes import (
 from backend.app.models.base import today_hk
 from backend.app.models.db import count_stations, create_database
 from backend.app.services.hko_ingest import METRIC_TO_DATATYPE, ingest_year
+from backend.app.services.recent_ingest import (
+    ingest_recent_temperature,
+    parse_recent_stations,
+)
 from backend.app.services.weather_util import TEMPERATURE_METRICS
 
 
@@ -80,6 +84,32 @@ def build_parser() -> argparse.ArgumentParser:
         help="官方 RYES 只提供 HKO 一站（其他站号会被拒绝）",
     )
     rainfall.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="只打印将发起的请求，不联网也不写库",
+    )
+
+    recent = subparsers.add_parser(
+        "ingest-recent",
+        help="用 RYES 日报补齐最近 N 天的逐日气温（1 请求/天，月表优先）",
+    )
+    recent.add_argument(
+        "--days",
+        type=int,
+        default=35,
+        help="回填天数（默认 35，包含结束日）",
+    )
+    recent.add_argument(
+        "--stations",
+        default="HKO,KP,SHA",
+        help="逗号分隔的官方站号（默认 HKO,KP,SHA）",
+    )
+    recent.add_argument(
+        "--end",
+        default=None,
+        help="结束日期 YYYY-MM-DD（默认香港时区的昨天）",
+    )
+    recent.add_argument(
         "--dry-run",
         action="store_true",
         help="只打印将发起的请求，不联网也不写库",
@@ -272,6 +302,83 @@ def _run_ingest_rainfall(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_ingest_recent(args: argparse.Namespace) -> int:
+    """执行 ingest-recent：用 RYES 日报补齐最近 N 天（月表优先，1 请求/天）。"""
+    settings = get_settings()
+    days = int(args.days)
+    if days < 1:
+        raise ValueError("--days 必须为正整数")
+    stations = parse_recent_stations(str(args.stations), settings)
+    if args.end is not None:
+        end = _parse_cli_date(args.end, "--end")
+    else:
+        end = today_hk() - timedelta(days=1)
+    start = end - timedelta(days=days - 1)
+    if bool(args.dry_run):
+        print(
+            f"[dry-run] 目標：{days} 天 × 1 請求/天 = {days} 次請求"
+            f"（{start.isoformat()} .. {end.isoformat()}）"
+        )
+        print(f"[dry-run] 測站：{', '.join(stations)}（僅寫入這些站的 tmax/tmin）")
+        print(
+            f"[dry-run] 接口：{settings.hko_opendata_url}?dataType=RYES&date=YYYYMMDD"
+        )
+        print(
+            f"[dry-run] 合規：同主機並發 1，最小間隔 {settings.fetch_min_interval_seconds}s"
+            f" + jitter ≤ {settings.fetch_jitter_seconds}s；月表已有數據的日期不覆蓋"
+        )
+        for offset in range(days):
+            day = start + timedelta(days=offset)
+            print(f"[dry-run] GET dataType=RYES date={day.strftime('%Y%m%d')}")
+        return 0
+
+    database = create_database(settings)
+    database.prepare()
+    client = HkoClient(settings, database)
+
+    async def _run() -> None:
+        try:
+            summary = await ingest_recent_temperature(
+                client,
+                database,
+                settings,
+                stations=stations,
+                end=end,
+                days=days,
+                on_request=print,
+            )
+        finally:
+            await client.aclose()
+        print(f"[完成] {summary.describe()}")
+        print(
+            f"[窗口] {summary.start.isoformat()} .. {summary.end.isoformat()}，"
+            f"實際新增/覆蓋日期 {len(summary.written_dates)} 天"
+        )
+        if summary.date_mismatch:
+            print(f"[日期不符] {summary.date_mismatch} 天（ReportTimeInfoDate 與請求日不同）")
+        if summary.monthly_authoritative_skipped:
+            print(
+                "[月表優先] 跳過 "
+                f"{summary.monthly_authoritative_skipped} 行（這些日期已有更權威月表資料）"
+            )
+        if summary.errors:
+            print(f"[錯誤] {len(summary.errors)} 條：")
+            for error in summary.errors[:10]:
+                print(f"  - {error}")
+
+    try:
+        asyncio.run(_run())
+    except FetchRejected as exc:
+        print(f"[拒絕] {exc.reason.value}: {exc.message}", file=sys.stderr)
+        return 1
+    except (HkoFetchError, HkoDataError) as exc:
+        print(f"[失敗] {exc}", file=sys.stderr)
+        return 1
+    finally:
+        database.dispose()
+    return 0
+
+
 def _run_init_db() -> int:
     """执行 init-db 子命令：建表并写入官方 39 站。"""
     settings = get_settings()
@@ -296,6 +403,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _run_ingest(args)
         if args.command == "ingest-rainfall":
             return _run_ingest_rainfall(args)
+        if args.command == "ingest-recent":
+            return _run_ingest_recent(args)
     except ValueError as exc:
         print(f"[參數錯誤] {exc}", file=sys.stderr)
         return 2

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -118,5 +118,34 @@ describe("LabPage 后端接入", () => {
     expect(screen.getByTestId("step-progress")).toHaveTextContent("已播放 2 /");
     fireEvent.click(screen.getByRole("button", { name: "下一步" }));
     expect(screen.getByTestId("step-progress")).toHaveTextContent("已播放 3 /");
+  });
+
+  it("柱图全宽无横向滚动，控制条紧随其后，双栏顶部对齐", async () => {
+    stubSuccessfulTrace();
+    renderLabPage();
+    const player = await screen.findByTestId("trace-player");
+
+    // 阶段 4.8：柱图占主内容区 100% 宽，10/30 根柱一屏显示，无滚动容器。
+    expect(screen.queryByTestId("bar-chart-scroll")).not.toBeInTheDocument();
+    const chart = screen.getByTestId("bar-chart");
+    expect(chart).toHaveAttribute("data-full-width", "true");
+    expect(screen.getAllByTestId("bar")).toHaveLength(traceFixture.items.length);
+
+    // 控制条在柱图之后，含当前步骤一句双语说明。
+    const controls = screen.getByTestId("player-controls");
+    expect(player.contains(controls)).toBe(true);
+    expect(
+      chart.compareDocumentPosition(controls) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(within(controls).getByTestId("step-explanation")).toBeInTheDocument();
+
+    // 控制条下方的双栏顶部对齐：左代码，右内联区 + 实时计数。
+    const grid = screen.getByTestId("player-main-grid");
+    expect(grid.className).toContain("items-start");
+    expect(
+      controls.compareDocumentPosition(grid) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(within(screen.getByTestId("player-side-column")).getByTestId("player-metrics")).toBeInTheDocument();
+    expect(screen.getByTestId("code-scroll")).toBeInTheDocument();
   });
 });

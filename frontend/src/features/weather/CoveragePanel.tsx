@@ -126,6 +126,11 @@ export function CoveragePanel({
         <BilingualText as="span" size="subtitle" tkey="weather.coverage.title" />
       </h2>
 
+      {/* 第一行醒目注明资料来源（用户要求置顶）。 */}
+      <p className="weather-coverage__source" data-testid="coverage-source">
+        <BilingualText size="sm" tkey="weather.coverage.sourceLine" />
+      </p>
+
       {error ? (
         <div role="alert" className="weather-alert" data-testid="coverage-error">
           <h3>

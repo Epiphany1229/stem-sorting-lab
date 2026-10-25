@@ -16,12 +16,12 @@ from backend.app.services.trace_service import TraceValidationError, build_bubbl
 from backend.app.trace.line_map import BUBBLE_LINE_MAP
 from backend.app.trace.recorder import EventType, Item, TraceLimitError, TraceRecorder
 
-# 契约 §5 第 3 条：每种事件的目标行必须是指定的 AST 节点类型。
+# 契约 §5 第 3 条 + 阶段 4.8 切片：目标行必须是指定的 AST 节点类型。
+# ``done`` 的目标行会被改映射到核心循环展示范围内最后一个语句（不再是 return）。
 _EXPECTED_TARGET_NODES: dict[str, type[ast.stmt]] = {
     "compare": ast.If,
     "swap": ast.Assign,
     "mark_sorted": ast.For,
-    "done": ast.Return,
 }
 
 
@@ -275,15 +275,20 @@ def test_descending_compare_explanations_use_desc_keys() -> None:
 
 
 def test_line_map_targets_have_expected_ast_nodes() -> None:
-    """按契约 §5 独立校验：目标行节点类型 compare→If、swap→Assign、mark_sorted→For、done→Return。"""
+    """独立校验：compare→If、swap→Assign、mark_sorted→For；done 不再映射到 return。"""
     tree = _module_tree()
     statements = [node for node in ast.walk(tree) if isinstance(node, ast.stmt)]
-    assert {mapping.event_type for mapping in BUBBLE_LINE_MAP.mappings} == set(
-        _EXPECTED_TARGET_NODES
-    )
+    event_types = {mapping.event_type for mapping in BUBBLE_LINE_MAP.mappings}
+    assert event_types == _EXPECTED_TARGET_NODES.keys() | {"done"}
     for mapping in BUBBLE_LINE_MAP.mappings:
-        expected = _EXPECTED_TARGET_NODES[mapping.event_type]
         matching = [node for node in statements if node.lineno == mapping.target_lineno]
+        if mapping.event_type == "done":
+            assert not any(isinstance(node, ast.Return) for node in matching), mapping
+            assert any(
+                line.lineno == mapping.target_lineno for line in BUBBLE_LINE_MAP.lines
+            )
+            continue
+        expected = _EXPECTED_TARGET_NODES[mapping.event_type]
         assert any(isinstance(node, expected) for node in matching), mapping
 
 
@@ -295,8 +300,8 @@ def test_line_map_fails_fast_when_instrumentation_drifts(
 
     monkeypatch.setattr(
         line_map_module,
-        "_load_source_lines",
-        lambda: ["def broken():\n", "    return 1\n"],
+        "_load_module_source_lines",
+        lambda module: ["def broken():\n", "    return 1\n"],
     )
     with pytest.raises(line_map_module.LineMapError):
         line_map_module.build_bubble_line_map()
@@ -318,24 +323,27 @@ def test_swap_target_is_the_swap_assignment_not_the_flag_assignment() -> None:
 
 
 def test_code_lines_come_from_real_executed_function_source() -> None:
-    """code.lines 只展示算法函数本体，且去掉注释/文档字符串（学生界面不允许简体）。
+    """code.lines 只展示核心循环切片，且去掉注释/文档字符串（学生界面不允许简体）。
 
-    需求：学生不需要看到模块级 import/docstring，也不需要看内部简体注释；
+    阶段 4.8：不下发函数签名、数组复制/长度初始化与 return；冒泡目标约 8–10 行。
     但行号仍是模块绝对行号，事件 ``code_line_ids`` 必须仍能解析。
     """
     trace = _trace([3, 1, 2])
     module_lines = inspect.getsource(bubble_module).splitlines()
-    function_lines, function_start = inspect.getsourcelines(bubble_module.bubble_sort)
-    expected_count = len(function_lines)
 
-    assert len(trace.code.lines) == expected_count
-    assert trace.code.lines[0].lineno == function_start
-    assert trace.code.lines[0].text.lstrip().startswith("def bubble_sort(")
-    assert trace.code.lines[-1].text.strip() == "return arr"
-
-    # 模块级内容（docstring / import）不得出现
-    assert not any(line.text.lstrip().startswith("from __future__") for line in trace.code.lines)
-    assert not any(line.text.lstrip().startswith("from collections") for line in trace.code.lines)
+    # 冒泡核心循环切片：外层 for、内层 for、if 比较、交换、early_exit 判断、
+    # 各 emit 行与 done 行（trace 行可折叠）。
+    assert 8 <= len(trace.code.lines) <= 10
+    first = trace.code.lines[0]
+    last = trace.code.lines[-1]
+    assert first.text.lstrip().startswith("for i in range(n - 1):")
+    assert last.text.lstrip().startswith("recorder.emit_done(")
+    assert last.kind == "trace"
+    assert not any(line.text.lstrip().startswith("def ") for line in trace.code.lines)
+    assert not any("return" in line.text for line in trace.code.lines)
+    assert not any(
+        line.text.lstrip().startswith("arr = list(values)") for line in trace.code.lines
+    )
 
     line_ids = set()
     for line in trace.code.lines:

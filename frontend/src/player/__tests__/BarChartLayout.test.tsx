@@ -50,8 +50,9 @@ describe("柱状图密集标签布局（30 根柱）", () => {
     expect(svg).toHaveAttribute("data-label-layout", "horizontal-staggered");
     // 不再有旋转标记。
     expect(svg).not.toHaveAttribute("data-label-rotate");
-    // 柱数多时每个槽位仍保留足够宽度，标签因此不会互相压住。
-    expect(Number(svg.getAttribute("data-slot-width"))).toBeGreaterThanOrEqual(34);
+    // 全宽画布：固定 viewBox 拉满容器，30 个槽位一次性排下（约 30px/槽）。
+    expect(svg).toHaveAttribute("data-full-width", "true");
+    expect(Number(svg.getAttribute("data-slot-width"))).toBeGreaterThanOrEqual(28);
 
     // 画布上方统一显示双语单位说明。
     const unitNote = screen.getByTestId("bar-chart-unit");
@@ -77,7 +78,9 @@ describe("柱状图密集标签布局（30 根柱）", () => {
       expect(["0", "1"]).toContain(value.getAttribute("data-label-stagger"));
 
       const dateLabel = within(bar).getByTestId("bar-label");
-      expect(dateLabel).toHaveTextContent(item?.label?.slice(5) ?? "");
+      // 底部日期使用简短 MM/DD 格式，避免 30 根柱时互相压住。
+      expect(dateLabel).toHaveTextContent(item?.label?.slice(5).replace("-", "/") ?? "");
+      expect(dateLabel.textContent).toMatch(/^\d{2}\/\d{2}$/);
       expect(dateLabel).not.toHaveAttribute("transform");
     }
 
@@ -111,19 +114,38 @@ describe("柱状图密集标签布局（30 根柱）", () => {
     expect(detail).toHaveTextContent("品質標記");
   });
 
-  it("宽画布放进可横向滚动的区域，并保留键盘可达性", () => {
+  it("柱图容器为全宽、无横向滚动/裁切，并保留键盘可达性", () => {
     const items = weatherItems(30);
     render(<BarChart items={items} state={stateOf(items)} unit="°C" />);
 
-    const scroll = screen.getByTestId("bar-chart-scroll");
-    expect(scroll).toHaveAttribute("tabindex", "0");
-    expect(scroll).toHaveAttribute("role", "group");
-    expect(scroll.getAttribute("aria-label")).toContain("柱狀圖");
+    // 已移除横向滚动容器：柱图直接占满主内容区宽度。
+    expect(screen.queryByTestId("bar-chart-scroll")).not.toBeInTheDocument();
+    const figure = screen.getByTestId("bar-chart-figure");
+    expect(figure).toHaveAttribute("data-full-width", "true");
+    expect(figure.querySelector('[role="region"]')).toBeNull();
 
     const svg = screen.getByTestId("bar-chart");
-    expect(Number(svg.getAttribute("width"))).toBeGreaterThan(680);
+    expect(svg).not.toHaveAttribute("width");
+    expect(svg).toHaveAttribute("data-full-width", "true");
     expect(svg).toHaveAttribute("role", "img");
     expect(svg.getAttribute("aria-label")).toContain("柱狀圖");
+    // 30 根柱子全部渲染，没有因裁切而丢失。
+    expect(screen.getAllByTestId("bar")).toHaveLength(30);
+  });
+
+  it("10 根柱同样一屏完整显示：全宽、纯数字、短日期", () => {
+    const items = weatherItems(10);
+    render(<BarChart items={items} state={stateOf(items)} unit="°C" />);
+
+    expect(screen.queryByTestId("bar-chart-scroll")).not.toBeInTheDocument();
+    expect(screen.getByTestId("bar-chart")).toHaveAttribute("data-full-width", "true");
+    const bars = screen.getAllByTestId("bar");
+    expect(bars).toHaveLength(10);
+    for (const bar of bars) {
+      const item = items.find((candidate) => candidate.id === bar.getAttribute("data-item-id"));
+      expect(within(bar).getByTestId("bar-value").textContent).toBe(item?.value_raw);
+      expect(within(bar).getByTestId("bar-label").textContent).toMatch(/^\d{2}\/\d{2}$/);
+    }
   });
 
   it("柱数较少时同样水平显示纯数字，并有统一单位提示", () => {

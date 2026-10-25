@@ -79,17 +79,15 @@ def shell_sort(
                     )
         gap //= 2
         gap_index += 1
-    recorder.emit_done(
-        pass_index=max(gap_index - 1, 0),
-        triggered=False,
-        finalized=tuple(range(n)),
-        aux={
-            "gap": 1,
-            "gap_index": max(gap_index - 1, 0),
-            "groups": [list(range(n))],
-            "group_index": 0,
-            "key_value": 0.0,
-            "hole_index": 0,
-        },
-    )
+    done_pass = max(gap_index - 1, 0)
+    done_final = tuple(range(n))
+    done_aux = {
+        "gap": 1,
+        "gap_index": done_pass,
+        "groups": [list(range(n))],
+        "group_index": 0,
+        "key_value": 0.0,
+        "hole_index": 0,
+    }
+    recorder.emit_done(pass_index=done_pass, finalized=done_final, aux=done_aux)
     return arr

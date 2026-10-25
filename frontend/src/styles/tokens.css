@@ -74,12 +74,12 @@
   --duration-base: 220ms;
   --duration-slow: 360ms;
 
-  /* 间距 token：页面区块、卡片内边距、区块内堆叠。 */
-  --space-page-block: clamp(2.5rem, 1.6rem + 3vw, 4.5rem);
-  --space-section: clamp(2rem, 1.4rem + 2vw, 3.25rem);
-  --space-card: clamp(1.35rem, 1.1rem + 0.8vw, 1.9rem);
-  --space-stack: clamp(1.5rem, 1.2rem + 1vw, 2rem);
-  --space-inline: 1.1rem;
+  /* 间距 token：紧凑但有呼吸，避免过大的固定留白。 */
+  --space-page-block: clamp(1.75rem, 1.2rem + 2vw, 3rem);
+  --space-section: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);
+  --space-card: clamp(1rem, 0.9rem + 0.5vw, 1.35rem);
+  --space-stack: clamp(1rem, 0.9rem + 0.4vw, 1.4rem);
+  --space-inline: 1rem;
 
   /* 内容宽度：阅读区不过宽，大屏留白更从容。 */
   --content-width: 74rem;

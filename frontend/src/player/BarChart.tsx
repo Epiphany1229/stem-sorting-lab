@@ -49,9 +49,9 @@ function formatItemValue(item: TraceItem, fallbackValue: number, unit?: string):
   return unit ? `${raw} ${unit}` : raw;
 }
 
-/** 柱子底部显示短日期标签（完整日期在悬停与聚焦详情里）。 */
+/** 柱子底部显示简短日期（完整日期在悬停与聚焦详情里），如 09/15。 */
 function shortDateLabel(label: string): string {
-  return /^\d{4}-\d{2}-\d{2}$/.test(label) ? label.slice(5) : label;
+  return /^\d{4}-\d{2}-\d{2}$/.test(label) ? label.slice(5).replace("-", "/") : label;
 }
 
 function detailOfItem(item: TraceItem | undefined, unit?: string): BarItemDetail | null {
@@ -69,17 +69,15 @@ function detailOfItem(item: TraceItem | undefined, unit?: string): BarItemDetail
 
 const LEGEND_STATES: readonly BarState[] = ["pending", "compare", "swap", "sorted"];
 
-/* ---------- 画布几何 ---------- */
-const VIEW_HEIGHT = 420;
+/* ---------- 画布几何：固定视窗宽度 + 100% 容器宽，一屏完整显示 ---------- */
+const VIEW_WIDTH = 960;
+const VIEW_HEIGHT = 340;
 const MARGIN_LEFT = 24;
 const MARGIN_RIGHT = 32;
-const MARGIN_TOP = 58;
-const MARGIN_BOTTOM = 96;
-const BASE_WIDTH = 680;
+const MARGIN_TOP = 40;
+const MARGIN_BOTTOM = 46;
 /** 柱数超过该阈值时进入紧凑模式：水平标签 + 奇偶微小错层。 */
 const DENSE_THRESHOLD = 8;
-const DENSE_MIN_SLOT = 36;
-const DEFAULT_MIN_SLOT = 26;
 const STAGGER_STEP = 6;
 const DATE_STAGGER_STEP = 8;
 const MIN_BAR_HEIGHT = 8;
@@ -140,10 +138,10 @@ function buildGeometry(
   const dense = count > DENSE_THRESHOLD;
   const marginTop = MARGIN_TOP;
   const marginRight = MARGIN_RIGHT;
-  const minSlot = dense ? DENSE_MIN_SLOT : DEFAULT_MIN_SLOT;
-  const availableWidth = BASE_WIDTH - MARGIN_LEFT - marginRight;
-  const contentWidth = Math.max(availableWidth, count * minSlot);
-  const viewWidth = MARGIN_LEFT + marginRight + contentWidth;
+  // 画布固定视窗宽度，靠 CSS 拉伸到容器 100%：10/30 根柱都能一屏完整显示，
+  // 不产生横向滚动，也不会被裁切。
+  const viewWidth = VIEW_WIDTH;
+  const contentWidth = viewWidth - MARGIN_LEFT - marginRight;
   const slotWidth = contentWidth / count;
 
   const plotHeight = VIEW_HEIGHT - marginTop - MARGIN_BOTTOM;
@@ -180,12 +178,12 @@ function buildGeometry(
     const y = value < 0 ? baselineY : baselineY - height;
     // 奇偶错层：只上下错开几像素，文字仍然水平。
     const stagger = dense && displayIndex % 2 === 1 ? STAGGER_STEP : 0;
-    // 正数标签在柱顶上方（错层向上），负数标签在柱底下方。
+    // 正数标签在柱顶上方；负数标签放在柱内顶部，避免与底部日期/括号重叠。
     const labelY =
       value < 0
-        ? Math.min(y + height + 20 - stagger, plotBottom + 44)
+        ? Math.max(y + 18 - stagger, marginTop + 12)
         : Math.max(y - 12 - stagger, marginTop - 6);
-    const dateY = VIEW_HEIGHT - 14 - (dense && displayIndex % 2 === 1 ? DATE_STAGGER_STEP : 0);
+    const dateY = VIEW_HEIGHT - 12 - (dense && displayIndex % 2 === 1 ? DATE_STAGGER_STEP : 0);
 
     return {
       itemId,
@@ -225,7 +223,6 @@ export function BarChart({
   const focusedItem = focusedItemId === null ? undefined : itemById.get(focusedItemId);
   const focusedDetail = detailOfItem(focusedItem, unit);
   const labelLayout = dense ? "horizontal-staggered" : "horizontal";
-  const scrollLabel = formatTranslation("player.chart.scrollLabel", {})["zh-Hant"];
   const unitText = unit
     ? formatTranslation("player.chart.unit", { unit })
     : null;
@@ -259,32 +256,29 @@ export function BarChart({
   };
 
   return (
-    <figure className="m-0">
+    <figure className="m-0" data-testid="bar-chart-figure" data-full-width="true">
       {unitText ? (
         <p className="bar-chart__unit" data-testid="bar-chart-unit">
           <BilingualText size="xs" zh={unitText["zh-Hant"]} en={unitText.en} />
         </p>
       ) : null}
-      <div
-        className="bar-chart__scroll"
-        data-testid="bar-chart-scroll"
-        role="group"
-        aria-label={scrollLabel}
-        tabIndex={0}
+      {/*
+        全宽柱图：SVG 的 viewBox 固定，CSS 拉满容器宽度；
+        不套横向滚动容器，10/30 根柱都在一屏内完整显示。
+      */}
+      <svg
+        className={dense ? "bar-chart bar-chart--compact" : "bar-chart"}
+        viewBox={`0 0 ${viewWidth} ${VIEW_HEIGHT}`}
+        role="img"
+        aria-label={formatTranslation("player.chart.label", { count: bars.length })["zh-Hant"]}
+        data-testid="bar-chart"
+        data-full-width="true"
+        data-reduced-motion={reducedMotion ? "true" : "false"}
+        data-bar-count={bars.length}
+        data-slot-width={Math.round(slotWidth * 10) / 10}
+        data-label-layout={labelLayout}
+        data-unit={unit ?? ""}
       >
-        <svg
-          className={dense ? "bar-chart bar-chart--compact" : "bar-chart"}
-          viewBox={`0 0 ${viewWidth} ${VIEW_HEIGHT}`}
-          width={viewWidth}
-          role="img"
-          aria-label={formatTranslation("player.chart.label", { count: bars.length })["zh-Hant"]}
-          data-testid="bar-chart"
-          data-reduced-motion={reducedMotion ? "true" : "false"}
-          data-bar-count={bars.length}
-          data-slot-width={Math.round(slotWidth * 10) / 10}
-          data-label-layout={labelLayout}
-          data-unit={unit ?? ""}
-        >
           <defs>
             <pattern id={dotsPatternId} width="8" height="8" patternUnits="userSpaceOnUse">
               <circle cx="2" cy="2" r="1.2" className="bar-chart__pattern-dot" />
@@ -458,7 +452,6 @@ export function BarChart({
           {bracketFor(comparedIndices, plotBottom + 22)}
           {bracketFor(modifiedIndices, plotBottom + 42)}
         </svg>
-      </div>
 
       {hasWeatherDetails ? (
         <div

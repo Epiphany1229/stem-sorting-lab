@@ -104,17 +104,15 @@ def heap_sort(
         recorder.emit_swap(i=0, j=end, aux=aux, site=1, finalized=finalized)
         finalized.append(end)
         sift_down(0, end, "sift_down")
-    recorder.emit_done(
-        pass_index=max(n - 2, 0),
-        triggered=False,
-        finalized=tuple(range(n)),
-        aux={
-            "heap_size": n,
-            "node_index": 0,
-            "parent_index": -1,
-            "left_child": 1 if n >= 2 else -1,
-            "right_child": 2 if n >= 3 else -1,
-            "phase": "extract",
-        },
-    )
+    done_pass = max(n - 2, 0)
+    done_final = tuple(range(n))
+    done_aux = {
+        "heap_size": n,
+        "node_index": 0,
+        "parent_index": -1,
+        "left_child": 1 if n >= 2 else -1,
+        "right_child": 2 if n >= 3 else -1,
+        "phase": "extract",
+    }
+    recorder.emit_done(pass_index=done_pass, finalized=done_final, aux=done_aux)
     return arr

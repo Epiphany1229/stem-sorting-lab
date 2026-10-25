@@ -4,9 +4,17 @@
 - ``settings``：配置单例；
 - ``database``：SQLAlchemy 数据库对象（首次访问天气接口时建表）；
 - ``hko_client_factory``：HKO 客户端工厂（测试注入 MockTransport 实现离线）。
+
+阶段 5.1 起通过 ``lifespan`` 启动后台自动同步任务（``AUTO_SYNC_ENABLED`` 控制；
+测试环境默认关闭，见 ``tests/conftest.py``）。
 """
 
 from __future__ import annotations
+
+import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager, suppress
+from typing import cast
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +27,25 @@ from backend.app.api.weather_deps import default_client_factory
 from backend.app.core.logging import configure_logging
 from backend.app.core.settings import Settings, get_settings
 from backend.app.models.db import Database, create_database
+from backend.app.services.auto_sync import start_auto_sync
 from backend.app.services.weather_service import ClientFactory
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """应用生命周期：启动后台自动同步任务，关闭时取消并等待其退出。"""
+    settings = cast(Settings, app.state.settings)
+    database = cast(Database, app.state.database)
+    client_factory = cast(ClientFactory, app.state.hko_client_factory)
+    task = start_auto_sync(database, settings, client_factory)
+    app.state.auto_sync_task = task
+    try:
+        yield
+    finally:
+        if task is not None:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
 
 
 def create_app(
@@ -36,6 +62,7 @@ def create_app(
         title=app_settings.app_name,
         version=app_settings.app_version,
         debug=app_settings.debug,
+        lifespan=lifespan,
     )
 
     # 只允许 .env 中显式列出的前端地址跨域访问，不使用 "*" 通配。

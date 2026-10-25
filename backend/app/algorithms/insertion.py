@@ -66,17 +66,15 @@ def insertion_sort(
             aux["sorted_to"] = i + 1
             arr[hole] = key
             recorder.emit_write_place(index=hole, aux=aux, site=1, finalized=list(range(i + 1)))
-    recorder.emit_done(
-        pass_index=max(n - 2, 0),
-        triggered=False,
-        finalized=tuple(range(n)),
-        aux={
-            "pass_index": max(n - 2, 0),
-            "key_value": 0.0,
-            "key_index": 0,
-            "hole_index": 0,
-            "sorted_to": n,
-            "shifting": False,
-        },
-    )
+    done_pass = max(n - 2, 0)
+    done_final = tuple(range(n))
+    done_aux = {
+        "pass_index": done_pass,
+        "key_value": 0.0,
+        "key_index": 0,
+        "hole_index": 0,
+        "sorted_to": n,
+        "shifting": False,
+    }
+    recorder.emit_done(pass_index=done_pass, finalized=done_final, aux=done_aux)
     return arr

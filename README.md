@@ -146,7 +146,8 @@ pnpm build
 | `pnpm test:run` | `Test Files 34 passed / 1 skipped`、`Tests 234 passed + 6 skipped` |
 | `pnpm build` | `✓ built in 2.44s`（Plotly 主 chunk 约 5.26 MB，阶段 6 做路由懒加载分包） |
 | `pnpm exec tsc --noEmit` | 通过（无输出） |
-| 真实算法链路 | catalog **7 项全 available**；7 算法轨迹均 200 且最终排序正确；`counting/bucket/radix/bogus` → 404 |
+| 真实算法链路 | catalog **7 项全 available**；7 算法轨迹均 200 且最终排序正确；`code.lines` 只含核心循环（冒泡 10 行、选择 11、归并 13、堆 16，无 `def`/`return`/注释，事件行引用 0 悬空） |
+| 真实天气链路 | 默认窗口 **2026-09-25 ~ 2026-10-24**（锚点 10-24），覆盖 30/30；HKO 10-24 `tmax=31.9°C`（RYES official）；自动同步已在 lifespan 启用（24h 自检） |
 | 跨栈回归 | 轨迹/天气/天气排序/算法清单与轨迹均消费真实后端输出 |
 
 ---

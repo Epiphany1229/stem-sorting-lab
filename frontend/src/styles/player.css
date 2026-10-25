@@ -8,23 +8,42 @@
 .lab-player {
   display: flex;
   flex-direction: column;
-  gap: var(--space-stack);
+  gap: 1.1rem;
 }
 
-/* 下方固定控制栏：sticky 在视口底部，不遮挡页面其他内容。 */
+/* 紧凑控制条：直接放在柱图下方，不再 sticky、不再占满整行高度。 */
 .lab-controls {
-  position: sticky;
-  bottom: 0;
-  z-index: 20;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.9rem 1rem;
+  gap: 0.55rem;
+  margin-block-start: 0.65rem;
+  padding: 0.7rem 0.85rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
-  backdrop-filter: blur(6px);
-  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-chip);
+  background-color: var(--color-surface);
+}
+
+.player-control-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-step-explanation {
+  color: var(--color-ink-soft);
+}
+
+.player-step-explanation .bilingual {
+  max-inline-size: none;
+}
+
+.player-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  color: var(--color-ink-muted);
 }
 
 .lab-controls__speed {
@@ -75,26 +94,12 @@
   color: var(--color-primary-strong);
 }
 
-/* ---------- SVG 柱状图 ---------- */
-.bar-chart__scroll {
-  max-inline-size: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-block-end: 0.25rem;
-  /* 横向滚动条只在需要时出现，细而低对比。 */
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border-strong) transparent;
-}
-
-.bar-chart__scroll:focus-visible {
-  outline-offset: 0;
-}
-
+/* ---------- SVG 柱状图（全宽，一屏完整显示，无横向滚动） ---------- */
 .bar-chart {
   display: block;
-  height: auto;
+  inline-size: 100%;
+  block-size: auto;
   overflow: visible;
-  margin-inline: auto;
 }
 
 .bar-chart__baseline {
@@ -318,9 +323,9 @@
   color: var(--color-ink);
 }
 
-/* ---------- Python 代码面板 ---------- */
+/* ---------- Python 代码面板（紧凑，避免大面积空白） ---------- */
 .code-panel__scroll {
-  max-height: 26rem;
+  max-height: 18rem;
   overflow: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-chip);
@@ -329,10 +334,10 @@
 
 .code-panel__pre {
   margin: 0;
-  padding: 0.5rem 0;
+  padding: 0.4rem 0;
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  line-height: 1.65;
+  font-size: 0.78rem;
+  line-height: 1.55;
   tab-size: 4;
 }
 
@@ -561,11 +566,8 @@
 .inline-compare {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  /* 内联区在 idle / 事实性比较 / 预测题之间切换，保留最小高度避免页面跳动。 */
-  min-height: 12rem;
-  padding-block-start: 1rem;
-  border-block-start: 1px solid var(--color-border);
+  gap: 0.65rem;
+  padding-block-start: 0.5rem;
 }
 
 .inline-compare__body {
@@ -627,4 +629,116 @@
 .inline-compare__idle {
   margin: 0;
   color: var(--color-ink-soft);
+}
+
+/* ---------- 阶段 4.8：全宽柱图 + 紧凑控制条 + 顶部对齐双栏 ---------- */
+.lab-player {
+  gap: 0.9rem;
+}
+
+.lab-controls {
+  position: static;
+  z-index: auto;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-block-start: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-chip);
+  background-color: var(--color-surface);
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.player-step-explanation {
+  padding-block-start: 0.15rem;
+  border-block-start: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  color: var(--color-ink-soft);
+}
+
+.player-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1rem;
+  color: var(--color-ink-muted);
+}
+
+/* 顶部对齐的紧凑双栏：左核心代码，右内联互动 + 实时计数。 */
+.player-main-grid {
+  align-items: start;
+}
+
+.player-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-inline-size: 0;
+}
+
+.player-metrics-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+}
+
+.player-metrics-card h3 {
+  margin: 0;
+  color: var(--color-ink-soft);
+}
+
+.lab-controls__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem 0.9rem;
+  margin: 0;
+}
+
+.lab-controls__metrics dt {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
+.lab-controls__metrics dd {
+  margin: 0.1rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 520px) {
+  .lab-controls__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.code-panel__scroll {
+  max-height: 18rem;
+}
+
+.code-panel__pre {
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+/* 内联比较区放在右列卡片里：去掉固定最小高度与顶部分隔线。 */
+.inline-compare {
+  min-height: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+}
+
+.inline-compare__values {
+  font-size: 1.25rem;
+}
+
+.bar-chart__unit {
+  margin-block-end: 0.25rem;
+  padding-inline-start: 0;
 }

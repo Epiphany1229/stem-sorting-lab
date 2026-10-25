@@ -1,6 +1,6 @@
 /**
- * 排序条件控件：测站、指标、方向、日期、提前结束与并排比较。
- * 阶段 4.6 移除「引导模式 / 自由实验」开关：比较互动改为代码面板下方常驻内联区。
+ * 排序条件控件：测站、指标、方向、提前结束与并排比较。
+ * 阶段 4.8 移除起止日期选择器：固定使用后端默认的「最近 30 天」窗口。
  * 所有输入变化都会成为新的查询条件，从而让播放器回到 idle（见页面与 useTracePlayback）。
  */
 import { BilingualText } from "../../i18n/BilingualText";
@@ -25,11 +25,6 @@ export interface WeatherSortControlsProps {
   readonly onEarlyExitChange: (earlyExit: boolean) => void;
   readonly parallel: boolean;
   readonly onParallelChange: (parallel: boolean) => void;
-  readonly start: string;
-  readonly end: string;
-  readonly onStartChange: (start: string) => void;
-  readonly onEndChange: (end: string) => void;
-  readonly dateInvalid: boolean;
 }
 
 /** 只列出在当前窗口有资料的测站（与 /weather 的筛选规则一致）。 */
@@ -51,15 +46,8 @@ export function WeatherSortControls({
   onEarlyExitChange,
   parallel,
   onParallelChange,
-  start,
-  end,
-  onStartChange,
-  onEndChange,
-  dateInvalid,
 }: WeatherSortControlsProps) {
   const stationList = selectable(stations);
-  const startLabel = translate("weather.controls.startDate");
-  const endLabel = translate("weather.controls.endDate");
   const stationLabel = translate("weatherSort.controls.station");
   const placeholder = formatTranslation("weatherSort.controls.stationPlaceholder", {});
 
@@ -72,6 +60,9 @@ export function WeatherSortControls({
       <h2 id="weather-sort-controls-heading">
         <BilingualText as="span" size="subtitle" tkey="weatherSort.controls.title" />
       </h2>
+      <p className="weather-controls__hint" data-testid="weather-sort-fixed-window">
+        <BilingualText size="xs" tkey="weatherSort.controls.fixedWindow" />
+      </p>
 
       <div className="weather-sort-controls">
         <div className="weather-sort-controls__field">
@@ -151,50 +142,6 @@ export function WeatherSortControls({
               </label>
             ))}
           </div>
-        </fieldset>
-
-        <fieldset className="weather-sort-controls__group">
-          <legend>
-            <BilingualText as="span" size="sm" tkey="weatherSort.controls.dateRange" />
-          </legend>
-          <div className="weather-sort-controls__dates">
-            <div className="weather-sort-controls__field">
-              <label htmlFor="weather-sort-start">
-                <BilingualText as="span" size="xs" tkey="weather.controls.startDate" />
-              </label>
-              <input
-                id="weather-sort-start"
-                type="date"
-                value={start}
-                max={end || undefined}
-                aria-label={startLabel["zh-Hant"]}
-                aria-invalid={dateInvalid}
-                onChange={(event) => onStartChange(event.target.value)}
-              />
-            </div>
-            <div className="weather-sort-controls__field">
-              <label htmlFor="weather-sort-end">
-                <BilingualText as="span" size="xs" tkey="weather.controls.endDate" />
-              </label>
-              <input
-                id="weather-sort-end"
-                type="date"
-                value={end}
-                min={start || undefined}
-                aria-label={endLabel["zh-Hant"]}
-                aria-invalid={dateInvalid}
-                onChange={(event) => onEndChange(event.target.value)}
-              />
-            </div>
-          </div>
-          {dateInvalid ? (
-            <p role="alert" className="weather-controls__error" data-testid="sort-date-error">
-              <BilingualText size="xs" tkey="weather.controls.dateInvalid" />
-            </p>
-          ) : null}
-          <p className="weather-controls__hint">
-            <BilingualText size="xs" tkey="weatherSort.rangeHint" />
-          </p>
         </fieldset>
 
         <div className="weather-sort-controls__toggles">

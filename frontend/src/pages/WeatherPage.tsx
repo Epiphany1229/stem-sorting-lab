@@ -1,10 +1,10 @@
 /**
- * 香港天气数据探索页（阶段 3，阶段 4.7 按用户反馈最终收敛）。
+ * 香港天气数据探索页（阶段 3，阶段 4.8 最终精简）。
  *
  * 数据流向：所有内容都来自后端天气接口；本地只保存测站选择。
  * - 日期窗口固定使用后端返回的「最近 30 天」，页面始终显示真实起止日期与覆盖率；
- * - 不提供日期范围、指标多选、CSV 导入、抓取/刷新入口或 demo 模式切换；
- *   用户端只读 official 库表，抓取与模式由运维在后端控制；
+ * - 不提供日期范围、指标多选、CSV 导入/导出、抓取/刷新入口或 demo 模式切换；
+ *   用户端只读 official 库表，抓取与同步由后端自动完成；
  * - 四类图表（折线 / 柱状 / 直方 / 环形）+ 可折叠可访问资料表；
  *   若响应信封仍返回非 official 数据，横幅照旧常驻、缺数据展示具体 reason。
  */
@@ -13,7 +13,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { BilingualText } from "../i18n/BilingualText";
 import {
-  buildExportCsvUrl,
   useWeatherCoverage,
   useWeatherDaily,
   useWeatherStations,
@@ -103,19 +102,13 @@ export default function WeatherPage() {
     });
   };
 
-  const exportHref = buildExportCsvUrl(queryParams);
   const showChartsHint = selected.length === 0;
 
   return (
     <div className="page-stack">
       <PageHeader titleKey="weather.title" status="available" leadKey="weather.lead" />
 
-      <WeatherSortEntryButton
-        station={selected[0]}
-        metric="tmax"
-        start={window?.start}
-        end={window?.end}
-      />
+      <WeatherSortEntryButton station={selected[0]} metric="tmax" />
 
       <DemoBanner mode={bannerMode} notice={bannerNotice} sources={bannerSources} />
 
@@ -129,46 +122,21 @@ export default function WeatherPage() {
         }}
       />
 
-      <div className="weather-layout">
-        <StationPicker
-          stations={stations}
-          loading={stationsQuery.isPending}
-          error={stationsQuery.isError ? stationsQuery.error : null}
-          onRetry={() => {
-            void stationsQuery.refetch();
-          }}
-          selected={selected}
-          onToggle={handleToggleStation}
-          onSelectAll={handleSelectAll}
-          onClear={() => {
-            autoSelected.current = true;
-            setSelected([]);
-          }}
-        />
-
-        <div className="weather-layout__side">
-          <section
-            className="weather-panel weather-options"
-            aria-labelledby="weather-options-heading"
-            data-testid="weather-options"
-          >
-            <h2 id="weather-options-heading">
-              <BilingualText as="span" size="subtitle" tkey="weather.options.title" />
-            </h2>
-            <p className="weather-controls__hint">
-              <BilingualText size="xs" tkey="weather.options.hint" />
-            </p>
-            <a
-              className="btn btn--secondary"
-              href={exportHref}
-              download
-              data-testid="export-csv"
-            >
-              <BilingualText as="span" size="sm" tkey="weather.controls.export" />
-            </a>
-          </section>
-        </div>
-      </div>
+      <StationPicker
+        stations={stations}
+        loading={stationsQuery.isPending}
+        error={stationsQuery.isError ? stationsQuery.error : null}
+        onRetry={() => {
+          void stationsQuery.refetch();
+        }}
+        selected={selected}
+        onToggle={handleToggleStation}
+        onSelectAll={handleSelectAll}
+        onClear={() => {
+          autoSelected.current = true;
+          setSelected([]);
+        }}
+      />
 
       <section
         className="weather-charts"

@@ -84,19 +84,17 @@ def quick_sort(
             stack.append((boundary + 1, high, depth + 1))
         if low + 1 < boundary:
             stack.append((low, boundary - 1, depth + 1))
-    recorder.emit_done(
-        pass_index=max(pass_index - 1, 0),
-        triggered=False,
-        finalized=tuple(range(n)),
-        aux={
-            "pivot_value": 0.0,
-            "pivot_index": 0,
-            "low": 0,
-            "high": n - 1,
-            "left_ptr": 0,
-            "right_ptr": 0,
-            "partition_index": 0,
-            "phase": "placed",
-        },
-    )
+    done_pass = max(pass_index - 1, 0)
+    done_final = tuple(range(n))
+    done_aux = {
+        "pivot_value": 0.0,
+        "pivot_index": 0,
+        "low": 0,
+        "high": n - 1,
+        "left_ptr": 0,
+        "right_ptr": 0,
+        "partition_index": 0,
+        "phase": "placed",
+    }
+    recorder.emit_done(pass_index=done_pass, finalized=done_final, aux=done_aux)
     return arr

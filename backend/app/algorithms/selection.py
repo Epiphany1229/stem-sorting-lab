@@ -59,16 +59,14 @@ def selection_sort(
             arr[i], arr[min_index] = arr[min_index], arr[i]
             aux["min_index"] = i
             recorder.emit_swap(i=i, j=min_index, aux=aux, finalized=finalized)
-    recorder.emit_done(
-        pass_index=max(n - 2, 0),
-        triggered=False,
-        finalized=tuple(range(n)),
-        aux={
-            "pass_index": max(n - 2, 0),
-            "min_index": 0,
-            "scan_from": n,
-            "scan_to": n - 1,
-            "finalized_before": list(range(n)),
-        },
-    )
+    done_pass = max(n - 2, 0)
+    done_final = tuple(range(n))
+    done_aux = {
+        "pass_index": done_pass,
+        "min_index": 0,
+        "scan_from": n,
+        "scan_to": n - 1,
+        "finalized_before": list(range(n)),
+    }
+    recorder.emit_done(pass_index=done_pass, finalized=done_final, aux=done_aux)
     return arr

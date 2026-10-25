@@ -1,6 +1,6 @@
 /**
- * /weather 顶部入口：把当前测站、指标与真实数据窗口带进 /weather-sort。
- * 只拼查询参数，不携带或伪造任何温度数据。
+ * /weather 顶部入口：把当前测站与指标带进 /weather-sort。
+ * 日期窗口由 /weather-sort 使用后端默认的「最近 30 天」，因此不再携带 start/end。
  */
 import { Link } from "react-router-dom";
 
@@ -10,27 +10,17 @@ import type { WeatherMetric } from "../../player/types";
 export interface WeatherSortEntryButtonProps {
   readonly station: string | undefined;
   readonly metric: WeatherMetric;
-  readonly start: string | undefined;
-  readonly end: string | undefined;
 }
 
 export function buildWeatherSortHref({
   station,
   metric,
-  start,
-  end,
 }: WeatherSortEntryButtonProps): string {
   const search = new URLSearchParams();
   if (station) {
     search.set("station", station);
   }
   search.set("metric", metric);
-  if (start) {
-    search.set("start", start);
-  }
-  if (end) {
-    search.set("end", end);
-  }
   return `/weather-sort?${search.toString()}`;
 }
 

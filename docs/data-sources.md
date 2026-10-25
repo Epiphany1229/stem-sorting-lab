@@ -466,6 +466,15 @@ https://data.weather.gov.hk/weatherAPI/opendata/opendata.php
 
 ---
 
+### 9.6 2026 年 10 月数据的实际情况（2026-10-25 实测）与 RYES 补数
+
+- **月表确实未发布**：`CLMMAXT&station=HKO&year=2026&month=10` 的 **JSON 与 CSV 都只有表头 + 3 行 legend、无数据行**；`year=2026` 不带 `month` 时最后一行仍是 `2026-09-30 34.2 C`。→ 项目**没有伪造** 10 月月表数据。
+- **RYES 日报可补齐最近逐日温度**：`dataType=RYES&date=YYYYMMDD` 对 2026-10-01/10-20/10-24 均返回 JSON，`ReportTimeInfoDate`=资料日、`BulletinDate`=次日，含 `HKOReadingsMaxTemp/MinTemp` 与多个按站 `*MaxTemp/*MinTemp` 平铺键。
+- **项目实现**：`ryes_temperature.py` 只映射名称与官方 39 站**完全一致**的 22 站（未映射键跳过计数，不猜行政区）；`recent_ingest.py` 逐日 1 请求、校验资料日、**月表优先**、幂等；CLI `ingest-recent --days 35`。真实补数结果：35 请求写入 144 行（Oct 01–24，HKO/KP/SHA × tmax/tmin），Sep 20–30 月表行未被覆盖。
+- **口径声明**：RYES 官方注明数据为 **provisional**（有限校验）；月表正式发布后以月表为准。前端/文档必须如实标注数据来源，不得把 provisional 数据说成最终官方值。
+
+---
+
 ## 10. 更新频率与数据许可/署名要求
 
 ### 10.1 更新时间（汇总）

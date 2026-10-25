@@ -35,6 +35,24 @@ export function WeatherTracePanel({
   const errorKind = error ? classifyTraceError(error) : null;
   const tooFewDays = errorKind === "invalidInput";
 
+  // 真实窗口来自后端轨迹本身（有效日期 + 被排除日期），不写死、不猜日期。
+  const dates = trace
+    ? [
+        ...trace.items.map((item) => item.label).filter((label): label is string => !!label),
+        ...(trace.excluded_dates?.map((entry) => entry.date) ?? []),
+      ].sort()
+    : [];
+  const windowText =
+    trace && dates.length > 0
+      ? formatTranslation("weatherSort.windowLine", {
+          start: dates[0],
+          end: dates[dates.length - 1],
+          valid: trace.valid_days ?? trace.items.length,
+          requested:
+            trace.requested_days ?? (trace.valid_days ?? trace.items.length) + (trace.excluded_dates?.length ?? 0),
+        })
+      : null;
+
   return (
     <section
       className="weather-sort__panel"
@@ -44,6 +62,11 @@ export function WeatherTracePanel({
       <h3 id={headingId}>
         <BilingualText size="subtitle" zh={heading["zh-Hant"]} en={headingEn.en} />
       </h3>
+      {windowText ? (
+        <p className="weather-sort__window" data-testid={`window-${metric}`}>
+          <BilingualText size="xs" zh={windowText["zh-Hant"]} en={windowText.en} />
+        </p>
+      ) : null}
 
       {loading ? (
         <p role="status" data-testid={`trace-loading-${metric}`}>

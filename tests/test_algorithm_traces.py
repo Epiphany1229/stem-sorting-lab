@@ -386,14 +386,16 @@ def test_stable_algorithms_keep_equal_elements_in_original_order(
 
 @pytest.mark.parametrize("algorithm_id", ALGORITHM_IDS)
 def test_code_line_ids_reference_rendered_function_lines(algorithm_id: str) -> None:
-    """每个事件的 code_line_ids 必须能在 code.lines 中解析；行号与 line_id 一致。"""
+    """code.lines 是核心循环切片；每个事件的 code_line_ids 都必须能解析。"""
     trace = _trace(algorithm_id, [5, 3, 8, 1])
     known = {line.line_id for line in trace.code.lines}
     for line in trace.code.lines:
         assert line.line_id == f"L{line.lineno}"
         assert "#" not in line.text
-    assert trace.code.lines[0].text.lstrip().startswith("def ")
-    assert "return" in trace.code.lines[-1].text
+        assert not line.text.lstrip().startswith("def ")
+        assert "return" not in line.text
+    assert trace.code.lines[0].text.lstrip().startswith(("for ", "while "))
+    assert trace.code.lines[-1].text.lstrip().startswith("recorder.emit_done(")
     for event in trace.events:
         assert event.code_line_ids
         assert set(event.code_line_ids) <= known

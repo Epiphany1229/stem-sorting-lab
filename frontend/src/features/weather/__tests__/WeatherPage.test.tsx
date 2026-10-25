@@ -124,12 +124,27 @@ describe("天气探索页", () => {
     expect(screen.queryByTestId("chart-scatter")).not.toBeInTheDocument();
     expect(screen.queryByTestId("chart-scatter-table")).not.toBeInTheDocument();
 
-    // 查询条件与 CSV 导入已删除。
+    // 查询条件、CSV 导入/导出与「顯示選項」面板全部删除。
     expect(screen.queryByTestId("weather-controls")).not.toBeInTheDocument();
     expect(screen.queryByTestId("csv-import")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("weather-options")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("export-csv")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("開始日期")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("結束日期")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("選擇 CSV 檔案")).not.toBeInTheDocument();
+
+    // 資料覆蓋區塊第一行必須醒目顯示官方資料來源，然後才是時間窗口。
+    const sourceLine = screen.getByTestId("coverage-source");
+    expect(sourceLine).toHaveTextContent(
+      "資料來源：香港天文台官方網站與開放數據 API（data.weather.gov.hk）",
+    );
+    expect(sourceLine).toHaveTextContent(
+      "Data source: Hong Kong Observatory Official Website & Open Data API",
+    );
+    const coverageWindow = screen.getByTestId("coverage-window");
+    expect(
+      sourceLine.compareDocumentPosition(coverageWindow) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
     const lineTable = await screen.findByTestId("chart-line-table");
     // 8 行 > 5，默认折叠：行数说明与展开按钮都存在。
@@ -141,10 +156,6 @@ describe("天气探索页", () => {
     expect(lineToggle).toHaveAttribute("aria-expanded", "true");
     expect(within(lineTable).getAllByRole("row")).toHaveLength(9); // 表头 + 全部 8 行
 
-    const exportLink = screen.getByTestId("export-csv");
-    expect(exportLink.getAttribute("href")).toContain("/api/weather/export.csv");
-    expect(exportLink.getAttribute("href")).toContain("stations=HKO");
-    expect(exportLink.getAttribute("href")).toContain("metrics=tmax%2Ctmin");
     // 请求不再带日期参数：窗口由后端决定。
     const dailyUrl = fetchMock.mock.calls
       .map(([input]) => String(input))
@@ -180,24 +191,25 @@ describe("天气探索页", () => {
     });
   });
 
-  it("不暴露任何抓取或模式切换入口，只保留 CSV 导出", async () => {
+  it("不暴露任何抓取、模式切换或导出入口", async () => {
     const fetchMock = createFetchMock();
     vi.stubGlobal("fetch", fetchMock);
     renderPage();
     await waitForFourCharts();
 
-    // 不再有 demo 开关、重新抓取按钮或任何抓取相关控件。
+    // 不再有 demo 开关、重新抓取按钮、刷新控件或 CSV 导出/显示选项面板。
     expect(screen.queryByRole("checkbox", { name: /示範模式/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /重新抓取/ })).not.toBeInTheDocument();
     expect(screen.queryByTestId("refresh-control")).not.toBeInTheDocument();
-    const options = screen.getByTestId("weather-options");
-    expect(within(options).queryAllByRole("button")).toHaveLength(0);
-    expect(within(options).getByTestId("export-csv")).toBeInTheDocument();
+    expect(screen.queryByTestId("weather-options")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("export-csv")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /匯出/ })).not.toBeInTheDocument();
 
     // 所有请求固定为 official（不带 mode 参数），也不会调用 /refresh。
     const urls = fetchMock.mock.calls.map(([input]) => String(input));
     expect(urls.some((url) => url.includes("mode="))).toBe(false);
     expect(urls.some((url) => url.includes("/weather/refresh"))).toBe(false);
+    expect(urls.some((url) => url.includes("/weather/export"))).toBe(false);
   });
 
   it("官方无数据时四张图都显示空状态与具体原因，且不静默切演示数据", async () => {

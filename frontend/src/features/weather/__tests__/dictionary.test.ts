@@ -66,7 +66,7 @@ describe("阶段 3 天气双语文案", () => {
       "weather.chart.donut.desc",
       "weather.table.expand",
       "weather.table.collapse",
-      "weather.options.title",
+      "weather.coverage.sourceLine",
       "weather.stations.noMatch",
       "weather.table.empty",
     ] as const;

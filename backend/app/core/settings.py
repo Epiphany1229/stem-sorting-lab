@@ -76,6 +76,18 @@ class Settings(BaseSettings):
     # 是否读取系统代理环境变量；本机实测必须为 false（系统代理会导致 TLS 中断）
     http_trust_env: bool = False
 
+    # ---------- 后台自动同步（阶段 5.1） ----------
+    # 是否启用启动自检 + 每 N 小时一次的近期数据静默同步（测试环境必须关闭）
+    auto_sync_enabled: bool = True
+    # 两次检查之间的间隔小时数（默认 24h）
+    auto_sync_interval_hours: int = 24
+    # 每次补数的天数（默认 35，覆盖默认 30 天窗口并留冗余）
+    auto_sync_days: int = 35
+    # 参与自动同步的核心测站（逗号分隔，必须是官方 39 站之一）
+    auto_sync_stations: str = "HKO,KP,SHA"
+    # 单轮同步允许的最大尝试次数（超过即放弃本轮，只记日志）
+    auto_sync_max_attempts: int = 3
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

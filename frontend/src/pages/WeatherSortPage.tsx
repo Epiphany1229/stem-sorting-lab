@@ -1,9 +1,10 @@
 /**
- * 用排序理解最近一个月的真实气温（阶段 4）。
+ * 用排序理解最近一个月的真实气温（阶段 4.8 精简版）。
  *
  * 页面只负责查询条件与布局：
  * - 每个指标（tmax / tmin）各自向后端要一份真实天气轨迹，前端不做排序、不推导事件；
- * - 播放器直接复用阶段 2 的 TracePlayer（含 CodePanel / 内联比较区 / 状态机）；
+ * - 不再提供日期选择器：后端固定返回默认的「最近 30 天」窗口；
+ * - 播放器直接复用 TracePlayer（全宽柱图 / 紧凑控制条 / 顶部对齐双栏 / 内联比较区）；
  * - 缺失日期、Top 5、排序前后顺序、STEM 对照数字全部来自后端轨迹；
  * - 切换任何查询条件都会产生新的轨迹对象，播放器随之重置为 idle。
  */
@@ -13,7 +14,7 @@ import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
 import { BilingualText } from "../i18n/BilingualText";
 import { translate } from "../i18n/dictionary";
-import { useWeatherCoverage, useWeatherStations } from "../features/weather/api";
+import { useWeatherStations } from "../features/weather/api";
 import { MissingDatesNotice } from "../features/weather-sort/MissingDatesNotice";
 import type { MetricTraceState } from "../features/weather-sort/MissingDatesNotice";
 import { isWeatherTraceReady, useWeatherTrace } from "../features/weather-sort/useWeatherTrace";
@@ -25,22 +26,17 @@ import type { Direction, WeatherMetric } from "../player/types";
 export default function WeatherSortPage() {
   const [searchParams] = useSearchParams();
 
-  // 初始条件优先来自 /weather 入口按钮携带的真实窗口。
+  // 入口按钮可携带测站与指标；日期窗口固定由后端默认值决定。
   const [station, setStation] = useState(() => searchParams.get("station") ?? "");
   const [metric, setMetric] = useState<WeatherMetric>(() => {
     const value = searchParams.get("metric");
     return isWeatherMetric(value) ? value : "tmax";
   });
-  const [start, setStart] = useState(() => searchParams.get("start") ?? "");
-  const [end, setEnd] = useState(() => searchParams.get("end") ?? "");
   const [direction, setDirection] = useState<Direction>("asc");
   const [earlyExit, setEarlyExit] = useState(true);
   const [parallel, setParallel] = useState(false);
 
   const stationsQuery = useWeatherStations("official");
-  const needsDefaultWindow = start.length === 0 || end.length === 0;
-  // 直接打开本页时，用 /weather/coverage 返回的真实窗口作为默认日期，而不是猜日期。
-  const coverageQuery = useWeatherCoverage({ mode: "official" }, needsDefaultWindow);
 
   useEffect(() => {
     if (station.length > 0) {
@@ -55,39 +51,18 @@ export default function WeatherSortPage() {
     setStation(first.id);
   }, [station, stationsQuery.data]);
 
-  useEffect(() => {
-    if (!needsDefaultWindow) {
-      return;
-    }
-    const window = coverageQuery.data?.window;
-    if (!window) {
-      return;
-    }
-    setStart(window.start);
-    setEnd(window.end);
-  }, [needsDefaultWindow, coverageQuery.data]);
-
-  const effectiveStart = start || coverageQuery.data?.window.start || "";
-  const effectiveEnd = end || coverageQuery.data?.window.end || "";
-  const dateInvalid =
-    (start.length > 0 && end.length === 0) ||
-    (start.length === 0 && end.length > 0) ||
-    (start.length > 0 && end.length > 0 && start > end);
-
   const unit = translate("weatherSort.unitCelsius")["zh-Hant"];
 
   const paramsFor = (metricValue: WeatherMetric) => ({
     station,
     metric: metricValue,
-    start: effectiveStart,
-    end: effectiveEnd,
     direction,
     earlyExit,
   });
 
   const tmaxParams = paramsFor("tmax");
   const tminParams = paramsFor("tmin");
-  const ready = !dateInvalid && isWeatherTraceReady(tmaxParams);
+  const ready = isWeatherTraceReady(tmaxParams);
   const tmaxQuery = useWeatherTrace(tmaxParams, ready);
   const tminQuery = useWeatherTrace(tminParams, ready);
 
@@ -104,11 +79,7 @@ export default function WeatherSortPage() {
   const activeQuery = metric === "tmax" ? tmaxQuery : tminQuery;
   const activeState = metric === "tmax" ? states[0] : states[1];
 
-  const notReadyKey = dateInvalid
-    ? "weather.controls.dateInvalid"
-    : station.length === 0
-      ? "weatherSort.stationMissing"
-      : "weatherSort.rangeMissing";
+  const notReadyKey = station.length === 0 ? "weatherSort.stationMissing" : "weatherSort.rangeMissing";
 
   return (
     <div className="page-stack">
@@ -138,11 +109,6 @@ export default function WeatherSortPage() {
         onEarlyExitChange={setEarlyExit}
         parallel={parallel}
         onParallelChange={setParallel}
-        start={start}
-        end={end}
-        onStartChange={setStart}
-        onEndChange={setEnd}
-        dateInvalid={dateInvalid}
       />
 
       <div

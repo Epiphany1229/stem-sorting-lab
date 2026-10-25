@@ -49,8 +49,11 @@ def merge_sort(
             "buffer_index": 0,
             "writing_back": False,
         }
-        recorder.emit_merge(aux=aux, active=(left, right), finalized=[])
+        merged = False
         while left_ptr <= mid or right_ptr <= right:
+            if not merged:
+                recorder.emit_merge(aux=aux, active=(left, right), finalized=[])
+                merged = True
             take_left = True
             if left_ptr <= mid and right_ptr <= right:
                 recorder.emit_compare(
@@ -103,20 +106,17 @@ def merge_sort(
 
     if n >= 2:
         merge_range(0, n - 1, 0)
-    recorder.emit_done(
-        pass_index=0,
-        triggered=False,
-        finalized=tuple(range(n)),
-        aux={
-            "left": 0,
-            "mid": n // 2,
-            "right": n - 1,
-            "depth": 0,
-            "left_ptr": 0,
-            "right_ptr": 0,
-            "buffer": [],
-            "buffer_index": 0,
-            "writing_back": False,
-        },
-    )
+    done_final = tuple(range(n))
+    done_aux = {
+        "left": 0,
+        "mid": n // 2,
+        "right": n - 1,
+        "depth": 0,
+        "left_ptr": 0,
+        "right_ptr": 0,
+        "buffer": [],
+        "buffer_index": 0,
+        "writing_back": False,
+    }
+    recorder.emit_done(pass_index=0, finalized=done_final, aux=done_aux)
     return arr

@@ -30,35 +30,27 @@ function jsonResponse(payload: unknown): Response {
 }
 
 describe("天气排序入口按钮", () => {
-  it("把当前测站、指标、窗口写进 /weather-sort 查询参数", () => {
+  it("把当前测站、指标写进 /weather-sort 查询参数（日期窗口交给后端默认值）", () => {
     render(
       <MemoryRouter>
-        <WeatherSortEntryButton
-          station="HKO"
-          metric="tmax"
-          start="2026-09-01"
-          end="2026-09-30"
-        />
+        <WeatherSortEntryButton station="HKO" metric="tmax" />
       </MemoryRouter>,
     );
 
     const link = screen.getByRole("link", { name: /用冒泡排序探索這 30 天的氣溫/ });
-    expect(link).toHaveAttribute(
-      "href",
-      "/weather-sort?station=HKO&metric=tmax&start=2026-09-01&end=2026-09-30",
-    );
+    expect(link).toHaveAttribute("href", "/weather-sort?station=HKO&metric=tmax");
+    expect(link.getAttribute("href")).not.toContain("start=");
+    expect(link.getAttribute("href")).not.toContain("end=");
     expect(
       screen.getByText("Explore These 30 Days of Temperatures with Bubble Sort"),
     ).toBeInTheDocument();
   });
 
-  it("缺失的测站/日期参数不会被写成猜测值", () => {
+  it("缺失的测站参数不会被写成猜测值", () => {
     expect(
       buildWeatherSortHref({
         station: undefined,
         metric: "tmin",
-        start: undefined,
-        end: undefined,
       }),
     ).toBe("/weather-sort?metric=tmin");
   });
@@ -99,12 +91,12 @@ describe("天气排序入口按钮", () => {
     const link = within(entry).getByRole("link", {
       name: /用冒泡排序探索這 30 天的氣溫/,
     });
-    // 测站与窗口要等首轮查询完成后才写进链接。
+    // 测站要等首轮查询完成后才写进链接；日期窗口不再由前端携带。
     await waitFor(() => {
       const href = link.getAttribute("href") ?? "";
       expect(href).toContain("station=HKO");
-      expect(href).toContain("start=2026-09-01");
-      expect(href).toContain("end=2026-09-05");
+      expect(href).not.toContain("start=");
+      expect(href).not.toContain("end=");
     });
     const href = link.getAttribute("href") ?? "";
     expect(href).toContain("/weather-sort?");

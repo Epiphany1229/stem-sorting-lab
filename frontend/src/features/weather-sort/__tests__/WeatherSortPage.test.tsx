@@ -66,7 +66,7 @@ function createFetchMock(options: MockOptions = {}) {
   });
 }
 
-function renderPage(path = "/weather-sort?station=HKO&metric=tmax&start=2026-09-01&end=2026-09-08") {
+function renderPage(path = "/weather-sort?station=HKO&metric=tmax") {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
@@ -128,7 +128,10 @@ describe("天气排序页", () => {
       // 柱顶只显示纯数字；单位统一在画布上方说明。
       expect(within(bar).getByTestId("bar-value")).toHaveTextContent(`${item?.value_raw}`);
       expect(within(bar).getByTestId("bar-value").textContent).not.toContain("°C");
-      expect(within(bar).getByTestId("bar-label")).toHaveTextContent(item?.label?.slice(5) ?? "");
+      // 底部日期使用简短 MM/DD，避免 30 天时重叠。
+      expect(within(bar).getByTestId("bar-label")).toHaveTextContent(
+        item?.label?.slice(5).replace("-", "/") ?? "",
+      );
       const title = bar.querySelector("title")?.textContent ?? "";
       expect(title).toContain(item?.label ?? "");
       expect(title).toContain("香港天文台");
@@ -170,7 +173,9 @@ describe("天气排序页", () => {
         const item = itemById.get(state?.order[index] ?? "");
         expect(item).toBeDefined();
         expect(within(bar).getByTestId("bar-value")).toHaveTextContent(`${item?.value_raw}`);
-        expect(within(bar).getByTestId("bar-label")).toHaveTextContent(item?.label?.slice(5) ?? "");
+        expect(within(bar).getByTestId("bar-label")).toHaveTextContent(
+          item?.label?.slice(5).replace("-", "/") ?? "",
+        );
       });
     }
   }, 20000);
@@ -270,12 +275,54 @@ describe("天气排序页", () => {
     expect(screen.getByText("這一步的解釋")).toBeInTheDocument();
   });
 
-  it("直接打开本页时用 coverage 返回的真实窗口作为默认日期", async () => {
+  it("柱图全宽无横向滚动，控制条紧随其后，双栏顶部对齐", async () => {
+    vi.stubGlobal("fetch", createFetchMock());
+    renderPage();
+    const player = await screen.findByTestId("trace-player");
+
+    // 柱图占满容器宽度：不再有横向滚动容器/裁切。
+    expect(screen.queryByTestId("bar-chart-scroll")).not.toBeInTheDocument();
+    const chart = screen.getByTestId("bar-chart");
+    expect(chart).toHaveAttribute("data-full-width", "true");
+    expect(screen.getAllByTestId("bar")).toHaveLength(6);
+
+    // 控制条位于柱图之后，且紧跟当前步骤一句说明。
+    const controls = screen.getByTestId("player-controls");
+    expect(player.contains(controls)).toBe(true);
+    expect(
+      chart.compareDocumentPosition(controls) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(within(controls).getByTestId("step-explanation")).toBeInTheDocument();
+
+    // 控制条下方是顶部对齐的双栏：左代码、右内联区 + 实时计数。
+    const grid = screen.getByTestId("player-main-grid");
+    expect(grid.className).toContain("items-start");
+    expect(
+      controls.compareDocumentPosition(grid) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByTestId("code-scroll")).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId("player-side-column")).getByTestId("player-metrics"),
+    ).toBeInTheDocument();
+  });
+
+  it("固定请求后端默认窗口：不传 start/end，也没有日期选择器", async () => {
     const fetchMock = createFetchMock();
     vi.stubGlobal("fetch", fetchMock);
     renderPage("/weather-sort?station=HKO&metric=tmax");
 
     await screen.findByTestId("trace-player");
+
+    expect(screen.queryByLabelText("開始日期")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("結束日期")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("sort-date-error")).not.toBeInTheDocument();
+    expect(screen.getByTestId("weather-sort-fixed-window")).toHaveTextContent("最近 30 天");
+
+    // 顶部显示后端返回的真实窗口与覆盖率，不是前端写死。
+    const window = screen.getByTestId("window-tmax");
+    expect(window).toHaveTextContent("2026-09-01");
+    expect(window).toHaveTextContent("2026-09-08");
+    expect(window).toHaveTextContent("6 / 8");
 
     const traceCalls = fetchMock.mock.calls.filter(([input]) =>
       String(input).includes("/algorithms/bubble/weather-trace"),
@@ -283,11 +330,13 @@ describe("天气排序页", () => {
     expect(traceCalls.length).toBeGreaterThan(0);
     for (const [, init] of traceCalls) {
       const body = JSON.parse(String((init as RequestInit).body)) as {
-        start: string;
-        end: string;
+        start?: string;
+        end?: string;
+        station: string;
       };
-      expect(body.start).toBe("2026-09-01");
-      expect(body.end).toBe("2026-09-05");
+      expect(body.start).toBeUndefined();
+      expect(body.end).toBeUndefined();
+      expect(body.station).toBe("HKO");
     }
   });
 });
@@ -452,21 +501,5 @@ describe("天气排序页：错误与日期校验", () => {
     vi.stubGlobal("fetch", createFetchMock({ tmax: { error: new TypeError("Failed to fetch") } }));
     renderPage();
     expect(await screen.findByTestId("trace-error-tmax")).toHaveTextContent("連不上後端伺服器");
-  });
-
-  it("日期不成对/顺序错误时禁用查询并提示", async () => {
-    vi.stubGlobal("fetch", createFetchMock());
-    renderPage();
-    await screen.findByTestId("trace-player");
-
-    fireEvent.change(screen.getByLabelText("開始日期"), {
-      target: { value: "2026-10-01" },
-    });
-
-    expect(screen.getByTestId("sort-date-error")).toHaveTextContent(
-      "開始日期不能晚於結束日期",
-    );
-    expect(screen.getByTestId("weather-sort-not-ready")).toBeInTheDocument();
-    expect(screen.queryByTestId("trace-player")).not.toBeInTheDocument();
   });
 });

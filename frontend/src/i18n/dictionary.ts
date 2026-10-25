@@ -344,12 +344,16 @@ export const dictionary = {
     en: "When on, two players for the same window appear side by side, each with independent playback controls.",
   },
   "weatherSort.controls.resetHint": {
-    "zh-Hant": "切換測站、指標、方向、日期或提前結束選項，都會把播放器重置為待開始。",
-    en: "Changing the station, metric, direction, dates or early-exit option resets the player to ready.",
+    "zh-Hant": "切換測站、指標、方向或提前結束選項，都會把播放器重置為待開始。",
+    en: "Changing the station, metric, direction or early-exit option resets the player to ready.",
   },
-  "weatherSort.controls.dateRange": {
-    "zh-Hant": "日期範圍（香港時區自然日）",
-    en: "Date range (Hong Kong calendar days)",
+  "weatherSort.controls.fixedWindow": {
+    "zh-Hant": "日期窗口固定為後端預設的最近 30 天，不需手動選擇。",
+    en: "The date window is fixed to the backend's default most recent 30 days; no manual date selection.",
+  },
+  "weatherSort.windowLine": {
+    "zh-Hant": "{start} 至 {end}，有效 {valid} / {requested} 天",
+    en: "{start} to {end}, {valid} of {requested} valid days",
   },
 
   // ---------- 阶段 4：播放器与柱子标签 ----------
@@ -467,13 +471,12 @@ export const dictionary = {
     en: "At least 2 valid dates are needed to sort.",
   },
   "weatherSort.rangeHint": {
-    "zh-Hant":
-      "直接開啟本頁時，會先用 /api/weather/coverage 的真實窗口；也可以自行選擇日期。",
-    en: "Opening this page directly first uses the real window from /api/weather/coverage; you can also choose dates yourself.",
+    "zh-Hant": "窗口固定為後端預設的最近 30 天，清單只顯示真實取得的日期。",
+    en: "The window is fixed to the backend's most recent 30 days; the list shows only dates actually retrieved.",
   },
   "weatherSort.rangeMissing": {
-    "zh-Hant": "請選擇開始與結束日期。",
-    en: "Choose start and end dates.",
+    "zh-Hant": "後端尚未提供預設窗口，請稍後重試。",
+    en: "The backend has not provided a default window yet; please retry later.",
   },
   "weatherSort.stationMissing": {
     "zh-Hant": "請先選擇測站。",
@@ -626,10 +629,6 @@ export const dictionary = {
     "zh-Hant": "目前 {count} 個數字的柱狀圖",
     en: "Bar chart of the current {count} numbers",
   },
-  "player.chart.scrollLabel": {
-    "zh-Hant": "可橫向捲動的柱狀圖，每根柱子都能用 Tab 鍵聚焦",
-    en: "Scrollable bar chart; every bar can be focused with Tab",
-  },
   "player.chart.unit": {
     "zh-Hant": "單位：{unit}",
     en: "Unit: {unit}",
@@ -733,6 +732,10 @@ export const dictionary = {
   "player.metric.comparisons": {
     "zh-Hant": "比較次數",
     en: "Comparisons",
+  },
+  "player.metrics.title": {
+    "zh-Hant": "即時統計",
+    en: "Live metrics",
   },
   "player.metric.swaps": {
     "zh-Hant": "交換次數",
@@ -970,6 +973,10 @@ export const dictionary = {
     "zh-Hant": "資料覆蓋率",
     en: "Data coverage",
   },
+  "weather.coverage.sourceLine": {
+    "zh-Hant": "資料來源：香港天文台官方網站與開放數據 API（data.weather.gov.hk）",
+    en: "Data source: Hong Kong Observatory Official Website & Open Data API",
+  },
   "weather.coverage.windowLabel": {
     "zh-Hant": "實際資料窗口",
     en: "Actual data window",
@@ -1085,19 +1092,7 @@ export const dictionary = {
     en: "The backend reported an unknown reason; see the raw reason code for details.",
   },
 
-  // ---------- 阶段 3：查询控件 ----------
-  "weather.controls.dateRange": {
-    "zh-Hant": "日期範圍（香港時區自然日）",
-    en: "Date range (Hong Kong calendar days)",
-  },
-  "weather.controls.startDate": {
-    "zh-Hant": "開始日期",
-    en: "Start date",
-  },
-  "weather.controls.endDate": {
-    "zh-Hant": "結束日期",
-    en: "End date",
-  },
+  // ---------- 阶段 3：指标标签（页面固定展示 tmax/tmin） ----------
   "weather.controls.metric.tmax": {
     "zh-Hant": "日最高溫",
     en: "Daily maximum temperature",
@@ -1109,18 +1104,6 @@ export const dictionary = {
   "weather.controls.metric.tmean": {
     "zh-Hant": "日平均溫",
     en: "Daily mean temperature",
-  },
-  "weather.controls.dateInvalid": {
-    "zh-Hant": "開始日期與結束日期必須成對填寫，且開始日期不能晚於結束日期。",
-    en: "The start and end dates must both be set, and the start cannot be after the end.",
-  },
-  "weather.controls.hint": {
-    "zh-Hant": "留空日期則使用後端依錨點回推的預設窗口；畫面上永遠顯示後端回傳的真實起止日期。",
-    en: "Leave the dates empty to use the backend's default window derived from the anchor; the real start and end dates returned by the backend are always shown.",
-  },
-  "weather.controls.export": {
-    "zh-Hant": "匯出目前查詢 CSV",
-    en: "Export current query as CSV",
   },
 
   // ---------- 阶段 3：测站选择 ----------
@@ -1485,14 +1468,6 @@ export const dictionary = {
   "weather.page.emptySelection": {
     "zh-Hant": "請先選擇至少一個測站，圖表才會載入。",
     en: "Select at least one station before the charts can load.",
-  },
-  "weather.options.title": {
-    "zh-Hant": "顯示選項",
-    en: "Display options",
-  },
-  "weather.options.hint": {
-    "zh-Hant": "日期窗口由後端固定提供最近 30 天，畫面只顯示真實資料；這裡只保留 CSV 匯出。",
-    en: "The backend always provides the most recent 30-day window and the page shows the real data; this area only keeps the CSV export.",
   },
   "weather.error.title": {
     "zh-Hant": "無法載入天氣資料",
