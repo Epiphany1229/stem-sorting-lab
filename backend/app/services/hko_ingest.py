@@ -34,6 +34,7 @@ from backend.app.services.weather_util import (
     QUALITY_COMPLETE,
     QUALITY_INCOMPLETE,
     QUALITY_UNAVAILABLE,
+    TEMPERATURE_METRICS,
     TEMPERATURE_UNIT,
     parse_iso_date,
 )
@@ -506,18 +507,29 @@ class WindowRange:
 
 
 def default_window_anchor(database: Database, *, mode: str = "official") -> date | None:
-    """返回库内某模式下"最后可用日"（各站各指标最大值）。"""
+    """返回库内某模式下"最后可用日"。
+
+    只统计 API 支持的三个温度指标：阶段 4 的 RYES 日雨量会写入 ``rainfall`` 行，
+    如果把它算进锚点，默认窗口会整体后移，导致温度数据被截断。
+    """
     with database.session() as session:
-        statement = select(func.max(DailyWeather.obs_date)).where(DailyWeather.mode == mode)
+        statement = (
+            select(func.max(DailyWeather.obs_date))
+            .where(DailyWeather.mode == mode)
+            .where(DailyWeather.metric.in_(TEMPERATURE_METRICS))
+        )
         value = session.execute(statement).scalar()
         return value if isinstance(value, date) else None
 
 
 def has_any_data(database: Database, *, mode: str = "official") -> bool:
-    """库内某模式下是否存在任何逐日数据。"""
+    """库内某模式下是否存在任何受支持的逐日数据。"""
     with database.session() as session:
         statement = (
-            select(DailyWeather.id).where(DailyWeather.mode == mode).limit(1)
+            select(DailyWeather.id)
+            .where(DailyWeather.mode == mode)
+            .where(DailyWeather.metric.in_(TEMPERATURE_METRICS))
+            .limit(1)
         )
         return session.execute(statement).first() is not None
 

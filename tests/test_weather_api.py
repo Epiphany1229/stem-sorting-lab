@@ -281,6 +281,82 @@ def test_stations_lists_official_registry_with_availability(
     assert by_id["SHA"]["metrics"] == []
 
 
+def test_rainfall_rows_do_not_skew_anchor_or_availability(
+    api_client: TestClient,
+    api_database: Database,
+) -> None:
+    """回归：RYES 的 rainfall 行不能把默认窗口锚点/可用天数带偏。
+
+    背景：rainfall 行日期（如 2026-10-22）晚于温度月表最后可用日（2026-09-30），
+    若参与锚点计算，默认窗口会整体后移，页面只剩零散温度数据。
+    """
+    seed_month(api_database)
+    seed_records(
+        api_database,
+        [
+            ParsedDailyRow(
+                station_id="HKO",
+                metric="rainfall",
+                obs_date=date(2026, 10, 22),
+                value_raw="0.0",
+                value=0.0,
+                unit="mm",
+                quality_flag="C",
+            )
+        ],
+    )
+
+    stations = get_json(api_client, "/api/weather/stations")
+    hko = {station["id"]: station for station in stations["stations"]}["HKO"]
+    assert hko["available_days"] == 30
+    assert hko["last_date"] == "2026-09-30"
+    assert hko["metrics"] == ["tmax", "tmin"]
+
+    daily = get_json(api_client, "/api/weather/daily?stations=HKO&metrics=tmax,tmin")
+    assert daily["window"]["anchor"] == "2026-09-30"
+    assert daily["window"]["start"] == "2026-09-01"
+    assert daily["window"]["end"] == "2026-09-30"
+    assert len(daily["data"]) == 60
+    assert daily["reason"] is None
+
+
+def test_stations_hides_non_temperature_metrics(
+    api_client: TestClient,
+    api_database: Database,
+) -> None:
+    """数据库里可能存在 RYES 回填的 rainfall；/stations 只能暴露 API 支持的三个温度指标。
+
+    回归背景：阶段 4 用 RYES 写入 HKO 的 rainfall 后，/stations 把 rainfall 透传给前端，
+    前端的 DailyMetric 校验只允许 tmax/tmin/tmean，导致整页报「格式不符合介面契約」。
+    """
+    seed_month(api_database)
+    seed_records(
+        api_database,
+        [
+            ParsedDailyRow(
+                station_id="HKO",
+                metric="rainfall",
+                obs_date=date(2026, 9, 1),
+                value_raw="0.0",
+                value=0.0,
+                unit="mm",
+                quality_flag="C",
+            )
+        ],
+    )
+    body = get_json(api_client, "/api/weather/stations")
+    by_id = {station["id"]: station for station in body["stations"]}
+    assert by_id["HKO"]["metrics"] == ["tmax", "tmin"]
+    # 覆盖率聚合也不能把 rainfall 混进 per_station
+    coverage = get_json(
+        api_client, "/api/weather/coverage?stations=HKO&metrics=tmax,tmin"
+    )
+    assert {entry["metric"] for entry in coverage["coverage"]["per_station"]} == {
+        "tmax",
+        "tmin",
+    }
+
+
 def test_summary_bins_and_bilingual_threshold_note(
     api_client: TestClient,
     api_database: Database,

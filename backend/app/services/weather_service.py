@@ -491,17 +491,24 @@ def _aggregate_db(
                 func.count(func.distinct(DailyWeather.obs_date)),
             )
             .where(DailyWeather.mode == mode)
+            # 只按 API 支持的指标统计，避免 RYES rainfall 行把 available_days 与首末日带偏
+            .where(DailyWeather.metric.in_(TEMPERATURE_METRICS))
             .group_by(DailyWeather.station_id)
         )
         metric_statement = (
             select(DailyWeather.station_id, DailyWeather.metric)
             .where(DailyWeather.mode == mode)
+            .where(DailyWeather.metric.in_(TEMPERATURE_METRICS))
             .distinct()
         )
         date_rows = session.execute(date_statement).all()
         metric_rows = session.execute(metric_statement).all()
     metrics_by_station: dict[str, set[str]] = {}
     for station_id, metric in metric_rows:
+        # 只暴露当前 API 支持的指标：数据库里可能还会有 RYES 回填的 rainfall 等非温度指标，
+        # 但阶段 3 的查询接口只认 tmax/tmin/tmean，透传给前端会破坏契约校验。
+        if str(metric) not in TEMPERATURE_METRICS:
+            continue
         metrics_by_station.setdefault(str(station_id), set()).add(str(metric))
     result: dict[str, tuple[int, date | None, date | None, list[str]]] = {}
     for station_id, first_date, last_date, count in date_rows:
