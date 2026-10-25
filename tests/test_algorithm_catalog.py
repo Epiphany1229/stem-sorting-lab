@@ -7,13 +7,11 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.app.algorithms.registry import ALGORITHMS, PLANNED_ALGORITHMS
+from backend.app.algorithms.registry import ALGORITHM_ORDER, ALGORITHMS
 from backend.app.main import app
 
 CATALOG_ENDPOINT = "/api/algorithms"
 AVAILABLE_IDS = ("bubble", "selection", "insertion", "shell", "merge", "quick", "heap")
-PLANNED_IDS = ("counting", "bucket", "radix")
-ALGORITHM_IDS = AVAILABLE_IDS + PLANNED_IDS
 
 # 学生可见文案必须是繁体中文；这些简体字不应出现在元数据里。
 _SIMPLIFIED_CHARS = set("选择复归并计数结构过这个们为与图统计稳尔杂")
@@ -42,13 +40,13 @@ def _catalog(client: TestClient) -> dict[str, Any]:
     return payload
 
 
-def test_catalog_lists_ten_algorithms_in_order(client: TestClient) -> None:
-    """必须是 10 项：7 个可用 + 3 个开发中，顺序稳定。"""
+def test_catalog_lists_seven_available_algorithms_in_order(client: TestClient) -> None:
+    """必须是 7 项比较类排序，全部 available，顺序稳定。"""
     payload = _catalog(client)
     algorithms = payload["algorithms"]
     assert payload["protocol_version"] == 1
-    assert [item["id"] for item in algorithms] == list(ALGORITHM_IDS)
-    assert [item["status"] for item in algorithms] == ["available"] * 7 + ["planned"] * 3
+    assert [item["id"] for item in algorithms] == list(AVAILABLE_IDS)
+    assert [item["status"] for item in algorithms] == ["available"] * 7
 
 
 def test_every_catalog_entry_has_required_metadata(client: TestClient) -> None:
@@ -75,10 +73,8 @@ def test_every_catalog_entry_has_required_metadata(client: TestClient) -> None:
         assert item["use_cases"]["zh-Hant"] and item["use_cases"]["en"]
         assert item["default_values"]
         assert isinstance(item["supports_early_exit"], bool)
-        if item["status"] == "available":
-            assert isinstance(item["stable"], bool)
-        else:
-            assert item["stable"] is None or isinstance(item["stable"], bool)
+        assert item["status"] == "available"
+        assert isinstance(item["stable"], bool)
 
 
 def test_catalog_bilingual_text_has_no_simplified_characters(client: TestClient) -> None:
@@ -110,18 +106,11 @@ def test_available_metadata_matches_implementation_choices(client: TestClient) -
     ]
 
 
-def test_registry_contains_seven_available_algorithms() -> None:
-    """注册表只注册 7 个可用算法，且每个都有真实行映射。"""
+def test_registry_contains_exactly_seven_available_algorithms() -> None:
+    """注册表只注册 7 种比较类排序，展示顺序与注册顺序一致。"""
     assert tuple(ALGORITHMS) == AVAILABLE_IDS
+    assert tuple(ALGORITHM_ORDER) == AVAILABLE_IDS
     for spec in ALGORITHMS.values():
         assert spec.line_map.lines
         assert spec.line_map.mappings
         assert spec.metadata.status == "available"
-
-
-def test_planned_algorithms_are_not_registered_for_traces() -> None:
-    """3 个非比较类算法标为 planned，不进入轨迹注册表。"""
-    assert [meta.id for meta in PLANNED_ALGORITHMS] == list(PLANNED_IDS)
-    assert all(meta.status == "planned" for meta in PLANNED_ALGORITHMS)
-    for algorithm_id in PLANNED_IDS:
-        assert algorithm_id not in ALGORITHMS

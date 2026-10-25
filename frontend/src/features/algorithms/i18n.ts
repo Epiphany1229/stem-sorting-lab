@@ -19,12 +19,8 @@ function pair(zh: string, en: string): AlgorithmTextPair {
 export const algorithmText = {
   // ---------- 算法中心列表 ----------
   "list.note": pair(
-    "階段 5A：七種比較類排序已可互動學習；三種非比較類排序清楚標示為開發中，不會隱藏。",
-    "Phase 5A: seven comparison sorts are interactive; the three non-comparison sorts are clearly marked as in development and never hidden.",
-  ),
-  "list.legend": pair(
-    "可用：可以打開學習頁並播放真實軌跡。開發中：尚未提供軌跡，暫不可進入。",
-    "Available: open the learning page and play a real trace. In development: no trace yet, so it cannot be opened.",
+    "階段 5A：七種比較類排序全部可用，每一種都能打開學習頁並播放後端真實軌跡。",
+    "Phase 5A: all seven comparison sorts are available; each opens a learning page with a real backend trace.",
   ),
   "list.loading": pair("正在載入演算法清單…", "Loading the algorithm list…"),
   "list.error": pair(
@@ -33,8 +29,6 @@ export const algorithmText = {
   ),
   "list.retry": pair("重新載入", "Reload"),
   "list.available": pair("開始學習", "Start learning"),
-  "list.planned": pair("將於階段 5B 提供", "Planned for phase 5B"),
-  "list.itemLabel": pair("第 {index} 項：{name}", "Item {index}: {name}"),
 
   // ---------- 学习页通用 ----------
   "detail.breadcrumbLabel": pair("目前位置", "You are here"),
@@ -47,12 +41,6 @@ export const algorithmText = {
     "Could not load the algorithm details. Make sure the backend is running, then try again.",
   ),
   "detail.retry": pair("重新載入", "Reload"),
-  "detail.notFound": pair("找不到這個演算法。", "This algorithm could not be found."),
-  "detail.planned.title": pair("這個演算法仍在開發中", "This algorithm is still in development"),
-  "detail.planned.body": pair(
-    "階段 5B 會提供真實軌跡與專屬視覺；在那之前不會顯示任何模擬動畫。",
-    "Phase 5B will provide a real trace and a dedicated visualisation. Until then no simulated animation is shown.",
-  ),
   "detail.sourceNote": pair(
     "所有動畫、程式行高亮與步驟解釋都來自後端真實執行的軌跡；前端不自行推導排序。",
     "Every animation, code highlight and step explanation comes from the trace produced by the backend; the frontend never derives the sorting itself.",
@@ -89,6 +77,10 @@ export const algorithmText = {
     "用逗號或空格分隔 2 至 30 個數字；可輸入一位小數（例如 30.2），範圍 -1000 至 1000。",
     "Separate 2 to 30 numbers with commas or spaces; one decimal place is allowed (for example 30.2), range -1000 to 1000.",
   ),
+  "controls.integerHint": pair(
+    "冒泡頁使用整數入門資料；其他比較類算法支援一位小數。請用逗號或空格分隔 2 至 30 個整數，範圍 -1000 至 1000。",
+    "The bubble page uses integer starter data; the other comparison sorts support one decimal place. Separate 2 to 30 integers with commas or spaces, range -1000 to 1000.",
+  ),
   "controls.apply": pair("套用數列", "Use this list"),
   "controls.current": pair("目前數列：{values}", "Current list: {values}"),
   "controls.resetHint": pair(
@@ -105,6 +97,10 @@ export const algorithmText = {
     "Only numbers are allowed; separate them with commas or spaces.",
   ),
   "controls.error.decimals": pair("每個數字最多只能有一位小數。", "Each number may have at most one decimal place."),
+  "controls.error.integerOnly": pair(
+    "冒泡排序頁只接受整數，請輸入整數（例如 5、3、8、1）。",
+    "The bubble sort page accepts whole numbers only; enter integers such as 5, 3, 8, 1.",
+  ),
   "controls.error.range": pair(
     "每個數字必須介於 -1000 與 1000 之間。",
     "Each number must be between -1000 and 1000.",
@@ -271,10 +267,6 @@ export const algorithmText = {
   "trace.notReady": pair(
     "準備好資料後，播放器會顯示後端真實軌跡。",
     "Once the data is ready, the player shows the real trace from the backend.",
-  ),
-  "trace.planned": pair(
-    "這個演算法尚未提供軌跡，因此沒有動畫或程式碼可播放。",
-    "This algorithm does not provide a trace yet, so there is no animation or code to play.",
   ),
 } as const satisfies Record<string, AlgorithmTextPair>;
 

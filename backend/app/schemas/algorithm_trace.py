@@ -19,25 +19,11 @@ from backend.app.schemas.trace import (
 )
 from backend.app.trace.recorder import Direction, EventType
 
-# 可用算法 id 与仍在计划中的算法 id。
+# 算法中心只保留 7 种比较类排序，全部可用；其余 id 一律按未知算法返回 404。
 AvailableAlgorithmId = Literal[
     "bubble", "selection", "insertion", "shell", "merge", "quick", "heap"
 ]
-PlannedAlgorithmId = Literal["counting", "bucket", "radix"]
-AlgorithmId = Literal[
-    "bubble",
-    "selection",
-    "insertion",
-    "shell",
-    "merge",
-    "quick",
-    "heap",
-    "counting",
-    "bucket",
-    "radix",
-]
-
-AlgorithmStatus = Literal["available", "planned"]
+AlgorithmStatus = Literal["available"]
 
 # 数值元素：整数与一位小数都合法；保持原始 int/float 类型进行序列化。
 Number = int | float
@@ -53,7 +39,7 @@ class BilingualText(BaseModel):
 class AlgorithmMetadata(BaseModel):
     """``GET /api/algorithms`` 中单个算法的元数据（字段顺序即序列化顺序）。"""
 
-    id: AlgorithmId
+    id: AvailableAlgorithmId
     name: BilingualText
     tagline: BilingualText
     status: AlgorithmStatus

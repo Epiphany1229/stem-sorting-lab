@@ -147,11 +147,11 @@ def test_one_decimal_floats_are_preserved(client: TestClient) -> None:
     assert data["summary"]["final_values"] == [29.6, 30.1, 30.2]
 
 
-@pytest.mark.parametrize("algorithm_id", ["counting", "bucket", "radix", "not-a-real-id"])
-def test_planned_and_unknown_algorithms_return_404(
+@pytest.mark.parametrize("algorithm_id", ["bogus", "not-a-real-id", "counting", "bucket", "radix"])
+def test_removed_and_unknown_algorithms_return_404(
     client: TestClient, algorithm_id: str
 ) -> None:
-    """未实现/未知算法返回 404（而不是 422 或空轨迹）。"""
+    """未知 id 返回 404；已移除的 3 个非比较类 id 现在也走同一条未知 id 路径。"""
     response = _post(client, algorithm_id, _payload([3, 1, 2]))
     assert response.status_code == 404
 

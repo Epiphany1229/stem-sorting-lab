@@ -1,6 +1,6 @@
 """算法注册表：算法 id → 模块/函数/行映射/元数据。
 
-阶段 5A 注册 7 个可用算法（含阶段 2 的冒泡排序），3 个非比较类算法标为 planned。
+阶段 5A 注册 7 种比较类排序（含阶段 2 的冒泡排序），全部为可用状态。
 行映射在导入期建立：任何插桩漂移都会立即抛 ``LineMapError``，阻止服务启动。
 """
 
@@ -20,7 +20,6 @@ from backend.app.algorithms import (
     shell,
 )
 from backend.app.schemas.algorithm_trace import (
-    AlgorithmId,
     AlgorithmMetadata,
     AvailableAlgorithmId,
     BilingualText,
@@ -294,57 +293,8 @@ ALGORITHMS: dict[str, AlgorithmSpec] = {
     )
 }
 
-# 尚未实现的非比较类算法：只在算法中心列出，轨迹端点返回 404。
-PLANNED_ALGORITHMS: tuple[AlgorithmMetadata, ...] = (
-    AlgorithmMetadata(
-        id="counting",
-        name=_bi("計數排序", "Counting sort"),
-        tagline=_bi(
-            "統計每個值出現的次數，再按次序輸出",
-            "Count how often each value occurs, then output them in order",
-        ),
-        status="planned",
-        time_complexity=_bi("O(n + k)", "O(n + k)"),
-        space_complexity=_bi("O(k)", "O(k)"),
-        stable=True,
-        use_cases=_bi("整數且數值範圍很小的資料", "Integers with a small value range"),
-        default_values=[4, 2, 2, 8, 3, 3, 1],
-        supports_early_exit=False,
-    ),
-    AlgorithmMetadata(
-        id="bucket",
-        name=_bi("桶排序", "Bucket sort"),
-        tagline=_bi(
-            "按數值區間分到不同桶，桶內排序後再拼接",
-            "Distribute values into buckets by range, sort inside each bucket, then concatenate",
-        ),
-        status="planned",
-        time_complexity=_bi("平均 O(n + k)", "Average O(n + k)"),
-        space_complexity=_bi("O(n + k)", "O(n + k)"),
-        stable=None,
-        use_cases=_bi("分布均勻的資料", "Uniformly distributed data"),
-        default_values=[30.2, 29.6, 30.1, 28.0, 31.5],
-        supports_early_exit=False,
-    ),
-    AlgorithmMetadata(
-        id="radix",
-        name=_bi("基數排序", "Radix sort"),
-        tagline=_bi(
-            "按個位、十位、百位逐位穩定分配再收集",
-            "Stable distribution and collection by each digit (ones, tens, hundreds)",
-        ),
-        status="planned",
-        time_complexity=_bi("O(d(n + b))", "O(d(n + b))"),
-        space_complexity=_bi("O(n + b)", "O(n + b)"),
-        stable=True,
-        use_cases=_bi("整數或固定長度的資料", "Integers or fixed-length keys"),
-        default_values=[170, 45, 75, 90, 802, 24, 2, 66],
-        supports_early_exit=False,
-    ),
-)
-
-# 算法中心展示顺序：7 个可用 + 3 个 planned。
-ALGORITHM_ORDER: tuple[AlgorithmId, ...] = (
+# 算法中心展示顺序：只保留 7 种比较类排序。
+ALGORITHM_ORDER: tuple[AvailableAlgorithmId, ...] = (
     "bubble",
     "selection",
     "insertion",
@@ -352,7 +302,4 @@ ALGORITHM_ORDER: tuple[AlgorithmId, ...] = (
     "merge",
     "quick",
     "heap",
-    "counting",
-    "bucket",
-    "radix",
 )

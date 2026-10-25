@@ -13,11 +13,6 @@
   background: var(--color-primary-soft);
 }
 
-.algo-intro__legend {
-  margin: 0.5rem 0 0;
-  color: var(--color-ink-soft);
-}
-
 .algo-list {
   display: grid;
   gap: 1rem;
@@ -52,12 +47,6 @@
   background: var(--color-primary-soft);
 }
 
-.algo-card--planned {
-  border-style: dashed;
-  background: color-mix(in srgb, var(--color-surface) 70%, var(--color-canvas));
-  cursor: not-allowed;
-}
-
 .algo-card__head {
   display: flex;
   align-items: flex-start;
@@ -89,11 +78,6 @@
   margin: 0;
   font-weight: 600;
   color: var(--color-primary-strong);
-}
-
-.algo-card--planned .algo-card__cta {
-  font-weight: 500;
-  color: var(--color-ink-muted);
 }
 
 /* ---------- 学习页页头 ---------- */

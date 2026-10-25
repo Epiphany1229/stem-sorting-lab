@@ -46,12 +46,12 @@ describe("七个页面路由", () => {
   });
 });
 
-describe("算法中心", () => {
+describe("算法中心（产品收敛：7 种比较类排序）", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it("从后端清单列出全部十种算法，并分别标注可用与开发中", async () => {
+  it("从后端清单列出 7 种比较类排序，全部可用且无開發中占位", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => ({
@@ -72,30 +72,40 @@ describe("算法中心", () => {
       "歸併排序",
       "快速排序",
       "堆積排序",
-      "計數排序",
-      "桶排序",
-      "基數排序",
     ];
 
+    expect(algorithmListFixture).toHaveLength(7);
     for (const name of expectedNames) {
       expect(screen.getAllByRole("heading", { level: 3, name })).toHaveLength(1);
     }
 
-    // 十个入口全部渲染，不隐藏未完成项；状态来自后端元数据。
+    expect(screen.getAllByTestId(/^algorithm-item-/)).toHaveLength(7);
     for (const metadata of algorithmListFixture) {
       const item = screen.getByTestId(`algorithm-item-${metadata.id}`);
-      expect(item).toBeInTheDocument();
-      if (metadata.status === "available") {
-        expect(item).toHaveTextContent("可用");
-        expect(screen.getByTestId(`algorithm-link-${metadata.id}`)).toHaveAttribute(
-          "href",
-          `/algorithms/${metadata.id}`,
-        );
-      } else {
-        expect(item).toHaveTextContent("開發中");
-        expect(item.querySelector("a")).toBeNull();
-      }
+      expect(item).toHaveTextContent("可用");
+      expect(screen.getByTestId(`algorithm-link-${metadata.id}`)).toHaveAttribute(
+        "href",
+        `/algorithms/${metadata.id}`,
+      );
     }
+
+    // 不再保留任何「開發中」占位。
+    expect(screen.queryByText(/開發中/)).toBeNull();
+  });
+
+  it("首页学习目录的算法卡片改为「七種比較類排序」表述", () => {
+    renderRoute("/");
+
+    const algorithmCard = screen
+      .getAllByRole("heading", { level: 3 })
+      .find((heading) => heading.textContent?.includes("七種比較類排序學習中心"));
+    expect(algorithmCard).toBeDefined();
+    const card = algorithmCard?.closest("li") ?? algorithmCard?.closest("a");
+    expect(card).not.toBeNull();
+    expect(card).toHaveTextContent("七種比較類排序");
+    expect(card).toHaveTextContent("可用");
+    // 首页不应再出现「十種演算法」的旧表述。
+    expect(screen.queryByText(/十種/)).toBeNull();
   });
 });
 

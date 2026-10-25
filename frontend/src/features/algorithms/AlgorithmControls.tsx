@@ -17,6 +17,8 @@ export interface AlgorithmControlsProps {
   readonly values: readonly number[];
   readonly direction: Direction;
   readonly earlyExit: boolean;
+  /** 冒泡页仍走阶段 2 整数语义，因此只接受整数；其余六种允许一位小数。 */
+  readonly allowDecimal: boolean;
   readonly onValuesChange: (values: number[]) => void;
   readonly onDirectionChange: (direction: Direction) => void;
   readonly onEarlyExitChange: (earlyExit: boolean) => void;
@@ -27,6 +29,7 @@ export function AlgorithmControls({
   values,
   direction,
   earlyExit,
+  allowDecimal,
   onValuesChange,
   onDirectionChange,
   onEarlyExitChange,
@@ -42,7 +45,7 @@ export function AlgorithmControls({
   };
 
   const applyCustom = () => {
-    const result = parseAlgorithmValues(customText, { allowDecimal: true });
+    const result = parseAlgorithmValues(customText, { allowDecimal });
     if (!result.ok) {
       setErrorKey(result.reason);
       return;
@@ -54,6 +57,9 @@ export function AlgorithmControls({
   const currentText = formatAlgorithmText("controls.current", {
     values: values.join(", "),
   });
+  const hintText = algorithmTextOf(
+    allowDecimal ? "controls.customHint" : "controls.integerHint",
+  );
   const title = algorithmTextOf("controls.title");
 
   return (
@@ -95,6 +101,7 @@ export function AlgorithmControls({
                 autoComplete="off"
                 className="lab-input-field"
                 placeholder="5, 3, 8, 1"
+                inputMode={allowDecimal ? "decimal" : "numeric"}
                 value={customText}
                 aria-describedby={hintId}
                 aria-invalid={errorKey !== null}
@@ -109,12 +116,8 @@ export function AlgorithmControls({
                 />
               </button>
             </div>
-            <p id={hintId} className="algo-controls__hint">
-              <BilingualText
-                size="xs"
-                zh={algorithmTextOf("controls.customHint")["zh-Hant"]}
-                en={algorithmTextOf("controls.customHint").en}
-              />
+            <p id={hintId} className="algo-controls__hint" data-testid="input-mode-hint">
+              <BilingualText size="xs" zh={hintText["zh-Hant"]} en={hintText.en} />
             </p>
             {errorKey ? (
               <p role="alert" className="algo-controls__error" data-testid="values-error">

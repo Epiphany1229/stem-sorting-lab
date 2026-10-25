@@ -10,7 +10,6 @@ import type {
   AlgorithmId,
   AlgorithmListResponse,
   AlgorithmMetadata,
-  AlgorithmStatus,
   AlgorithmSummary,
   AlgorithmTrace,
   AlgorithmTraceEvent,
@@ -111,14 +110,7 @@ function asAlgorithmId(value: unknown, path: string): AlgorithmId {
   return value as AlgorithmId;
 }
 
-function asStatus(value: unknown, path: string): AlgorithmStatus {
-  if (value !== "available" && value !== "planned") {
-    fail(`${path} 必须是 available 或 planned`);
-  }
-  return value;
-}
-
-/** 解析一个算法元数据项。 */
+/** 解析一个可用算法的元数据项（planned 项在列表层被过滤，不会走进来）。 */
 function parseMetadata(value: unknown, index: number): AlgorithmMetadata {
   const path = `algorithms[${index}]`;
   if (!isRecord(value)) {
@@ -135,19 +127,14 @@ function parseMetadata(value: unknown, index: number): AlgorithmMetadata {
     }
   }
 
-  const stable = value.stable;
-  if (stable !== null && typeof stable !== "boolean") {
-    fail(`${path}.stable 必须是布尔值或 null`);
-  }
-
   return {
     id: asAlgorithmId(value.id, `${path}.id`),
     name: asBilingual(value.name, `${path}.name`),
     tagline: asBilingual(value.tagline, `${path}.tagline`),
-    status: asStatus(value.status, `${path}.status`),
+    status: "available",
     time_complexity: asBilingual(value.time_complexity, `${path}.time_complexity`),
     space_complexity: asBilingual(value.space_complexity, `${path}.space_complexity`),
-    stable,
+    stable: asBoolean(value.stable, `${path}.stable`),
     use_cases: asBilingual(value.use_cases, `${path}.use_cases`),
     default_values: defaultValues,
     supports_early_exit: asBoolean(value.supports_early_exit, `${path}.supports_early_exit`),
@@ -156,7 +143,10 @@ function parseMetadata(value: unknown, index: number): AlgorithmMetadata {
 
 /**
  * 解析 GET /api/algorithms。
- * 契约是 { protocol_version: 1, algorithms: [...] }；同时容忍直接返回数组的早期实现。
+ *
+ * 产品范围收敛为 7 种比较类排序：只保留 `status === "available"` 的项。
+ * 兼容后端尚未收敛时仍返回 planned 项的情况——这些项直接忽略，绝不在 UI
+ * 显示「開發中」占位，也不校验其 id（counting/bucket/radix 已从前端类型移除）。
  */
 export function parseAlgorithmListResponse(payload: unknown): AlgorithmListResponse {
   const container = Array.isArray(payload) ? { algorithm_list: payload } : payload;
@@ -173,7 +163,24 @@ export function parseAlgorithmListResponse(payload: unknown): AlgorithmListRespo
     fail("algorithms 不能为空");
   }
 
-  const parsed = algorithms.map((entry, index) => parseMetadata(entry, index));
+  const available: unknown[] = [];
+  algorithms.forEach((entry, index) => {
+    if (!isRecord(entry)) {
+      fail(`algorithms[${index}] 必须是对象`);
+    }
+    if (entry.status !== "available" && entry.status !== "planned") {
+      fail(`algorithms[${index}].status 必须是 available 或 planned`);
+    }
+    if (entry.status === "available") {
+      available.push(entry);
+    }
+  });
+
+  if (available.length === 0) {
+    fail("algorithms 中没有可用的比较类排序");
+  }
+
+  const parsed = available.map((entry, index) => parseMetadata(entry, index));
   const ids = new Set<string>();
   for (const metadata of parsed) {
     if (ids.has(metadata.id)) {
@@ -193,7 +200,7 @@ interface ParsedEvent extends AlgorithmTraceEvent {
   readonly auxiliary_state: AlgorithmTraceEvent["auxiliary_state"];
 }
 
-/** 解析单个事件（通用字段 + compare 必须带 comparison）。 */
+/** 解析单个事件（通用字段；comparison 可选，存在时严格校验）。 */
 function parseEvent(
   value: unknown,
   index: number,

@@ -1,9 +1,9 @@
 /**
- * 十种排序算法学习中心（阶段 5A）。
+ * 七种比较类排序学习中心（阶段 5A 产品收敛）。
  *
- * 列表来自 GET /api/algorithms：10 项全部显示，可用项可进入学习页，
- * 开发中项保持可见但不可点击。加载失败时显示明确的双语错误与重试，
- * 不用本地静态数据冒充后端元数据。
+ * 列表来自 GET /api/algorithms，前端只保留 status === "available" 的 7 种
+ * 比较类排序；后端若仍返回 planned 项，解析层会忽略，绝不显示「開發中」占位。
+ * 每一项都可用，链接到 /algorithms/:id。
  */
 import { Link } from "react-router-dom";
 
@@ -22,40 +22,7 @@ function AlgorithmCard({
   readonly metadata: AlgorithmMetadata;
   readonly index: number;
 }) {
-  const available = metadata.status === "available";
   const availableLabel = algorithmTextOf("list.available");
-  const plannedLabel = algorithmTextOf("list.planned");
-
-  const body = (
-    <>
-      <div className="algo-card__head">
-        <span aria-hidden="true" className="algo-card__index">
-          {String(index + 1).padStart(2, "0")}
-        </span>
-        <div className="algo-card__text">
-          <h3 className="algo-card__name">
-            <BilingualText
-              as="span"
-              size="subtitle"
-              zh={metadata.name["zh-Hant"]}
-              en={metadata.name.en}
-            />
-          </h3>
-          <p className="algo-card__tagline">
-            <BilingualText size="sm" zh={metadata.tagline["zh-Hant"]} en={metadata.tagline.en} />
-          </p>
-        </div>
-        <StatusBadge status={available ? "available" : "inDevelopment"} />
-      </div>
-      <p className="algo-card__cta">
-        {available ? (
-          <BilingualText size="sm" zh={availableLabel["zh-Hant"]} en={availableLabel.en} />
-        ) : (
-          <BilingualText size="sm" zh={plannedLabel["zh-Hant"]} en={plannedLabel.en} />
-        )}
-      </p>
-    </>
-  );
 
   return (
     <li
@@ -64,19 +31,42 @@ function AlgorithmCard({
       data-testid={`algorithm-item-${metadata.id}`}
       data-status={metadata.status}
     >
-      {available ? (
-        <Link
-          to={`/algorithms/${metadata.id}`}
-          className="algo-card algo-card--available"
-          data-testid={`algorithm-link-${metadata.id}`}
-        >
-          {body}
-        </Link>
-      ) : (
-        <div className="algo-card algo-card--planned" aria-disabled="true">
-          {body}
+      <Link
+        to={`/algorithms/${metadata.id}`}
+        className="algo-card algo-card--available"
+        data-testid={`algorithm-link-${metadata.id}`}
+      >
+        <div className="algo-card__head">
+          <span aria-hidden="true" className="algo-card__index">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <div className="algo-card__text">
+            <h3 className="algo-card__name">
+              <BilingualText
+                as="span"
+                size="subtitle"
+                zh={metadata.name["zh-Hant"]}
+                en={metadata.name.en}
+              />
+            </h3>
+            <p className="algo-card__tagline">
+              <BilingualText
+                size="sm"
+                zh={metadata.tagline["zh-Hant"]}
+                en={metadata.tagline.en}
+              />
+            </p>
+          </div>
+          <StatusBadge status="available" />
         </div>
-      )}
+        <p className="algo-card__cta">
+          <BilingualText
+            size="sm"
+            zh={availableLabel["zh-Hant"]}
+            en={availableLabel.en}
+          />
+        </p>
+      </Link>
     </li>
   );
 }
@@ -84,7 +74,6 @@ function AlgorithmCard({
 export default function AlgorithmsPage() {
   const listQuery = useAlgorithmList();
   const note = algorithmTextOf("list.note");
-  const legend = algorithmTextOf("list.legend");
   const loading = algorithmTextOf("list.loading");
   const errorText = algorithmTextOf("list.error");
   const retry = algorithmTextOf("list.retry");
@@ -100,9 +89,6 @@ export default function AlgorithmsPage() {
       <section className="algo-intro" data-testid="algorithms-intro">
         <p>
           <BilingualText size="sm" zh={note["zh-Hant"]} en={note.en} />
-        </p>
-        <p className="algo-intro__legend">
-          <BilingualText size="xs" zh={legend["zh-Hant"]} en={legend.en} />
         </p>
       </section>
 

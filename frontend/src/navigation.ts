@@ -50,7 +50,7 @@ export const navItems: readonly NavItem[] = [
     navKey: "nav.algorithms",
     titleKey: "algorithms.title",
     descriptionKey: "home.card.algorithms.desc",
-    // 阶段 5A 起：列表页可用；具体算法按「可用 / 開發中」状态区分
+    // 阶段 5A 产品收敛：算法中心只提供 7 种比较类排序，全部可用
     status: "available",
   },
   {

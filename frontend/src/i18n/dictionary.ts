@@ -128,16 +128,16 @@ export const dictionary = {
   },
   "home.lead": {
     "zh-Hant":
-      "這個教學網站用 Python 排序演算法，帶你讀懂香港天文台的氣象數據。先認識比較與交換，再走進十種排序演算法。",
-    en: "This learning site uses Python sorting algorithms to help you read Hong Kong Observatory weather data. Start with comparing and swapping, then work through ten sorting algorithms.",
+      "這個教學網站用 Python 排序演算法，帶你讀懂香港天文台的氣象數據。先認識比較與交換，再走進七種比較類排序演算法。",
+    en: "This learning site uses Python sorting algorithms to help you read Hong Kong Observatory weather data. Start with comparing and swapping, then work through seven comparison sorting algorithms.",
   },
   "home.cta.start": {
     "zh-Hant": "開始第一個實驗室",
     en: "Start the first lab",
   },
   "home.cta.algorithms": {
-    "zh-Hant": "查看十種演算法",
-    en: "See all ten algorithms",
+    "zh-Hant": "查看七種比較類排序",
+    en: "See all seven comparison sorts",
   },
   "home.path.title": {
     "zh-Hant": "建議學習路徑",
@@ -164,8 +164,8 @@ export const dictionary = {
     en: "Sort temperatures",
   },
   "home.path.step5": {
-    "zh-Hant": "學習更多演算法",
-    en: "Learn more algorithms",
+    "zh-Hant": "學習七種比較類排序",
+    en: "Learn seven comparison sorts",
   },
   "home.directory.title": {
     "zh-Hant": "學習目錄",
@@ -181,8 +181,8 @@ export const dictionary = {
   },
   "home.scope.body": {
     "zh-Hant":
-      "階段 2 已完成冒泡排序的軌跡播放器：動畫、Python 程式碼同步高亮與步驟解釋都來自後端真實執行的軌跡。階段 3 加入香港天氣數據探索頁與五類圖表：可回溯的每日氣溫、資料覆蓋率與缺口；降雨與濕度只有接口位置，不以氣溫冒充。其他演算法尚未實作。",
-    en: "Phase 2 delivers the bubble sort trace player: the animation, synchronised Python highlighting and step explanations all come from the trace produced by the backend. Phase 3 adds the Hong Kong weather explorer and five chart types covering retroactive daily temperatures, coverage and gaps; rainfall and humidity only have reserved slots and are never faked with temperature. The other algorithms are not implemented yet.",
+      "階段 5A：七種比較類排序（冒泡、選擇、插入、希爾、歸併、快速、堆積）已全部可互動學習；動畫、Python 程式碼同步高亮、步驟解釋與專屬輔助視覺都來自後端真實執行的軌跡。階段 3、4 的香港天氣探索與氣溫排序維持可用。",
+    en: "Phase 5A: all seven comparison sorts (bubble, selection, insertion, shell, merge, quick, heap) are interactive; the animation, synchronised Python highlighting, step explanations and dedicated visuals all come from the trace produced by the backend. The phase 3 weather explorer and phase 4 temperature sorting remain available.",
   },
   "home.card.lab.desc": {
     "zh-Hant": "用數字卡片一步一步看冒泡排序怎麼比較與交換。",
@@ -197,8 +197,8 @@ export const dictionary = {
     en: "Line up the last 30 days of temperature to find the hottest and coldest days.",
   },
   "home.card.algorithms.desc": {
-    "zh-Hant": "比較十種排序演算法的想法、Python 實作與適用時機。",
-    en: "Compare the ideas, Python code and use cases of ten sorting algorithms.",
+    "zh-Hant": "比較七種比較類排序演算法的想法、Python 實作與適用時機。",
+    en: "Compare the ideas, Python code and use cases of seven comparison sorting algorithms.",
   },
   "home.card.sources.desc": {
     "zh-Hant": "查看官方資料來源、欄位定義、單位與授權要求。",
@@ -484,112 +484,24 @@ export const dictionary = {
     en: "Not provided",
   },
 
-  // ---------- 十种排序算法学习中心 ----------
+  // ---------- 七种比较类排序学习中心 ----------
   "algorithms.title": {
-    "zh-Hant": "十種排序演算法學習中心",
-    en: "Ten sorting algorithms learning center",
+    "zh-Hant": "七種比較類排序學習中心",
+    en: "Seven comparison sorts learning center",
   },
   "algorithms.lead": {
     "zh-Hant":
-      "從冒泡排序開始，逐一比較十種演算法的直觀想法、Python 實作與適用情況。尚未完成的演算法會清楚標示狀態，不會隱藏。",
-    en: "Starting from bubble sort, compare the intuition, Python implementation and use cases of ten algorithms. Unfinished algorithms are clearly labelled and never hidden.",
+      "從冒泡排序開始，逐一比較七種比較類排序的直觀想法、Python 實作與適用情況。每一種都有真實軌跡、程式碼同步高亮與專屬輔助視覺。",
+    en: "Starting from bubble sort, compare the intuition, Python implementation and use cases of seven comparison sorts. Each one plays a real trace with synchronised code highlighting and a dedicated visual.",
   },
   "algorithms.list.title": {
-    "zh-Hant": "全部十種演算法",
-    en: "All ten algorithms",
+    "zh-Hant": "全部七種比較類排序",
+    en: "All seven comparison sorts",
   },
   "algorithms.note": {
     "zh-Hant":
-      "階段 1 只建立入口與狀態。各演算法的 Python 實作、統一步進播放器與專屬視覺化會在後續階段加入。",
-    en: "Phase 1 only builds the entries and their status. Each algorithm's Python implementation, the shared step player and its dedicated visualisation arrive in later phases.",
-  },
-  "alg.bubble.name": {
-    "zh-Hant": "冒泡排序",
-    en: "Bubble sort",
-  },
-  "alg.bubble.desc": {
-    "zh-Hant": "相鄰兩兩比較，把較大的數字往後推，一輪之後最大值就定位。",
-    en: "Compare neighbours and push the larger number right; after one pass the largest value is settled.",
-  },
-  "alg.selection.name": {
-    "zh-Hant": "選擇排序",
-    en: "Selection sort",
-  },
-  "alg.selection.desc": {
-    "zh-Hant": "每一輪從未排序區找出最小值，放到未排序區的最前面。",
-    en: "Each pass finds the smallest value in the unsorted part and moves it to the front of that part.",
-  },
-  "alg.insertion.name": {
-    "zh-Hant": "插入排序",
-    en: "Insertion sort",
-  },
-  "alg.insertion.desc": {
-    "zh-Hant": "像整理撲克牌，把新數字插入已排序區的正確位置。",
-    en: "Like sorting playing cards: insert each new number into its correct place in the sorted part.",
-  },
-  "alg.shell.name": {
-    "zh-Hant": "希爾排序",
-    en: "Shell sort",
-  },
-  "alg.shell.desc": {
-    "zh-Hant": "先用較大的間隔分組做插入排序，再逐步縮小間隔。",
-    en: "Run insertion sort on groups separated by a large gap, then shrink the gap step by step.",
-  },
-  "alg.merge.name": {
-    "zh-Hant": "歸併排序",
-    en: "Merge sort",
-  },
-  "alg.merge.desc": {
-    "zh-Hant": "不斷對半拆分，再把小段合併成有序的一大段。",
-    en: "Split in halves repeatedly, then merge the small runs into one sorted run.",
-  },
-  "alg.quick.name": {
-    "zh-Hant": "快速排序",
-    en: "Quick sort",
-  },
-  "alg.quick.desc": {
-    "zh-Hant": "選一個樞軸，把比它小的放左邊、比它大的放右邊，再分別處理兩邊。",
-    en: "Pick a pivot, move smaller values left and larger values right, then handle both sides.",
-  },
-  "alg.heap.name": {
-    "zh-Hant": "堆積排序",
-    en: "Heap sort",
-  },
-  "alg.heap.desc": {
-    "zh-Hant": "先建立最大堆，再把堆頂換到最後並縮小堆的範圍。",
-    en: "Build a max-heap, then move the top to the end and shrink the heap.",
-  },
-  "alg.counting.name": {
-    "zh-Hant": "計數排序",
-    en: "Counting sort",
-  },
-  "alg.counting.desc": {
-    "zh-Hant": "先數每個整數出現幾次，再依計數把數字放回正確位置。",
-    en: "Count how often each integer appears, then write the values back in order.",
-  },
-  "alg.bucket.name": {
-    "zh-Hant": "桶排序",
-    en: "Bucket sort",
-  },
-  "alg.bucket.desc": {
-    "zh-Hant": "把數值分到幾個區間桶，各自排序後再拼接起來。",
-    en: "Distribute values into interval buckets, sort each bucket, then concatenate.",
-  },
-  "alg.radix.name": {
-    "zh-Hant": "基數排序",
-    en: "Radix sort",
-  },
-  "alg.radix.desc": {
-    "zh-Hant": "從個位、十位、百位依序做穩定分配與收集。",
-    en: "Distribute and collect stably by digit, from ones to tens to hundreds.",
-  },
-  "alg.bubble.note": {
-    "zh-Hant": "先導示範：階段 2 會完成完整軌跡播放",
-    en: "Starter demo: the full trace player lands in phase 2",
-  },
-  "alg.planned.note": {
-    "zh-Hant": "尚未開始：階段 5 提供",
-    en: "Not started: planned for phase 5",
+      "七種比較類排序全部可用；每一種都能播放後端真實執行的軌跡，並在程式碼面板同步高亮。",
+    en: "All seven comparison sorts are available; each plays a real backend trace while the code panel highlights along.",
   },
 
   // ---------- 数据来源与方法 ----------
@@ -693,8 +605,8 @@ export const dictionary = {
     en: "Current phase",
   },
   "help.phase.body": {
-    "zh-Hant": "階段 4：香港天氣排序頁已完成，可直接把逐日最高溫或最低溫放進階段 2 的冒泡排序播放器；階段 3 的天氣探索頁與五類圖表可繼續使用。其他九種演算法尚未開始。",
-    en: "Phase 4: the Hong Kong weather sorting page is complete and feeds daily maximum or minimum temperatures into the phase 2 bubble sort player; the phase 3 weather explorer and its five chart types remain available. The other nine algorithms have not started.",
+    "zh-Hant": "階段 5A：七種比較類排序已全部可互動學習，包含真實軌跡、Python 高亮、事實性比較與專屬輔助視覺；階段 3、4 的香港天氣探索與氣溫排序維持可用。",
+    en: "Phase 5A: all seven comparison sorts are interactive, with real traces, Python highlighting, factual comparisons and dedicated visuals; the phase 3 weather explorer and phase 4 temperature sorting remain available.",
   },
 
   // ---------- 阶段 2：冒泡排序播放器 ----------

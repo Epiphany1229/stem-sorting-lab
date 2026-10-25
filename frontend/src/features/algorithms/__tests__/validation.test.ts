@@ -14,11 +14,32 @@ function clone<T>(value: T): Record<string, unknown> {
 type AnyRecord = Record<string, unknown>;
 
 describe("GET /api/algorithms 响应校验", () => {
-  it("接受契约信封与早期裸数组两种形式", () => {
-    expect(parseAlgorithmListResponse(algorithmListResponse()).algorithms).toHaveLength(10);
+  it("接受契约信封与早期裸数组两种形式，且只保留 7 项比较类排序", () => {
+    expect(parseAlgorithmListResponse(algorithmListResponse()).algorithms).toHaveLength(7);
     expect(
       parseAlgorithmListResponse(algorithmListResponse().algorithms).algorithms,
-    ).toHaveLength(10);
+    ).toHaveLength(7);
+  });
+
+  it("静默忽略后端仍返回的 planned 项（不校验已移除的算法 id）", () => {
+    const payload = clone(algorithmListResponse());
+    const list = payload.algorithms as AnyRecord[];
+    list.push({
+      id: "counting",
+      name: { "zh-Hant": "計數排序", en: "Counting sort" },
+      tagline: { "zh-Hant": "統計次數。", en: "Count occurrences." },
+      status: "planned",
+      time_complexity: { "zh-Hant": "O(n+k)", en: "O(n+k)" },
+      space_complexity: { "zh-Hant": "O(k)", en: "O(k)" },
+      stable: true,
+      use_cases: { "zh-Hant": "整數。", en: "Integers." },
+      default_values: [],
+      supports_early_exit: false,
+    });
+
+    const parsed = parseAlgorithmListResponse(payload);
+    expect(parsed.algorithms).toHaveLength(7);
+    expect(parsed.algorithms.some((algorithm) => String(algorithm.id) === "counting")).toBe(false);
   });
 
   it("拒绝重复 id、缺失双语字段与非法状态", () => {

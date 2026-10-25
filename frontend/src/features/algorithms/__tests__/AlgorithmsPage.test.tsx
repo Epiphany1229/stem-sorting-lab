@@ -22,7 +22,9 @@ function jsonResponse(payload: unknown, status = 200): Response {
   } as unknown as Response;
 }
 
-function stubListFetch(overrides: { status?: number; error?: Error } = {}) {
+function stubListFetch(
+  overrides: { status?: number; error?: Error; payload?: unknown } = {},
+) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
     if (url.endsWith("/api/algorithms")) {
@@ -32,7 +34,7 @@ function stubListFetch(overrides: { status?: number; error?: Error } = {}) {
       if (overrides.status && overrides.status >= 400) {
         return jsonResponse({ detail: "mock error" }, overrides.status);
       }
-      return jsonResponse(algorithmListResponse());
+      return jsonResponse(overrides.payload ?? algorithmListResponse());
     }
     throw new Error(`unexpected request: ${url}`);
   });
@@ -53,21 +55,63 @@ function renderPage() {
   );
 }
 
-describe("算法中心 /algorithms", () => {
-  it("从后端元数据渲染 10 个入口，并标出可用与开发中", async () => {
+/** 模拟后端尚未收敛时仍返回 planned 项（前端必须静默忽略，不显示占位）。 */
+const LEGACY_PLANNED = [
+  {
+    id: "counting",
+    name: { "zh-Hant": "計數排序", en: "Counting sort" },
+    tagline: { "zh-Hant": "統計每個值出現次數再按序輸出。", en: "Count occurrences then output in order." },
+    status: "planned",
+    time_complexity: { "zh-Hant": "O(n+k)", en: "O(n+k)" },
+    space_complexity: { "zh-Hant": "O(k)", en: "O(k)" },
+    stable: true,
+    use_cases: { "zh-Hant": "整數且範圍小。", en: "Small integer ranges." },
+    default_values: [],
+    supports_early_exit: false,
+  },
+  {
+    id: "bucket",
+    name: { "zh-Hant": "桶排序", en: "Bucket sort" },
+    tagline: { "zh-Hant": "按區間分桶。", en: "Distribute into buckets." },
+    status: "planned",
+    time_complexity: { "zh-Hant": "O(n+k)", en: "O(n+k)" },
+    space_complexity: { "zh-Hant": "O(n+k)", en: "O(n+k)" },
+    stable: null,
+    use_cases: { "zh-Hant": "均勻分佈。", en: "Evenly distributed values." },
+    default_values: [],
+    supports_early_exit: false,
+  },
+  {
+    id: "radix",
+    name: { "zh-Hant": "基數排序", en: "Radix sort" },
+    tagline: { "zh-Hant": "逐位穩定分配。", en: "Stable digit distribution." },
+    status: "planned",
+    time_complexity: { "zh-Hant": "O(d(n+b))", en: "O(d(n+b))" },
+    space_complexity: { "zh-Hant": "O(n+b)", en: "O(n+b)" },
+    stable: true,
+    use_cases: { "zh-Hant": "整數資料。", en: "Integer data." },
+    default_values: [],
+    supports_early_exit: false,
+  },
+];
+
+describe("算法中心 /algorithms（产品收敛：仅 7 种比较类排序）", () => {
+  it("渲染 7 个入口，全部可用且链接到学习页", async () => {
     stubListFetch();
     renderPage();
 
     await screen.findByTestId("algorithm-list");
 
-    // 10 个 h3，名称与后端元数据一致。
+    expect(algorithmListFixture).toHaveLength(7);
+    expect(availableAlgorithmIds).toHaveLength(7);
+    expect(screen.getAllByTestId(/^algorithm-item-/)).toHaveLength(7);
+
     for (const metadata of algorithmListFixture) {
       expect(
         screen.getAllByRole("heading", { level: 3, name: metadata.name["zh-Hant"] }),
       ).toHaveLength(1);
     }
 
-    // 七个可用项：可点击、链接到 /algorithms/{id}。
     for (const id of availableAlgorithmIds) {
       const item = screen.getByTestId(`algorithm-item-${id}`);
       expect(item).toHaveAttribute("data-status", "available");
@@ -76,23 +120,26 @@ describe("算法中心 /algorithms", () => {
       expect(link).toHaveAttribute("href", `/algorithms/${id}`);
     }
 
-    // 三个开发中项：可见、有徽标、不可点击（不是链接）。
-    for (const id of ["counting", "bucket", "radix"]) {
-      const item = screen.getByTestId(`algorithm-item-${id}`);
-      expect(item).toHaveAttribute("data-status", "planned");
-      expect(item).toHaveTextContent("開發中");
-      expect(item.querySelector("a")).toBeNull();
-      expect(screen.queryByTestId(`algorithm-link-${id}`)).toBeNull();
-    }
+    // 不再出现任何「開發中」占位。
+    expect(screen.queryByText(/開發中/)).toBeNull();
   });
 
-  it("始终列出全部 10 项，不隐藏未完成算法", async () => {
-    stubListFetch();
+  it("后端若仍返回 counting/bucket/radix 的 planned 项，前端静默忽略", async () => {
+    stubListFetch({
+      payload: {
+        protocol_version: 1,
+        algorithms: [...algorithmListFixture, ...LEGACY_PLANNED],
+      },
+    });
     renderPage();
     await screen.findByTestId("algorithm-list");
 
-    const items = screen.getAllByTestId(/^algorithm-item-/);
-    expect(items).toHaveLength(10);
+    expect(screen.getAllByTestId(/^algorithm-item-/)).toHaveLength(7);
+    for (const id of ["counting", "bucket", "radix"]) {
+      expect(screen.queryByTestId(`algorithm-item-${id}`)).toBeNull();
+      expect(screen.queryByTestId(`algorithm-link-${id}`)).toBeNull();
+    }
+    expect(screen.queryByText(/開發中/)).toBeNull();
   });
 
   it("加载中显示双语状态，失败时显示错误与重试", async () => {

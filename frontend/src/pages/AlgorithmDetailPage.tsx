@@ -22,7 +22,6 @@ import { toPlayerTrace, useAlgorithmList, useAlgorithmTrace } from "../features/
 import { AuxPanel, hasAuxVisual } from "../features/algorithms/auxiliary/AuxPanel";
 import {
   algorithmTextOf,
-  formatAlgorithmText,
   practiceByAlgorithm,
   zhAlgorithmText,
 } from "../features/algorithms/i18n";
@@ -30,11 +29,10 @@ import {
   defaultValuesFrom,
   FALLBACK_VALUES,
 } from "../features/algorithms/inputValues";
-import {
-  isImplementedAlgorithmId,
-  type AlgorithmMetadata,
-  type AlgorithmTraceEvent,
-  type ImplementedAlgorithmId,
+import type {
+  AlgorithmMetadata,
+  AlgorithmTraceEvent,
+  ImplementedAlgorithmId,
 } from "../features/algorithms/types";
 import "../features/algorithms/algorithms.css";
 
@@ -235,6 +233,7 @@ function AlgorithmLearningView({ metadata }: { readonly metadata: AlgorithmMetad
         values={values}
         direction={direction}
         earlyExit={earlyExit}
+        allowDecimal={algorithmId !== "bubble"}
         onValuesChange={setValues}
         onDirectionChange={setDirection}
         onEarlyExitChange={setEarlyExit}
@@ -279,34 +278,6 @@ function AlgorithmLearningView({ metadata }: { readonly metadata: AlgorithmMetad
   );
 }
 
-/* ---------- 开发中算法（直链访问时如实说明） ---------- */
-
-function PlannedAlgorithmView({ metadata }: { readonly metadata: AlgorithmMetadata }) {
-  const title = algorithmTextOf("detail.planned.title");
-  const body = algorithmTextOf("detail.planned.body");
-  const back = algorithmTextOf("detail.back");
-  return (
-    <div className="page-stack">
-      <DetailHeader metadata={metadata} />
-      <section className="section-card" data-testid="algorithm-planned">
-        <h2>
-          <BilingualText as="span" size="subtitle" zh={title["zh-Hant"]} en={title.en} />
-        </h2>
-        <p className="mt-3">
-          <BilingualText size="sm" zh={body["zh-Hant"]} en={body.en} />
-        </p>
-        <p className="mt-4">
-          <BilingualText size="xs" zh={formatAlgorithmText("trace.planned", {})["zh-Hant"]} en={formatAlgorithmText("trace.planned", {}).en} />
-        </p>
-        <Link to="/algorithms" className="algo-back-link mt-4">
-          <span aria-hidden="true">←</span>
-          <BilingualText as="span" size="sm" zh={back["zh-Hant"]} en={back.en} />
-        </Link>
-      </section>
-    </div>
-  );
-}
-
 /* ---------- 路由页面 ---------- */
 
 export default function AlgorithmDetailPage() {
@@ -339,13 +310,11 @@ export default function AlgorithmDetailPage() {
     );
   }
 
+  // 产品收敛后目录只有 7 种比较类排序；任何其他 id（含 counting/bucket/radix）
+  // 一律走 404，不显示「開發中」占位。
   const metadata = listQuery.data.algorithms.find((algorithm) => algorithm.id === id);
   if (!metadata) {
     return <NotFoundPage />;
-  }
-
-  if (metadata.status !== "available" || !isImplementedAlgorithmId(metadata.id)) {
-    return <PlannedAlgorithmView metadata={metadata} />;
   }
 
   return <AlgorithmLearningView key={metadata.id} metadata={metadata} />;

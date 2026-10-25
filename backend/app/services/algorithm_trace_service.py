@@ -12,7 +12,6 @@ from decimal import Decimal
 from backend.app.algorithms.registry import (
     ALGORITHM_ORDER,
     ALGORITHMS,
-    PLANNED_ALGORITHMS,
     AlgorithmSpec,
 )
 from backend.app.schemas.algorithm_trace import (
@@ -20,7 +19,6 @@ from backend.app.schemas.algorithm_trace import (
     AlgorithmAuxiliaryState,
     AlgorithmComparisonInfo,
     AlgorithmListResponse,
-    AlgorithmMetadata,
     AlgorithmTraceEvent,
     AlgorithmTraceItem,
     AlgorithmTraceResponse,
@@ -54,22 +52,18 @@ _RELATION_EN: dict[str, str] = {
 
 
 class UnknownAlgorithmError(LookupError):
-    """未知或尚未实现的算法 id；由 API 层转换成 404。"""
+    """未知算法 id（含已移除的 id）；由 API 层转换成 404。"""
 
     def __init__(self, algorithm_id: str) -> None:
-        super().__init__(f"未知或尚未實現的算法：{algorithm_id}")
+        super().__init__(f"未知的算法：{algorithm_id}")
         self.algorithm_id = algorithm_id
 
 
 def build_algorithm_list() -> AlgorithmListResponse:
-    """返回 10 个算法的元数据（7 个 available + 3 个 planned）。"""
-    metadata_by_id: dict[str, AlgorithmMetadata] = {
-        spec.algorithm_id: spec.metadata for spec in ALGORITHMS.values()
-    }
-    metadata_by_id.update({meta.id: meta for meta in PLANNED_ALGORITHMS})
+    """返回 7 种比较类排序的元数据（全部可用）。"""
     return AlgorithmListResponse(
         protocol_version=PROTOCOL_VERSION,
-        algorithms=[metadata_by_id[algorithm_id] for algorithm_id in ALGORITHM_ORDER],
+        algorithms=[ALGORITHMS[algorithm_id].metadata for algorithm_id in ALGORITHM_ORDER],
     )
 
 

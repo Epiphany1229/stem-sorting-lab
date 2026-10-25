@@ -18,7 +18,7 @@ import type {
   TraceSummary,
 } from "../../player/types";
 
-/** 十种算法的稳定 id（与后端注册表一致）。 */
+/** 产品收敛后只保留七种比较类排序的稳定 id（与后端注册表一致）。 */
 export const ALGORITHM_IDS = [
   "bubble",
   "selection",
@@ -27,25 +27,14 @@ export const ALGORITHM_IDS = [
   "merge",
   "quick",
   "heap",
-  "counting",
-  "bucket",
-  "radix",
 ] as const;
 
 export type AlgorithmId = (typeof ALGORITHM_IDS)[number];
 
-/** 阶段 5A 已实现、可以打开学习页的七种（含冒泡）。 */
-export const IMPLEMENTED_ALGORITHM_IDS = [
-  "bubble",
-  "selection",
-  "insertion",
-  "shell",
-  "merge",
-  "quick",
-  "heap",
-] as const;
+/** 七种全部已实现、可以打开学习页（保留旧名以兼容现有引用）。 */
+export const IMPLEMENTED_ALGORITHM_IDS = ALGORITHM_IDS;
 
-export type ImplementedAlgorithmId = (typeof IMPLEMENTED_ALGORITHM_IDS)[number];
+export type ImplementedAlgorithmId = AlgorithmId;
 
 /** 除冒泡外需要专属辅助可视化的六种。 */
 export const AUX_ALGORITHM_IDS = [
@@ -59,18 +48,19 @@ export const AUX_ALGORITHM_IDS = [
 
 export type AuxAlgorithmId = (typeof AUX_ALGORITHM_IDS)[number];
 
-/** 类型守卫：字符串是否是本阶段已实现的算法 id。 */
+/** 类型守卫：字符串是否是本阶段提供的算法 id。 */
 export function isImplementedAlgorithmId(
   value: string | undefined,
 ): value is ImplementedAlgorithmId {
   return value !== undefined && (IMPLEMENTED_ALGORITHM_IDS as readonly string[]).includes(value);
 }
 
-/** 类型守卫：字符串是否是已知的十种算法 id。 */
+/** 类型守卫：字符串是否是七种比较类排序之一。 */
 export function isAlgorithmId(value: string | undefined): value is AlgorithmId {
   return value !== undefined && (ALGORITHM_IDS as readonly string[]).includes(value);
 }
 
+/** 目录接口的原始状态；产品收敛后前端只保留 available，planned 仅用于防御性解析。 */
 export type AlgorithmStatus = "available" | "planned";
 
 /** 成对双语文案：繁体中文在上、英文在下。 */
@@ -84,11 +74,11 @@ export interface AlgorithmMetadata {
   readonly id: AlgorithmId;
   readonly name: Bilingual;
   readonly tagline: Bilingual;
-  readonly status: AlgorithmStatus;
+  /** 产品收敛后列表只余七种比较类排序，全部可用。 */
+  readonly status: "available";
   readonly time_complexity: Bilingual;
   readonly space_complexity: Bilingual;
-  /** planned 项可能为 null。 */
-  readonly stable: boolean | null;
+  readonly stable: boolean;
   readonly use_cases: Bilingual;
   readonly default_values: readonly number[];
   readonly supports_early_exit: boolean;

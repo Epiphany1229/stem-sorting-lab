@@ -20,6 +20,17 @@ describe("算法输入解析", () => {
     });
   });
 
+  it("冒泡模式（allowDecimal=false）拒绝小数并给出专门提示", () => {
+    expect(parseAlgorithmValues("1.5, 2", { allowDecimal: false })).toEqual({
+      ok: false,
+      reason: "controls.error.integerOnly",
+    });
+    expect(parseAlgorithmValues("5, 3, 8, 1", { allowDecimal: false })).toEqual({
+      ok: true,
+      values: [5, 3, 8, 1],
+    });
+  });
+
   it("拒绝空输入、数量不符、非数字、小数位过多与越界", () => {
     expect(parseAlgorithmValues("  ")).toEqual({
       ok: false,

@@ -35,6 +35,10 @@ export function parseAlgorithmValues(
 
   const values: number[] = [];
   for (const token of tokens) {
+    // 冒泡页仍走阶段 2 整数语义：出现小数时给出专门的双语提示。
+    if (!allowDecimal && /^[+-]?\d+\.\d+$/.test(token)) {
+      return { ok: false, reason: "controls.error.integerOnly" };
+    }
     // 明确区分「不是数字」与「小数位过多」，给出更准确的双语提示。
     if (/^[+-]?\d+\.\d+$/.test(token) && !ONE_DECIMAL.test(token)) {
       return { ok: false, reason: "controls.error.decimals" };

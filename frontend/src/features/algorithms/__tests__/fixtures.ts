@@ -1,9 +1,9 @@
 /**
  * 阶段 5A 前端测试 fixture（不依赖后端运行）。
  *
- * - `algorithmListFixture`：GET /api/algorithms 的 10 项元数据（契约见设计文档 §1.1）；
- * - `selectionTraceFixture` / `heapTraceFixture`：可被通用校验器接受的短轨迹，
- *   仅用于 UI 测试，字段严格按协议与设计文档 §4；
+ * - `algorithmListFixture`：GET /api/algorithms 的 7 项比较类排序元数据（契约见设计文档 §1.1）；
+ * - `bubbleTraceFixture` / `selectionTraceFixture` / `mergeTraceFixture` / `heapTraceFixture`：
+ *   可被通用校验器接受的短轨迹，仅用于 UI 测试，字段严格按协议与设计文档 §4；
  * - `auxEvent`：给六个 Aux 组件测试用的单事件辅助状态。
  */
 import type {
@@ -30,7 +30,7 @@ const AVAILABLE_IDS = [
   "heap",
 ] as const;
 
-/** 十项元数据；前七项 available，后三项 planned。 */
+/** 七项比较类排序元数据；产品收敛后全部可用。 */
 export const algorithmListFixture: readonly AlgorithmMetadata[] = [
   {
     id: "bubble",
@@ -116,49 +116,13 @@ export const algorithmListFixture: readonly AlgorithmMetadata[] = [
     default_values: [5, 3, 8, 1, 9, 2],
     supports_early_exit: false,
   },
-  {
-    id: "counting",
-    name: pair("計數排序", "Counting sort"),
-    tagline: pair("統計每個值出現次數再按序輸出。", "Count occurrences of each value, then output them in order."),
-    status: "planned",
-    time_complexity: pair("O(n+k)", "O(n+k)"),
-    space_complexity: pair("O(k)", "O(k)"),
-    stable: true,
-    use_cases: pair("整數且範圍小（階段 5B）。", "Integers with a small range (phase 5B)."),
-    default_values: [],
-    supports_early_exit: false,
-  },
-  {
-    id: "bucket",
-    name: pair("桶排序", "Bucket sort"),
-    tagline: pair("按區間分桶，桶內排序後拼接。", "Distribute into buckets, sort each bucket, then concatenate."),
-    status: "planned",
-    time_complexity: pair("平均 O(n+k)", "Average O(n+k)"),
-    space_complexity: pair("O(n+k)", "O(n+k)"),
-    stable: null,
-    use_cases: pair("數值均勻分佈（階段 5B）。", "Evenly distributed values (phase 5B)."),
-    default_values: [],
-    supports_early_exit: false,
-  },
-  {
-    id: "radix",
-    name: pair("基數排序", "Radix sort"),
-    tagline: pair("按個位、十位、百位逐位穩定分配再收集。", "Stable distribution and collection by digit, from ones upward."),
-    status: "planned",
-    time_complexity: pair("O(d(n+b))", "O(d(n+b))"),
-    space_complexity: pair("O(n+b)", "O(n+b)"),
-    stable: true,
-    use_cases: pair("整數或可轉成整數（階段 5B）。", "Integers, or data convertible to integers (phase 5B)."),
-    default_values: [],
-    supports_early_exit: false,
-  },
 ];
 
 export function algorithmListResponse(): AlgorithmListResponse {
   return { protocol_version: 1, algorithms: algorithmListFixture };
 }
 
-/** 可用项 id 清单（route 测试用）。 */
+/** 七项可用 id 清单（route 测试用）。 */
 export const availableAlgorithmIds: readonly string[] = [...AVAILABLE_IDS];
 
 /* ---------- 通用轨迹 fixture 辅助 ---------- */
@@ -443,6 +407,110 @@ export const heapTraceFixture: AlgorithmTrace = {
 };
 
 /** 复制轨迹并替换方向（用于方向切换测试）。 */
+/* ---------- 冒泡排序短轨迹（用于整数输入限制与 will_swap 出题测试） ---------- */
+
+export const bubbleTraceFixture: AlgorithmTrace = {
+  protocol_version: 1,
+  algorithm: "bubble",
+  direction: "asc",
+  options: { early_exit: true },
+  items: [
+    { id: "it-0", value: 5 },
+    { id: "it-1", value: 3 },
+    { id: "it-2", value: 1 },
+  ],
+  code: {
+    language: "python",
+    lines: [
+      { line_id: "L1", lineno: 1, text: "def bubble_sort(values, direction=\"asc\"):", kind: "normal" },
+      { line_id: "L2", lineno: 2, text: "    recorder.emit_mark_sorted(i=0)", kind: "trace" },
+      { line_id: "L3", lineno: 3, text: "    recorder.emit_compare(i=0, j=1)", kind: "trace" },
+      { line_id: "L4", lineno: 4, text: "    if _out_of_order(arr[0], arr[1], direction):", kind: "normal" },
+      { line_id: "L5", lineno: 5, text: "        arr[0], arr[1] = arr[1], arr[0]", kind: "normal" },
+      { line_id: "L6", lineno: 6, text: "    recorder.emit_done()", kind: "trace" },
+      { line_id: "L7", lineno: 7, text: "    return arr", kind: "normal" },
+    ],
+  },
+  states: [
+    { state_id: 0, order: ["it-0", "it-1", "it-2"], values: [5, 3, 1] },
+    { state_id: 1, order: ["it-1", "it-0", "it-2"], values: [3, 5, 1] },
+  ],
+  events: [
+    makeEvent(0, {
+      event_type: "mark_sorted",
+      code_line_ids: ["L2", "L1"],
+      state_before_id: 0,
+      state_after_id: 0,
+      active_indices: emptyIndices,
+      compared_indices: emptyIndices,
+      modified_indices: emptyIndices,
+      finalized_indices: emptyIndices,
+      auxiliary_state: {
+        pass_index: 0,
+        early_exit_enabled: true,
+        swapped_in_pass: false,
+      },
+    }, { comparisons: 0, swaps: 0, writes: 0 }),
+    makeEvent(1, {
+      event_type: "compare",
+      code_line_ids: ["L3", "L4"],
+      state_before_id: 0,
+      state_after_id: 0,
+      active_indices: add([0, 1]),
+      compared_indices: add([0, 1]),
+      modified_indices: emptyIndices,
+      finalized_indices: emptyIndices,
+      auxiliary_state: {
+        pass_index: 0,
+        early_exit_enabled: true,
+        swapped_in_pass: false,
+        comparison: { left: 5, right: 3, relation: "gt", will_swap: true },
+      },
+    }, { comparisons: 1, swaps: 0, writes: 0 }),
+    makeEvent(2, {
+      event_type: "swap",
+      code_line_ids: ["L5", "L5"],
+      state_before_id: 0,
+      state_after_id: 1,
+      active_indices: add([0, 1]),
+      compared_indices: emptyIndices,
+      modified_indices: add([0, 1]),
+      finalized_indices: emptyIndices,
+      auxiliary_state: {
+        pass_index: 0,
+        early_exit_enabled: true,
+        swapped_in_pass: true,
+      },
+    }, { comparisons: 1, swaps: 1, writes: 2 }),
+    makeEvent(3, {
+      event_type: "done",
+      code_line_ids: ["L6", "L7"],
+      state_before_id: 1,
+      state_after_id: 1,
+      active_indices: emptyIndices,
+      compared_indices: emptyIndices,
+      modified_indices: emptyIndices,
+      finalized_indices: add([0, 1, 2]),
+      auxiliary_state: {
+        pass_index: 0,
+        early_exit_enabled: true,
+        swapped_in_pass: true,
+      },
+    }, { comparisons: 1, swaps: 1, writes: 2 }),
+  ],
+  summary: {
+    comparisons: 1,
+    swaps: 1,
+    writes: 2,
+    passes: 1,
+    early_exit_triggered: false,
+    final_order: ["it-1", "it-0", "it-2"],
+    final_values: [3, 5, 1],
+    state_count: 2,
+    event_count: 4,
+  },
+};
+
 export function withDirection(trace: AlgorithmTrace, direction: Direction): AlgorithmTrace {
   return { ...trace, direction };
 }

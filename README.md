@@ -16,7 +16,7 @@
 | 2 | 冒泡排序真实 Python 轨迹 + SVG 播放器 + 代码同步高亮 + 教学预测弹窗 | ✅ 完成 |
 | 3 | 官方天气数据接入 + 数据质量 + 互动图表 | ✅ 完成 |
 | 4 | 用真实气温做排序（**仅冒泡排序**） | ✅ 完成 |
-| 5 | 其余九种算法 + 专属可视化 | 🟡 **5A 完成**：选择/插入/希尔/归并/快速/堆可用；计数/桶/基数待 5B |
+| 5 | 其余九种算法 + 专属可视化 | ✅ **已完成（范围收敛为 7 种比较类排序）**：冒泡/选择/插入/希尔/归并/快速/堆 |
 | 6 | 浏览器验收、无障碍、性能、文档完善 | ⬜ 未开始 |
 
 **已实现（可真实使用）**：
@@ -25,8 +25,9 @@
 - 前端 `/lab`：SVG 柱状图、播放/暂停/上一步/下一步/重置/调速、引导模式与自由实验模式、Python 代码行组同步高亮（插桩行可折叠且行号不漂移）、"下一步这两个数需要交换吗？"预测弹窗（可用键盘、Esc 关闭、焦点归还）。
 - **天气数据（阶段 3）**：HKO 安全抓取客户端（`trust_env=False`、并发 1、≥3s + jitter、429 `Retry-After` 挂起、403 熔断、ETag/Last-Modified 条件请求、每日预算、单 worker 租约）、SQLite 落库（保留 `value_raw` 原始字符串精度、质量标记 `C`/`#`/`***`）、CLI 入库、8 个天气/来源接口、官方 CSV 导入与演示模式隔离。
 - 前端 `/weather`：日期范围、39 站多选、覆盖率与真实窗口、5 类 Plotly 图表（折线/柱状/直方/散点/环形）、双语悬停、数据表、CSV 导入报告、刷新冷却显示、非 official 模式常驻横幅。
-- **真实气温排序 `/weather-sort`（阶段 4）**：`/weather` 顶部入口按钮；`tmax`/`tmin` 一键切换（各自有效天数与缺失日期）、升降序、测站与日期范围、并排比较开关；**复用**阶段 2 播放器（播放/暂停/上一步/下一步/重置/调速、Python 行组高亮、预测弹窗），零重写排序逻辑；柱上显示 `value_raw + °C` 与日期标签，悬停/聚焦看完整日期、测站中英文名、质量标记；Top5 最热/最冷、排序前后对比、比较/交换/轮次、冒泡 vs 单次扫描 STEM 卡片。
-- 跨栈回归：前端直接消费**后端真实输出**做测试（轨迹 JSON、天气 API JSON、天气排序轨迹各一组）。
+- **真实气温排序 `/weather-sort`（阶段 4）**：`/weather` 顶部入口按钮；`tmax`/`tmin` 一键切换（各自有效天数与缺失日期）、升降序、测站与日期范围、并排比较开关；**复用**阶段 2 播放器（播放/暂停/上一步/下一步/重置/调速、Python 行组高亮、内联比较区），零重写排序逻辑；柱上显示纯数字温度与日期标签，悬停/聚焦看完整日期、测站中英文名、质量标记；Top5 最热/最冷、排序前后对比、比较/交换/轮次、冒泡 vs 单次扫描 STEM 卡片。
+- **比较类排序学习中心（阶段 5，7 种）**：冒泡、选择、插入、希尔、归并、快速、堆；每种都有唯一真实 Python 源码 + AST 行号映射、同步代码高亮、双语逐步解释、复杂度/空间/稳定性/适用条件与练习；专属可视化：选择（最小值候选）、插入（持牌槽位）、希尔（gap 分组）、归并（区间 + 辅助合并区）、快速（枢轴/边界指针）、堆（数组与二叉堆 SVG 联动）。
+- 跨栈回归：前端直接消费**后端真实输出**做测试（轨迹 JSON、天气 API JSON、天气排序轨迹、算法清单与轨迹）。
 
 **尚未实现（不要误认为已有）**：其余九种算法、shadcn/ui 具体组件、ESLint、Playwright 浏览器截图验收；降雨/湿度的查询接口仍缺（RYES 日雨量已可由 CLI 回填，但未接入页面）。
 
@@ -139,14 +140,14 @@ pnpm build
 
 | 命令 | 结果 |
 |---|---|
-| `uv run pytest -q` | `134 passed, 1 warning`（含 Hypothesis 属性测试；全部离线 MockTransport） |
+| `uv run pytest -q` | `401 passed, 1 warning`（含算法轨迹/Hypothesis/天气/抓取测试，全部离线 MockTransport） |
 | `uv run ruff check .` | `All checks passed!` |
-| `uv run mypy backend tests` | `Success: no issues found in 49 source files`（strict，无 `# type: ignore`） |
-| `pnpm test:run` | `Test Files 27 passed`、`Tests 187 passed` |
-| `pnpm build` | `✓ built in 2.09s`（Plotly 主 chunk 5.23 MB / gzip 1.60 MB，阶段 6 做懒加载） |
+| `uv run mypy backend tests` | `Success: no issues found in 63 source files`（strict，无 `# type: ignore`） |
+| `pnpm test:run` | `Test Files 34 passed / 1 skipped`、`Tests 234 passed + 6 skipped` |
+| `pnpm build` | `✓ built in 2.44s`（Plotly 主 chunk 约 5.26 MB，阶段 6 做路由懒加载分包） |
 | `pnpm exec tsc --noEmit` | 通过（无输出） |
-| 真实天气排序冒烟 | HKO 2026-09 全月 tmax → `valid_days=30`、`single_scan=29`、`comparisons=380 / swaps=129 / passes=19`，解释含真实日期与温度 |
-| 跨栈回归 | 轨迹 4 + 天气 API 6 + 天气排序 6 用例，全部消费真实后端输出 |
+| 真实算法链路 | catalog **7 项全 available**；7 算法轨迹均 200 且最终排序正确；`counting/bucket/radix/bogus` → 404 |
+| 跨栈回归 | 轨迹/天气/天气排序/算法清单与轨迹均消费真实后端输出 |
 
 ---
 

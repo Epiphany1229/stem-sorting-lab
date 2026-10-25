@@ -7,6 +7,7 @@ import { AppRoutes } from "../../../App";
 import type { AlgorithmTrace } from "../types";
 import {
   algorithmListResponse,
+  bubbleTraceFixture,
   heapTraceFixture,
   mergeTraceFixture,
   selectionTraceFixture,
@@ -29,6 +30,7 @@ interface MockOptions {
   readonly selectionTrace?: AlgorithmTrace;
   readonly heapTrace?: AlgorithmTrace;
   readonly mergeTrace?: AlgorithmTrace;
+  readonly bubbleTrace?: AlgorithmTrace;
   readonly listError?: Error;
 }
 
@@ -51,6 +53,9 @@ function createFetchMock(options: MockOptions = {}) {
     }
     if (url.includes("/algorithms/merge/trace")) {
       return jsonResponse(options.mergeTrace ?? mergeTraceFixture);
+    }
+    if (url.includes("/algorithms/bubble/trace")) {
+      return jsonResponse(options.bubbleTrace ?? bubbleTraceFixture);
     }
     throw new Error(`unexpected request: ${url}`);
   });
@@ -200,6 +205,31 @@ describe("算法学习页 /algorithms/:id", () => {
     expect(progress()).toContain("已播放 0 / 2 步");
   });
 
+  it("其他六种比较类算法允许一位小数，并原样提交给后端", async () => {
+    const fetchMock = createFetchMock();
+    vi.stubGlobal("fetch", fetchMock);
+    renderRoute("/algorithms/selection");
+    await screen.findByTestId("trace-player");
+
+    expect(screen.getByTestId("input-mode-hint")).toHaveTextContent("一位小數");
+
+    fireEvent.change(screen.getByLabelText(/自訂數列/), {
+      target: { value: "1.5, 2.5, 0" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "套用數列" }));
+    expect(screen.queryByTestId("values-error")).toBeNull();
+
+    await waitFor(() => {
+      const traceCalls = fetchMock.mock.calls.filter(([input]) =>
+        String(input).includes("/algorithms/selection/trace"),
+      );
+      const lastBody = JSON.parse(
+        String((traceCalls[traceCalls.length - 1][1] as RequestInit).body),
+      ) as { values: number[] };
+      expect(lastBody.values).toEqual([1.5, 2.5, 0]);
+    });
+  });
+
   it("归并排序的「輪次」改为「合併段數」，按 merge 事件累计", async () => {
     vi.stubGlobal("fetch", createFetchMock());
     renderRoute("/algorithms/merge");
@@ -233,17 +263,53 @@ describe("算法学习页 /algorithms/:id", () => {
     expect(screen.queryByRole("button", { name: "不需要" })).toBeNull();
   });
 
-  it("开发中算法直链如实说明，未知 id 显示 404", async () => {
-    vi.stubGlobal("fetch", createFetchMock());
-    const { unmount } = renderRoute("/algorithms/counting");
-    expect(await screen.findByTestId("algorithm-planned")).toHaveTextContent("仍在開發中");
-    expect(screen.queryByTestId("trace-player")).toBeNull();
-    unmount();
+  it("冒泡页只接受整数：小数输入给出双语提示，并出 will_swap 预测题", async () => {
+    const fetchMock = createFetchMock();
+    vi.stubGlobal("fetch", fetchMock);
+    renderRoute("/algorithms/bubble");
+    await screen.findByTestId("trace-player");
 
-    renderRoute("/algorithms/not-a-real-algorithm");
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("找不到頁面");
+    // 输入区明确说明：冒泡用整数、其他算法支持一位小数。
+    const hint = screen.getByTestId("input-mode-hint");
+    expect(hint).toHaveTextContent("冒泡頁使用整數入門資料");
+    expect(hint).toHaveTextContent("其他比較類算法支援一位小數");
+
+    fireEvent.change(screen.getByLabelText(/自訂數列/), {
+      target: { value: "1.5, 2" },
     });
+    fireEvent.click(screen.getByRole("button", { name: "套用數列" }));
+
+    const error = screen.getByTestId("values-error");
+    expect(error).toHaveTextContent("冒泡排序頁只接受整數");
+    expect(error).toHaveTextContent("accepts whole numbers only");
+    // 当前数列保持不变，且没有发出带小数的轨迹请求（不会出现 422 无提示）。
+    expect(screen.getByTestId("current-values")).toHaveTextContent("目前數列：5, 3, 8, 1, 9, 2");
+    const decimalCalls = fetchMock.mock.calls.filter(([, init]) => {
+      const body = String((init as RequestInit | undefined)?.body ?? "");
+      return body.includes("1.5");
+    });
+    expect(decimalCalls).toHaveLength(0);
+
+    // 冒泡 compare 事件带 will_swap → 内联区出预测题。
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    expect(screen.getByTestId("inline-compare-question")).toBeInTheDocument();
+    expect(screen.queryByTestId("inline-compare-facts")).toBeNull();
+  });
+
+  it("未知 id（含已移除的 counting/bucket/radix）→ 404，不显示開發中", async () => {
+    vi.stubGlobal("fetch", createFetchMock());
+
+    for (const id of ["counting", "bucket", "radix", "not-a-real-algorithm"]) {
+      const { unmount } = renderRoute(`/algorithms/${id}`);
+      await waitFor(() => {
+        expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("找不到頁面");
+      });
+      expect(screen.queryByTestId("trace-player")).toBeNull();
+      expect(screen.queryByTestId("algorithm-planned")).toBeNull();
+      expect(screen.queryByText(/開發中/)).toBeNull();
+      unmount();
+    }
   });
 
   it("元数据加载失败时显示错误而不是播放器", async () => {
