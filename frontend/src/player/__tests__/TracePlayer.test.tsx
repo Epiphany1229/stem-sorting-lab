@@ -1,10 +1,10 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { TracePlayer } from "../TracePlayer";
-import { BASE_STEP_DELAY_MS, PREDICTION_FEEDBACK_DELAY_MS } from "../useTracePlayback";
+import { BASE_STEP_DELAY_MS } from "../useTracePlayback";
 import type { BubbleTrace } from "../types";
-import { eventByStep, traceFixture } from "./traceFixture";
+import { traceFixture, eventByStep } from "./traceFixture";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -21,7 +21,7 @@ function progressText(): string {
 
 describe("TracePlayer 播放器状态机", () => {
   it("初始为 idle，下一步/上一步只使用轨迹中已有的快照", () => {
-    render(<TracePlayer trace={traceFixture} guidedMode={false} />);
+    render(<TracePlayer trace={traceFixture} />);
 
     expect(screen.getByTestId("trace-player")).toBeInTheDocument();
     expect(progressText()).toContain("已播放 0 / 14 步");
@@ -72,7 +72,7 @@ describe("TracePlayer 播放器状态机", () => {
 
   it("暂停后严格不推进", () => {
     vi.useFakeTimers();
-    render(<TracePlayer trace={traceFixture} guidedMode={false} />);
+    render(<TracePlayer trace={traceFixture} />);
 
     fireEvent.click(screen.getByRole("button", { name: "開始播放" }));
     act(() => {
@@ -95,7 +95,7 @@ describe("TracePlayer 播放器状态机", () => {
 
   it("自动播放会按事件顺序推进到 finished", () => {
     vi.useFakeTimers();
-    render(<TracePlayer trace={traceFixture} guidedMode={false} />);
+    render(<TracePlayer trace={traceFixture} />);
 
     fireEvent.click(screen.getByRole("button", { name: "開始播放" }));
     for (let index = 0; index < traceFixture.events.length; index += 1) {
@@ -119,7 +119,7 @@ describe("TracePlayer 播放器状态机", () => {
   });
 
   it("重置回到 idle；键盘空格播放/暂停、左右键步进", () => {
-    render(<TracePlayer trace={traceFixture} guidedMode={false} />);
+    render(<TracePlayer trace={traceFixture} />);
 
     fireEvent.click(nextButton());
     fireEvent.click(nextButton());
@@ -142,14 +142,14 @@ describe("TracePlayer 播放器状态机", () => {
   });
 
   it("切换方向（新的轨迹对象）时重置为 idle", () => {
-    const { rerender } = render(<TracePlayer trace={traceFixture} guidedMode={false} />);
+    const { rerender } = render(<TracePlayer trace={traceFixture} />);
 
     fireEvent.click(nextButton());
     fireEvent.click(nextButton());
     expect(progressText()).toContain("已播放 2 / 14 步");
 
     const descendingTrace: BubbleTrace = { ...traceFixture, direction: "desc" };
-    rerender(<TracePlayer trace={descendingTrace} guidedMode={false} />);
+    rerender(<TracePlayer trace={descendingTrace} />);
 
     expect(progressText()).toContain("已播放 0 / 14 步");
     expect(screen.getByTestId("phase")).toHaveTextContent("待開始");
@@ -157,7 +157,7 @@ describe("TracePlayer 播放器状态机", () => {
 
   it("手动步进写 aria-live 摘要，连续播放不逐帧播报", () => {
     vi.useFakeTimers();
-    render(<TracePlayer trace={traceFixture} guidedMode={false} />);
+    render(<TracePlayer trace={traceFixture} />);
 
     const liveRegion = screen.getByTestId("live-region");
     expect(liveRegion).toHaveAttribute("aria-live", "polite");
@@ -177,125 +177,53 @@ describe("TracePlayer 播放器状态机", () => {
   });
 });
 
-describe("TracePlayer 教学预测弹窗", () => {
-  it("引导模式下 compare 事件前弹出预测，判定只读 will_swap", () => {
-    render(<TracePlayer trace={traceFixture} guidedMode={true} />);
+describe("TracePlayer 内联比较区（阶段 4.7）", () => {
+  it("inlinePrompt 在代码面板下方常驻；compare 出题、答后反馈且不阻塞播放", () => {
+    render(<TracePlayer trace={traceFixture} inlinePrompt />);
 
-    // step 1 是 mark_sorted，不弹窗。
-    fireEvent.click(nextButton());
+    const inline = screen.getByTestId("inline-compare");
+    expect(inline).toHaveAttribute("aria-live", "polite");
+    expect(screen.getByTestId("inline-compare-idle")).toBeInTheDocument();
+    // 不再有弹窗式引导模式。
     expect(screen.queryByRole("dialog")).toBeNull();
+
+    fireEvent.click(nextButton()); // mark_sorted：非 compare
+    expect(screen.getByTestId("inline-compare-idle")).toBeInTheDocument();
     expect(progressText()).toContain("已播放 1 / 14 步");
 
-    // step 2 是 compare(5,3)，will_swap=true，弹窗出现且尚未推进。
-    fireEvent.click(nextButton());
-    const dialog = screen.getByRole("dialog");
-    expect(dialog).toHaveAttribute("aria-modal", "true");
-    expect(within(dialog).getByText("下一步這兩個數需要交換嗎？")).toBeInTheDocument();
-    expect(
-      within(dialog).getByText("Do these two numbers need to be swapped?"),
-    ).toBeInTheDocument();
-    expect(progressText()).toContain("已播放 1 / 14 步");
-    expect(screen.getByRole("button", { name: "需要" })).toHaveFocus();
-
-    fireEvent.click(screen.getByRole("button", { name: "需要" }));
-    expect(screen.getByTestId("prediction-feedback")).toHaveTextContent("答對了！");
-    expect(screen.getByTestId("prediction-correct-answer")).toHaveTextContent(
-      "正確答案：需要交換。",
-    );
-    expect(within(dialog).getByText(eventByStep(1).explanation["zh-Hant"])).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "繼續" }));
-    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(nextButton()); // compare(5,3)，will_swap=true
+    expect(screen.getByText("這兩個數需要交換嗎？")).toBeInTheDocument();
     expect(progressText()).toContain("已播放 2 / 14 步");
-    expect(screen.getByTestId("step-explanation")).toHaveTextContent(
-      eventByStep(1).explanation["zh-Hant"],
-    );
-  });
 
-  it("学生答错时给出双语反馈与正确解释", () => {
-    render(<TracePlayer trace={traceFixture} guidedMode={true} />);
-
-    fireEvent.click(nextButton());
-    fireEvent.click(nextButton());
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "不需要" }));
-    expect(screen.getByTestId("prediction-feedback")).toHaveTextContent("答錯了，看看下面的解釋。");
-    expect(screen.getByTestId("prediction-correct-answer")).toHaveTextContent(
-      "正確答案：需要交換。",
-    );
-  });
-
-  it("答完展示 explanation 后自动推进（契约 §6.4）", () => {
-    vi.useFakeTimers();
-    render(<TracePlayer trace={traceFixture} guidedMode={true} />);
-
-    fireEvent.click(nextButton());
-    fireEvent.click(nextButton());
     fireEvent.click(screen.getByRole("button", { name: "需要" }));
+    expect(screen.getByTestId("inline-compare-feedback")).toHaveTextContent("答對了");
+    expect(screen.getByTestId("inline-compare-answer")).toHaveTextContent("需要交換");
 
-    expect(screen.getByTestId("prediction-feedback")).toHaveTextContent("答對了！");
-    expect(progressText()).toContain("已播放 1 / 14 步");
-
-    act(() => {
-      vi.advanceTimersByTime(PREDICTION_FEEDBACK_DELAY_MS);
-    });
-
-    expect(screen.queryByRole("dialog")).toBeNull();
-    expect(progressText()).toContain("已播放 2 / 14 步");
-    // 推进后 explanation 仍显示在步骤解释面板。
-    expect(screen.getByTestId("step-explanation")).toHaveTextContent(
-      eventByStep(1).explanation["zh-Hant"],
-    );
+    // 答题不阻塞播放：仍可继续下一步。
+    fireEvent.click(nextButton());
+    expect(progressText()).toContain("已播放 3 / 14 步");
   });
 
-  it("will_swap=false 的比较点（5 < 8）答「不需要」才算对", () => {
-    render(<TracePlayer trace={traceFixture} guidedMode={true} />);
+  it("答错时给出纠正反馈；下一步非 compare 时区域显示状态说明", () => {
+    render(<TracePlayer trace={traceFixture} inlinePrompt />);
 
-    // 推进到 compare(5,8) 之前：mark_sorted → compare(5,3) 答题 → swap → 下一个 compare。
     fireEvent.click(nextButton());
     fireEvent.click(nextButton());
-    fireEvent.click(screen.getByRole("button", { name: "需要" }));
-    fireEvent.click(screen.getByRole("button", { name: "繼續" }));
-    fireEvent.click(nextButton()); // swap(5,3) → step 3
-    fireEvent.click(nextButton()); // 即将 compare(5,8)，弹窗出现
-
-    const comparison = eventByStep(3).auxiliary_state.comparison;
-    if (!comparison) {
-      throw new Error("fixture 中 compare 事件缺少 comparison 字段");
-    }
-    expect(comparison.will_swap).toBe(false);
-
     fireEvent.click(screen.getByRole("button", { name: "不需要" }));
-    expect(screen.getByTestId("prediction-feedback")).toHaveTextContent("答對了！");
-    expect(screen.getByTestId("prediction-correct-answer")).toHaveTextContent(
-      "正確答案：不需要交換。",
-    );
+    expect(screen.getByTestId("inline-compare-feedback")).toHaveTextContent("答錯了");
+    expect(screen.getByTestId("inline-compare-answer")).toHaveTextContent("需要交換");
+
+    fireEvent.click(nextButton()); // swap 事件
+    expect(screen.getByTestId("inline-compare-idle")).toBeInTheDocument();
   });
 
-  it("Esc 关闭弹窗、不推进，并把焦点还给触发按钮", () => {
-    render(<TracePlayer trace={traceFixture} guidedMode={true} />);
+  it("不传 inlinePrompt 时没有内联区，也不会有任何弹窗（阶段 2 基础行为）", () => {
+    render(<TracePlayer trace={traceFixture} />);
 
-    fireEvent.click(nextButton());
-    const trigger = nextButton();
-    trigger.focus();
-    fireEvent.click(trigger);
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-
-    fireEvent.keyDown(window, { key: "Escape" });
-
+    expect(screen.queryByTestId("inline-compare")).toBeNull();
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(progressText()).toContain("已播放 1 / 14 步");
-    expect(trigger).toHaveFocus();
-  });
-
-  it("自由实验模式不弹预测题", () => {
-    render(<TracePlayer trace={traceFixture} guidedMode={false} />);
-
     fireEvent.click(nextButton());
     fireEvent.click(nextButton());
-
-    expect(screen.queryByRole("dialog")).toBeNull();
     expect(progressText()).toContain("已播放 2 / 14 步");
   });
 });
@@ -317,7 +245,7 @@ describe("TracePlayer 减少动态", () => {
         }) as unknown as MediaQueryList,
     );
 
-    render(<TracePlayer trace={traceFixture} guidedMode={false} />);
+    render(<TracePlayer trace={traceFixture} />);
 
     expect(screen.getByTestId("trace-player")).toHaveAttribute("data-reduced-motion", "true");
     expect(screen.getByTestId("bar-chart")).toHaveAttribute("data-reduced-motion", "true");

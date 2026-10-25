@@ -86,7 +86,23 @@ function nextButton(): HTMLElement {
   return screen.getByRole("button", { name: "下一步" });
 }
 
-describe("天气排序页：复用阶段 2 播放器", () => {
+describe("天气排序页", () => {
+  it("不暴露任何抓取或数据模式切换控件", async () => {
+    const fetchMock = createFetchMock();
+    vi.stubGlobal("fetch", fetchMock);
+    renderPage();
+    await screen.findByTestId("trace-player");
+
+    expect(screen.queryByRole("button", { name: /重新抓取/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /示範模式/ })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("refresh-control")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("demo-banner")).not.toBeInTheDocument();
+
+    const urls = fetchMock.mock.calls.map(([input]) => String(input));
+    expect(urls.some((url) => url.includes("/weather/refresh"))).toBe(false);
+    expect(urls.some((url) => url.includes("mode="))).toBe(false);
+  });
+
   it("直接复用 TracePlayer/CodePanel/BarChart，并渲染温度与日期标签", async () => {
     vi.stubGlobal("fetch", createFetchMock());
     renderPage();
@@ -109,14 +125,18 @@ describe("天气排序页：复用阶段 2 播放器", () => {
     for (const bar of bars) {
       const item = itemById.get(bar.getAttribute("data-item-id") ?? "");
       expect(item).toBeDefined();
-      expect(within(bar).getByTestId("bar-value")).toHaveTextContent(`${item?.value_raw} °C`);
+      // 柱顶只显示纯数字；单位统一在画布上方说明。
+      expect(within(bar).getByTestId("bar-value")).toHaveTextContent(`${item?.value_raw}`);
+      expect(within(bar).getByTestId("bar-value").textContent).not.toContain("°C");
       expect(within(bar).getByTestId("bar-label")).toHaveTextContent(item?.label?.slice(5) ?? "");
       const title = bar.querySelector("title")?.textContent ?? "";
       expect(title).toContain(item?.label ?? "");
       expect(title).toContain("香港天文台");
       expect(title).toContain("Hong Kong Observatory");
       expect(title).toContain("品質標記");
+      expect(title).toContain("°C");
     }
+    expect(screen.getByTestId("bar-chart-unit")).toHaveTextContent("單位：°C");
 
     // 键盘聚焦柱子时显示完整日期、测站中英文与品质标记。
     fireEvent.focus(bars[0]);
@@ -149,7 +169,7 @@ describe("天气排序页：复用阶段 2 播放器", () => {
       bars.forEach((bar, index) => {
         const item = itemById.get(state?.order[index] ?? "");
         expect(item).toBeDefined();
-        expect(within(bar).getByTestId("bar-value")).toHaveTextContent(`${item?.value_raw} °C`);
+        expect(within(bar).getByTestId("bar-value")).toHaveTextContent(`${item?.value_raw}`);
         expect(within(bar).getByTestId("bar-label")).toHaveTextContent(item?.label?.slice(5) ?? "");
       });
     }
@@ -178,7 +198,7 @@ describe("天气排序页：复用阶段 2 播放器", () => {
     });
     await waitFor(() => {
       const bars = screen.getAllByTestId("bar");
-      expect(within(bars[0]).getByTestId("bar-value")).toHaveTextContent("24.1 °C");
+      expect(within(bars[0]).getByTestId("bar-value")).toHaveTextContent("24.1");
     });
   });
 
@@ -315,10 +335,25 @@ describe("天气排序页：缺失日期与结果区", () => {
     expect(summary).toHaveTextContent(`${trace.summary.passes} 輪`);
 
     const before = within(results).getByTestId("before-order");
+    expect(within(before).getAllByRole("listitem")).toHaveLength(5);
     expect(within(before).getAllByRole("listitem")[0]).toHaveTextContent("2026-09-01");
     const after = within(results).getByTestId("after-order");
+    expect(within(after).getAllByRole("listitem")).toHaveLength(5);
     expect(within(after).getAllByRole("listitem")[0]).toHaveTextContent("2026-09-06");
     expect(within(after).getAllByRole("listitem")[0]).toHaveTextContent("26.8 °C");
+
+    // 长列表默认 5 项，可双语展開/收起（不影响 <ol> 语义）。
+    const beforeToggle = within(results).getByTestId("before-order-toggle");
+    const afterToggle = within(results).getByTestId("after-order-toggle");
+    expect(beforeToggle).toHaveAttribute("aria-expanded", "false");
+    expect(afterToggle).toHaveAttribute("aria-expanded", "false");
+    expect(beforeToggle).toHaveTextContent("展開全部");
+    fireEvent.click(beforeToggle);
+    expect(beforeToggle).toHaveAttribute("aria-expanded", "true");
+    expect(beforeToggle).toHaveTextContent("收起");
+    expect(within(before).getAllByRole("listitem")).toHaveLength(6);
+    fireEvent.click(afterToggle);
+    expect(within(after).getAllByRole("listitem")).toHaveLength(6);
 
     expect(within(results).getByTestId("stem-bubble")).toHaveTextContent(
       `${trace.summary.comparisons} 次比較`,
@@ -368,8 +403,8 @@ describe("天气排序页：缺失日期与结果区", () => {
     const negativeValues = screen
       .getAllByTestId("bar-value")
       .map((node) => node.textContent);
-    expect(negativeValues).toContain("-3.5 °C");
-    expect(negativeValues).toContain("-7.2 °C");
+    expect(negativeValues).toContain("-3.5");
+    expect(negativeValues).toContain("-7.2");
     for (const shape of screen.getAllByTestId("bar-shape")) {
       expect(Number(shape.getAttribute("height"))).toBeGreaterThan(0);
     }
@@ -380,7 +415,7 @@ describe("天气排序页：缺失日期与结果区", () => {
     renderPage();
     await screen.findByTestId("trace-player");
     for (const value of screen.getAllByTestId("bar-value")) {
-      expect(value).toHaveTextContent("28.0 °C");
+      expect(value).toHaveTextContent("28.0");
     }
     for (const shape of screen.getAllByTestId("bar-shape")) {
       expect(Number(shape.getAttribute("height"))).toBeGreaterThanOrEqual(8);

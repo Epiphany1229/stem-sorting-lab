@@ -88,6 +88,6 @@ describe("阶段 3 天气双语文案", () => {
 
   it("模式横幅文案明确提示非官方数据", () => {
     expect(dictionary["weather.banner.warning"]["zh-Hant"]).toContain("不是官方即時資料");
-    expect(dictionary["weather.mode.demoHint"]["zh-Hant"]).toContain("mode=demo");
+    expect(dictionary["weather.mode.demo"]["zh-Hant"]).toContain("示範資料");
   });
 });

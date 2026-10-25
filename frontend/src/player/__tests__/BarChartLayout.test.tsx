@@ -41,16 +41,22 @@ function barSnapshot() {
 }
 
 describe("柱状图密集标签布局（30 根柱）", () => {
-  it("30 根柱全部显示真实气温 + °C，并改用旋转 + 错层布局", () => {
+  it("30 根柱全部显示纯数字（水平、无旋转），单位统一显示在画布上方", () => {
     const items = weatherItems(30);
     render(<BarChart items={items} state={stateOf(items)} unit="°C" />);
 
     const svg = screen.getByTestId("bar-chart");
     expect(svg).toHaveAttribute("data-bar-count", "30");
-    expect(svg).toHaveAttribute("data-label-layout", "rotated-staggered");
-    expect(svg).toHaveAttribute("data-label-rotate", "-45");
+    expect(svg).toHaveAttribute("data-label-layout", "horizontal-staggered");
+    // 不再有旋转标记。
+    expect(svg).not.toHaveAttribute("data-label-rotate");
     // 柱数多时每个槽位仍保留足够宽度，标签因此不会互相压住。
-    expect(Number(svg.getAttribute("data-slot-width"))).toBeGreaterThanOrEqual(40);
+    expect(Number(svg.getAttribute("data-slot-width"))).toBeGreaterThanOrEqual(34);
+
+    // 画布上方统一显示双语单位说明。
+    const unitNote = screen.getByTestId("bar-chart-unit");
+    expect(unitNote).toHaveTextContent("單位：°C");
+    expect(unitNote).toHaveTextContent("Unit: °C");
 
     const bars = screen.getAllByTestId("bar");
     expect(bars).toHaveLength(30);
@@ -58,23 +64,51 @@ describe("柱状图密集标签布局（30 根柱）", () => {
     for (const bar of bars) {
       const item = items.find((candidate) => candidate.id === bar.getAttribute("data-item-id"));
       expect(item).toBeDefined();
-      // 必须始终显示真实气温与单位，不得省略。
+
       const value = within(bar).getByTestId("bar-value");
-      expect(value).toHaveTextContent(`${item?.value_raw} °C`);
-      expect(value).toHaveAttribute("data-label-rotate", "-45");
+      // 柱顶只显示纯数字，不再逐柱拼 °C。
+      expect(value.textContent).toBe(item?.value_raw);
+      expect(value.textContent).toMatch(/^\d+\.\d$/);
+      expect(value.textContent).not.toContain("°C");
+      // 数字保持水平：没有 rotate 属性/transform，text-anchor 居中。
+      expect(value).not.toHaveAttribute("data-label-rotate");
+      expect(value).not.toHaveAttribute("transform");
+      expect(value).toHaveAttribute("text-anchor", "middle");
       expect(["0", "1"]).toContain(value.getAttribute("data-label-stagger"));
 
       const dateLabel = within(bar).getByTestId("bar-label");
       expect(dateLabel).toHaveTextContent(item?.label?.slice(5) ?? "");
-      expect(dateLabel).toHaveAttribute("data-label-rotate", "-40");
+      expect(dateLabel).not.toHaveAttribute("transform");
     }
 
-    // 相邻柱子必定一上一下错层（奇偶交替），进一步避免标签重叠。
+    // 相邻柱子必定一上一下微错层（奇偶交替），文字仍然水平。
     for (let index = 1; index < bars.length; index += 1) {
       const previous = bars[index - 1].getAttribute("data-label-stagger");
       const current = bars[index].getAttribute("data-label-stagger");
       expect(current).not.toBe(previous);
     }
+  });
+
+  it("无障碍与聚焦详情仍带完整 °C（日期、测站、温度、单位）", () => {
+    const items = weatherItems(30);
+    render(<BarChart items={items} state={stateOf(items)} unit="°C" />);
+
+    const firstBar = screen.getAllByTestId("bar")[0];
+    expect(firstBar).toHaveAttribute("role", "img");
+    expect(firstBar).toHaveAttribute("tabindex", "0");
+    expect(firstBar.getAttribute("aria-label")).toContain("2026-09-01");
+    expect(firstBar.getAttribute("aria-label")).toContain("香港天文台");
+    expect(firstBar.getAttribute("aria-label")).toContain("Hong Kong Observatory");
+    expect(firstBar.getAttribute("aria-label")).toContain("20.0 °C");
+    expect(firstBar.querySelector("title")?.textContent).toContain("20.0 °C");
+
+    fireEvent.focus(firstBar);
+    const detail = screen.getByTestId("bar-detail");
+    expect(detail).toHaveTextContent("2026-09-01");
+    expect(detail).toHaveTextContent("20.0 °C");
+    expect(detail).toHaveTextContent("香港天文台");
+    expect(detail).toHaveTextContent("Hong Kong Observatory");
+    expect(detail).toHaveTextContent("品質標記");
   });
 
   it("宽画布放进可横向滚动的区域，并保留键盘可达性", () => {
@@ -90,28 +124,38 @@ describe("柱状图密集标签布局（30 根柱）", () => {
     expect(Number(svg.getAttribute("width"))).toBeGreaterThan(680);
     expect(svg).toHaveAttribute("role", "img");
     expect(svg.getAttribute("aria-label")).toContain("柱狀圖");
-
-    // 每根柱子仍是可聚焦的图片语义节点，读屏可得到完整日期/测站/温度。
-    const firstBar = screen.getAllByTestId("bar")[0];
-    expect(firstBar).toHaveAttribute("tabindex", "0");
-    expect(firstBar).toHaveAttribute("role", "img");
-    expect(firstBar.getAttribute("aria-label")).toContain("2026-09-01");
-    expect(firstBar.getAttribute("aria-label")).toContain("香港天文台");
-    expect(firstBar.getAttribute("aria-label")).toContain("Hong Kong Observatory");
   });
 
-  it("柱数较少时保持水平标签布局（不强制旋转）", () => {
+  it("柱数较少时同样水平显示纯数字，并有统一单位提示", () => {
     const items = weatherItems(4);
     render(<BarChart items={items} state={stateOf(items)} unit="°C" />);
 
     const svg = screen.getByTestId("bar-chart");
     expect(svg).toHaveAttribute("data-label-layout", "horizontal");
-    expect(svg).toHaveAttribute("data-label-rotate", "0");
+    expect(screen.getByTestId("bar-chart-unit")).toHaveTextContent("單位：°C");
     for (const value of screen.getAllByTestId("bar-value")) {
-      expect(value).toHaveAttribute("data-label-rotate", "0");
-      expect(value.textContent).toMatch(/°C$/);
+      expect(value.textContent).toMatch(/^\d+\.\d$/);
+      expect(value).not.toHaveAttribute("transform");
     }
     expect(screen.getAllByTestId("bar-label")).toHaveLength(4);
+  });
+
+  it("没有单位（阶段 2 整数轨迹）时不显示单位提示", () => {
+    render(
+      <BarChart
+        items={[
+          { id: "a", value: 5 },
+          { id: "b", value: 3 },
+        ]}
+        state={{ state_id: 0, order: ["a", "b"], values: [5, 3] }}
+      />,
+    );
+
+    expect(screen.queryByTestId("bar-chart-unit")).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("bar-value").map((node) => node.textContent)).toEqual([
+      "5",
+      "3",
+    ]);
   });
 });
 
@@ -134,7 +178,7 @@ describe("交换时标签与日期稳定跟随（transform 过渡）", () => {
     for (const bar of beforeSnapshot) {
       const moved = byId.get(bar.itemId);
       expect(moved).toBeDefined();
-      // 元素身份不变：同一根柱子的温度与日期在交换后仍然严格匹配。
+      // 元素身份不变：同一根柱子的数字与日期在交换后仍然严格匹配。
       expect(moved?.value).toBe(bar.value);
       expect(moved?.label).toBe(bar.label);
     }
@@ -149,18 +193,5 @@ describe("交换时标签与日期稳定跟随（transform 过渡）", () => {
       .slice(1)
       .map((bar, index) => Math.round((bar.centerX - afterSnapshot[index].centerX) * 10) / 10);
     expect(new Set(gaps).size).toBe(1);
-  });
-
-  it("聚焦柱子时显示完整日期、测站与品质标记", () => {
-    const items = weatherItems(4);
-    render(<BarChart items={items} state={stateOf(items)} unit="°C" />);
-
-    fireEvent.focus(screen.getAllByTestId("bar")[0]);
-    const detail = screen.getByTestId("bar-detail");
-    expect(detail).toHaveTextContent("2026-09-01");
-    expect(detail).toHaveTextContent("20.0 °C");
-    expect(detail).toHaveTextContent("香港天文台");
-    expect(detail).toHaveTextContent("Hong Kong Observatory");
-    expect(detail).toHaveTextContent("C");
   });
 });

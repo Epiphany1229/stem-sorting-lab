@@ -14,7 +14,6 @@ import type { DailyResponse, DataMode, SummaryResponse } from "../types";
 import {
   coverageResponse,
   dailyResponse,
-  demoDailyResponse,
   emptyOfficialDailyResponse,
   stationsEnvelope,
   summaryResponse,
@@ -57,9 +56,6 @@ function createFetchMock(options: FetchOptions = {}) {
     if (path.endsWith("/weather/daily")) {
       if (options.daily) {
         return jsonResponse(options.daily(mode));
-      }
-      if (mode === "demo") {
-        return jsonResponse(demoDailyResponse());
       }
       return jsonResponse(dailyResponse());
     }
@@ -184,26 +180,24 @@ describe("天气探索页", () => {
     });
   });
 
-  it("打开示範模式后所有 GET 请求带 mode=demo，并按回应信封显示常驻横幅", async () => {
+  it("不暴露任何抓取或模式切换入口，只保留 CSV 导出", async () => {
     const fetchMock = createFetchMock();
     vi.stubGlobal("fetch", fetchMock);
     renderPage();
     await waitForFourCharts();
 
-    fireEvent.click(screen.getByRole("checkbox", { name: /示範模式/ }));
+    // 不再有 demo 开关、重新抓取按钮或任何抓取相关控件。
+    expect(screen.queryByRole("checkbox", { name: /示範模式/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /重新抓取/ })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("refresh-control")).not.toBeInTheDocument();
+    const options = screen.getByTestId("weather-options");
+    expect(within(options).queryAllByRole("button")).toHaveLength(0);
+    expect(within(options).getByTestId("export-csv")).toBeInTheDocument();
 
-    const banner = await screen.findByTestId("demo-banner");
-    expect(banner).toHaveAttribute("data-mode", "demo");
-    expect(banner).toHaveTextContent("示範資料");
-    expect(banner).toHaveTextContent("不是官方即時資料");
-
+    // 所有请求固定为 official（不带 mode 参数），也不会调用 /refresh。
     const urls = fetchMock.mock.calls.map(([input]) => String(input));
-    expect(urls.some((url) => url.includes("/weather/daily") && url.includes("mode=demo"))).toBe(
-      true,
-    );
-    expect(
-      urls.some((url) => url.includes("/weather/coverage") && url.includes("mode=demo")),
-    ).toBe(true);
+    expect(urls.some((url) => url.includes("mode="))).toBe(false);
+    expect(urls.some((url) => url.includes("/weather/refresh"))).toBe(false);
   });
 
   it("官方无数据时四张图都显示空状态与具体原因，且不静默切演示数据", async () => {

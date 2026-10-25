@@ -4,14 +4,71 @@
  * 所有数字都直接读自后端轨迹（top_hot / top_cold / before_order / after_order /
  * summary / single_scan），前端不重新排序、不写死任何统计值。
  */
+import { useState } from "react";
+
 import { BilingualText } from "../../i18n/BilingualText";
 import { formatTranslation } from "../../i18n/dictionary";
 import type { BubbleTrace, WeatherMetric } from "../../player/types";
-import { metricLabelEn, metricLabelZh, orderEntries, topEntries } from "./weatherSortHelpers";
+import {
+  metricLabelEn,
+  metricLabelZh,
+  orderEntries,
+  topEntries,
+  type OrderEntry,
+} from "./weatherSortHelpers";
 
 export interface WeatherSortResultsProps {
   readonly trace: BubbleTrace;
   readonly metric: WeatherMetric;
+}
+
+/** 前后对比列表默认显示前 5 项；超过时提供双语「展開全部/收起」。 */
+const VISIBLE_ORDER_ROWS = 5;
+
+function CollapsibleOrderList({
+  entries,
+  testId,
+  idPrefix,
+}: {
+  readonly entries: readonly OrderEntry[];
+  readonly testId: string;
+  readonly idPrefix: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const hasMore = entries.length > VISIBLE_ORDER_ROWS;
+  const visibleEntries = hasMore && !expanded ? entries.slice(0, VISIBLE_ORDER_ROWS) : entries;
+  const listId = `${idPrefix}-${testId}`;
+
+  return (
+    <>
+      <ol className="weather-sort-results__order" id={listId} data-testid={testId}>
+        {visibleEntries.map((entry) => {
+          const text = itemText(entry.date, entry.valueRaw);
+          return (
+            <li key={`${testId}-${entry.itemId}`}>
+              <BilingualText size="xs" zh={text.zh} en={text.en} />
+            </li>
+          );
+        })}
+      </ol>
+      {hasMore ? (
+        <button
+          type="button"
+          className="btn btn--ghost weather-sort-results__toggle"
+          aria-expanded={expanded}
+          aria-controls={listId}
+          data-testid={`${testId}-toggle`}
+          onClick={() => setExpanded((current) => !current)}
+        >
+          <BilingualText
+            as="span"
+            size="xs"
+            tkey={expanded ? "weather.table.collapse" : "weather.table.expand"}
+          />
+        </button>
+      ) : null}
+    </>
+  );
 }
 
 /** 「日期｜溫度」的双语文本；温度保留后端原始字符串。 */
@@ -122,16 +179,11 @@ export function WeatherSortResults({ trace, metric }: WeatherSortResultsProps) {
             <BilingualText as="span" size="sm" tkey="weatherSort.results.before" />
           </h4>
           {before.length > 0 ? (
-            <ol className="weather-sort-results__order" data-testid="before-order">
-              {before.map((entry) => {
-                const text = itemText(entry.date, entry.valueRaw);
-                return (
-                  <li key={`before-${entry.itemId}`}>
-                    <BilingualText size="xs" zh={text.zh} en={text.en} />
-                  </li>
-                );
-              })}
-            </ol>
+            <CollapsibleOrderList
+              entries={before}
+              testId="before-order"
+              idPrefix={headingId}
+            />
           ) : (
             <p>
               <BilingualText size="xs" tkey="weatherSort.results.orderUnavailable" />
@@ -144,16 +196,11 @@ export function WeatherSortResults({ trace, metric }: WeatherSortResultsProps) {
             <BilingualText as="span" size="sm" tkey="weatherSort.results.after" />
           </h4>
           {after.length > 0 ? (
-            <ol className="weather-sort-results__order" data-testid="after-order">
-              {after.map((entry) => {
-                const text = itemText(entry.date, entry.valueRaw);
-                return (
-                  <li key={`after-${entry.itemId}`}>
-                    <BilingualText size="xs" zh={text.zh} en={text.en} />
-                  </li>
-                );
-              })}
-            </ol>
+            <CollapsibleOrderList
+              entries={after}
+              testId="after-order"
+              idPrefix={headingId}
+            />
           ) : (
             <p>
               <BilingualText size="xs" tkey="weatherSort.results.orderUnavailable" />

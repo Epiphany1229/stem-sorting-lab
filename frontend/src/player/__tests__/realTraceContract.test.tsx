@@ -33,7 +33,7 @@ describe("真实后端轨迹可以完整驱动播放器", () => {
     expect(trace.summary.event_count).toBe(trace.events.length);
     expect(trace.summary.final_values).toEqual([1, 3, 5, 8]);
 
-    render(<TracePlayer trace={trace} guidedMode={false} />);
+    render(<TracePlayer trace={trace} />);
     expect(screen.getByTestId("trace-player")).toBeInTheDocument();
 
     // 初始状态必须是输入顺序
@@ -57,7 +57,7 @@ describe("真实后端轨迹可以完整驱动播放器", () => {
     const trace = loadTrace(descDuplicates);
     expect(trace.summary.final_values).toEqual([4, 4, 1, 0, -2]);
 
-    render(<TracePlayer trace={trace} guidedMode={false} />);
+    render(<TracePlayer trace={trace} />);
     for (let step = 0; step < trace.events.length; step += 1) {
       fireEvent.click(nextButton());
     }
@@ -66,7 +66,7 @@ describe("真实后端轨迹可以完整驱动播放器", () => {
 
   it("高亮行组来自事件自身的 code_line_ids（每个事件至少一行被高亮）", () => {
     const trace = loadTrace(asc4);
-    render(<TracePlayer trace={trace} guidedMode={false} />);
+    render(<TracePlayer trace={trace} />);
 
     trace.events.forEach((event) => {
       fireEvent.click(nextButton());

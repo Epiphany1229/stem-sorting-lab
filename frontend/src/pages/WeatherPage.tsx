@@ -1,13 +1,13 @@
 /**
- * 香港天气数据探索页（阶段 3，阶段 4.6 按用户反馈精简）。
+ * 香港天气数据探索页（阶段 3，阶段 4.7 按用户反馈最终收敛）。
  *
- * 数据流向：所有内容都来自后端天气接口；本地只保存测站选择与数据模式。
+ * 数据流向：所有内容都来自后端天气接口；本地只保存测站选择。
  * - 日期窗口固定使用后端返回的「最近 30 天」，页面始终显示真实起止日期与覆盖率；
- * - 不再提供日期范围、指标多选与 CSV 导入；保留测站多选、刷新与 demo 开关（次要区域）；
+ * - 不提供日期范围、指标多选、CSV 导入、抓取/刷新入口或 demo 模式切换；
+ *   用户端只读 official 库表，抓取与模式由运维在后端控制；
  * - 四类图表（折线 / 柱状 / 直方 / 环形）+ 可折叠可访问资料表；
- *   非 official 模式由响应信封决定并常驻横幅，缺数据展示具体 reason。
+ *   若响应信封仍返回非 official 数据，横幅照旧常驻、缺数据展示具体 reason。
  */
-import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { PageHeader } from "../components/PageHeader";
@@ -26,7 +26,6 @@ import { Histogram } from "../features/weather/charts/Histogram";
 import { LineChart } from "../features/weather/charts/LineChart";
 import { CoveragePanel } from "../features/weather/CoveragePanel";
 import { DemoBanner } from "../features/weather/DemoBanner";
-import { RefreshControl } from "../features/weather/RefreshControl";
 import { selectableStations, StationPicker } from "../features/weather/StationPicker";
 import type { DailyMetric, DataMode } from "../features/weather/types";
 import { WeatherSortEntryButton } from "../features/weather-sort/WeatherSortEntryButton";
@@ -37,12 +36,10 @@ const SUMMARY_BIN_COUNT = 5;
 const CHART_METRICS: readonly DailyMetric[] = ["tmax", "tmin"];
 
 export default function WeatherPage() {
-  const queryClient = useQueryClient();
   const [selected, setSelected] = useState<readonly string[]>([]);
-  const [dataMode, setDataMode] = useState<DataMode>("official");
   const autoSelected = useRef(false);
 
-  const stationsQuery = useWeatherStations(dataMode);
+  const stationsQuery = useWeatherStations("official");
   const stations = stationsQuery.data?.stations;
   const selectedStations = useMemo(
     () => (stations ?? []).filter((station) => selected.includes(station.id)),
@@ -63,7 +60,7 @@ export default function WeatherPage() {
   }, [stations, selected.length]);
 
   // 不传日期：后端固定返回锚点前 30 天的真实窗口，页面只展示它。
-  const queryParams = { stations: selected, metrics: CHART_METRICS, mode: dataMode } as const;
+  const queryParams = { stations: selected, metrics: CHART_METRICS, mode: "official" } as const;
 
   const coverageQuery = useWeatherCoverage(queryParams);
   const dailyQuery = useWeatherDaily(queryParams, selected.length > 0);
@@ -73,7 +70,7 @@ export default function WeatherPage() {
       station: primaryStation ?? "",
       metric: "tmax",
       bins: SUMMARY_BIN_COUNT,
-      mode: dataMode,
+      mode: "official",
     },
     primaryStation !== undefined,
   );
@@ -89,10 +86,6 @@ export default function WeatherPage() {
   const dailyReason = dailyQuery.data?.reason ?? null;
   const dailyLoading = dailyQuery.isPending;
   const dailyError = dailyQuery.isError ? dailyQuery.error : null;
-
-  const invalidateWeather = () => {
-    void queryClient.invalidateQueries({ queryKey: ["weather"] });
-  };
 
   const handleToggleStation = (id: string) => {
     setSelected((current) =>
@@ -162,14 +155,6 @@ export default function WeatherPage() {
             <h2 id="weather-options-heading">
               <BilingualText as="span" size="subtitle" tkey="weather.options.title" />
             </h2>
-            <label className="weather-controls__checkbox">
-              <input
-                type="checkbox"
-                checked={dataMode === "demo"}
-                onChange={(event) => setDataMode(event.target.checked ? "demo" : "official")}
-              />
-              <BilingualText as="span" size="sm" tkey="weather.mode.demoToggle" />
-            </label>
             <p className="weather-controls__hint">
               <BilingualText size="xs" tkey="weather.options.hint" />
             </p>
@@ -182,8 +167,6 @@ export default function WeatherPage() {
               <BilingualText as="span" size="sm" tkey="weather.controls.export" />
             </a>
           </section>
-
-          <RefreshControl onRefreshed={invalidateWeather} />
         </div>
       </div>
 

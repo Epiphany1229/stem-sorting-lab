@@ -176,16 +176,16 @@
 }
 
 .bar-chart__value {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
   text-anchor: middle;
   fill: var(--color-ink);
   font-variant-numeric: tabular-nums;
 }
 
-/* 柱数很多时（旋转 + 错层）使用更紧凑的字号，标签仍然完整显示。 */
+/* 柱数很多时保持 12px；数字始终水平显示，不旋转。 */
 .bar-chart--compact .bar-chart__value {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -201,7 +201,16 @@
 }
 
 .bar-chart--compact .bar-chart__date {
-  font-size: 8.5px;
+  font-size: 9px;
+}
+
+/* 画布上方的统一单位提示：柱顶只显示纯数字，单位在这里说明一次。 */
+.bar-chart__unit {
+  margin: 0 0 0.4rem;
+  padding-inline-start: 0.25rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.01em;
 }
 
 /* 聚焦详情：悬停/键盘聚焦时显示完整日期、测站与品质标记。 */

@@ -95,13 +95,28 @@ describe("LabPage 后端接入", () => {
     expect(screen.getByRole("button", { name: "重新載入" })).toBeInTheDocument();
   });
 
-  it("模式切换只改变提示文案，播放器仍由轨迹驱动", async () => {
+  it("不再有引导模式开关，比较互动改为代码面板下方的内联区", async () => {
     stubSuccessfulTrace();
     renderLabPage();
     await screen.findByTestId("trace-player");
 
-    expect(screen.getByTestId("mode-hint")).toHaveTextContent("直接觀看完整播放");
-    fireEvent.click(screen.getByRole("radio", { name: "引導模式" }));
-    expect(screen.getByTestId("mode-hint")).toHaveTextContent("先預測兩個數字是否需要交換");
+    // 阶段 4.7：弹窗式引导模式已删除，统一使用内联比较区。
+    expect(screen.queryByTestId("mode-hint")).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "引導模式" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("prediction-dialog")).not.toBeInTheDocument();
+
+    const inline = screen.getByTestId("inline-compare");
+    expect(inline).toHaveAttribute("aria-live", "polite");
+    expect(screen.getByTestId("inline-compare-idle")).toBeInTheDocument();
+
+    // 手动步进到 compare 事件：内联区出题，答题后仍可继续推进。
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    expect(screen.getByText("這兩個數需要交換嗎？")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "需要" }));
+    expect(screen.getByTestId("inline-compare-feedback")).toHaveTextContent("答對了");
+    expect(screen.getByTestId("step-progress")).toHaveTextContent("已播放 2 /");
+    fireEvent.click(screen.getByRole("button", { name: "下一步" }));
+    expect(screen.getByTestId("step-progress")).toHaveTextContent("已播放 3 /");
   });
 });

@@ -13,13 +13,13 @@ import type { Direction } from "../player/types";
  *
  * 页面只负责「输入参数 + 展示后端轨迹」：随机/自定义数列、方向与 early_exit
  * 都原样提交给后端；动画、代码高亮与步骤解释全部来自 /algorithms/bubble/trace。
+ * 阶段 4.7 起比较互动统一在代码面板下方的内联区，不再有引导模式弹窗。
  * 后端不可用时显示明确的错误提示，绝不退回假数据。
  */
 export default function LabPage() {
   const [values, setValues] = useState<number[]>(() => generateRandomValues());
   const [direction, setDirection] = useState<Direction>("asc");
   const [earlyExit, setEarlyExit] = useState(true);
-  const [guidedMode, setGuidedMode] = useState(false);
   const [customText, setCustomText] = useState("");
   const [inputErrorKey, setInputErrorKey] = useState<TranslationKey | null>(null);
 
@@ -135,40 +135,6 @@ export default function LabPage() {
                 <BilingualText size="xs" tkey="lab.earlyExit.hint" />
               </p>
             </div>
-
-            <fieldset>
-              <legend>
-                <BilingualText as="span" size="sm" tkey="lab.mode.title" />
-              </legend>
-              <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="lab-mode"
-                    value="guided"
-                    checked={guidedMode}
-                    onChange={() => setGuidedMode(true)}
-                  />
-                  <BilingualText as="span" size="sm" tkey="lab.mode.guided" />
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="lab-mode"
-                    value="free"
-                    checked={!guidedMode}
-                    onChange={() => setGuidedMode(false)}
-                  />
-                  <BilingualText as="span" size="sm" tkey="lab.mode.free" />
-                </label>
-              </div>
-              <p className="mt-2 text-sm" data-testid="mode-hint">
-                <BilingualText
-                  size="xs"
-                  tkey={guidedMode ? "lab.mode.guided.hint" : "lab.mode.free.hint"}
-                />
-              </p>
-            </fieldset>
           </div>
         </div>
       </section>
@@ -218,7 +184,7 @@ export default function LabPage() {
         </section>
       ) : null}
 
-      {trace && !isEmptyTrace ? <TracePlayer trace={trace} guidedMode={guidedMode} /> : null}
+      {trace && !isEmptyTrace ? <TracePlayer trace={trace} inlinePrompt /> : null}
     </div>
   );
 }

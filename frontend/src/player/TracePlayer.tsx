@@ -1,32 +1,36 @@
 /**
- * 冒泡排序轨迹播放器：把 BarChart、CodePanel、控制栏与教学预测弹窗组合起来。
+ * 冒泡排序轨迹播放器：把 BarChart、CodePanel、内联比较区与控制栏组合起来。
  *
  * 所有视觉状态都来自 trace 数据（states[] 与当前事件的索引/行组），
  * 组件本身不推导排序、不自行交换数字、不猜测下一行代码。
+ * 阶段 4.7 起不再有弹窗式引导模式：比较互动统一在代码面板下方的 InlineComparePanel。
  */
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 
 import { BilingualText } from "../i18n/BilingualText";
 import { formatTranslation, zh } from "../i18n/dictionary";
 import { BarChart } from "./BarChart";
 import { CodePanel } from "./CodePanel";
 import { InlineComparePanel } from "./InlineComparePanel";
-import { PredictionDialog } from "./PredictionDialog";
 import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 import { useTracePlayback, type PlaybackPhase } from "./useTracePlayback";
-import type { BubbleTrace } from "./types";
+import type { BubbleTrace, TraceEvent, TraceState } from "./types";
 
 interface TracePlayerProps {
   readonly trace: BubbleTrace;
-  /** 引导模式（阶段 2 弹窗式预测）：只在 /lab 使用。 */
-  readonly guidedMode?: boolean;
-  /**
-   * 阶段 4.6：在代码面板下方常驻内联比较区，不弹窗、不阻塞播放。
-   * /weather-sort 使用；与 guidedMode 互斥（inline 优先，不会暂停播放）。
-   */
+  /** 在代码面板下方常驻内联比较区（/lab 与 /weather-sort 都使用）。 */
   readonly inlinePrompt?: boolean;
   /** 天气轨迹的数值单位（如 "°C"）；阶段 2 的整数轨迹不传。 */
   readonly unit?: string;
+  /**
+   * 阶段 5：可选插槽，渲染在主柱图卡片内（BarChart 之后），
+   * 与播放器共享当前事件与快照，供算法专属辅助可视化使用。
+   * 不传时行为与阶段 4 完全一致。
+   */
+  readonly renderAux?: (context: {
+    readonly event: TraceEvent | null;
+    readonly state: TraceState;
+  }) => ReactNode;
 }
 
 const SPEED_OPTIONS: readonly number[] = [0.5, 1, 1.5, 2];
@@ -49,21 +53,15 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
   );
 }
 
-export function TracePlayer({
-  trace,
-  guidedMode = false,
-  inlinePrompt = false,
-  unit,
-}: TracePlayerProps) {
+export function TracePlayer({ trace, inlinePrompt = false, unit, renderAux }: TracePlayerProps) {
   const reducedMotion = usePrefersReducedMotion();
-  // 内联互动区只展示题目与反馈，不暂停播放；弹窗模式仅在 /lab 使用。
-  const playback = useTracePlayback(trace, guidedMode && !inlinePrompt);
-  const { phase, step, total, currentEvent, currentState, prediction } = playback;
+  const playback = useTracePlayback(trace);
+  const { phase, step, total, currentEvent, currentState } = playback;
 
-  // 键盘操作：空格播放/暂停，←/→ 步进；输入控件与弹窗内的按键不受影响。
+  // 键盘操作：空格播放/暂停，←/→ 步进；输入控件内的按键不受影响。
   useEffect(() => {
     const handleKeyDown = (keyboardEvent: KeyboardEvent) => {
-      if (prediction || keyboardEvent.defaultPrevented) {
+      if (keyboardEvent.defaultPrevented) {
         return;
       }
       if (isInteractiveTarget(keyboardEvent.target)) {
@@ -83,7 +81,7 @@ export function TracePlayer({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [playback, prediction]);
+  }, [playback]);
 
   const playLabelKey = useMemo(() => {
     if (phase === "playing") {
@@ -122,6 +120,7 @@ export function TracePlayer({
             reducedMotion={reducedMotion}
             unit={unit}
           />
+          {renderAux ? renderAux({ event: currentEvent, state: currentState }) : null}
         </div>
 
         <div className="section-card">
@@ -164,7 +163,6 @@ export function TracePlayer({
             type="button"
             className="btn btn--primary"
             onClick={playback.togglePlay}
-            disabled={prediction !== null}
           >
             <BilingualText as="span" size="sm" tone="onPrimary" tkey={playLabelKey} />
           </button>
@@ -172,7 +170,7 @@ export function TracePlayer({
             type="button"
             className="btn btn--secondary"
             onClick={playback.prev}
-            disabled={prediction !== null || step === 0}
+            disabled={step === 0}
           >
             <BilingualText as="span" size="sm" tkey="player.prev" />
           </button>
@@ -180,7 +178,7 @@ export function TracePlayer({
             type="button"
             className="btn btn--secondary"
             onClick={playback.next}
-            disabled={prediction !== null || step >= total}
+            disabled={step >= total}
           >
             <BilingualText as="span" size="sm" tkey="player.next" />
           </button>
@@ -250,17 +248,6 @@ export function TracePlayer({
       <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="live-region">
         {playback.liveMessage}
       </p>
-
-      {prediction ? (
-        <PredictionDialog
-          event={prediction.event}
-          comparison={prediction.comparison}
-          resolution={prediction.resolution}
-          onAnswer={playback.answerPrediction}
-          onContinue={playback.continuePrediction}
-          onDismiss={playback.dismissPrediction}
-        />
-      ) : null}
     </section>
   );
 }

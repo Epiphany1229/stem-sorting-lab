@@ -72,16 +72,16 @@ const LEGEND_STATES: readonly BarState[] = ["pending", "compare", "swap", "sorte
 /* ---------- 画布几何 ---------- */
 const VIEW_HEIGHT = 420;
 const MARGIN_LEFT = 24;
-const MARGIN_RIGHT = 28;
-const MARGIN_RIGHT_ROTATED = 64;
+const MARGIN_RIGHT = 32;
 const MARGIN_TOP = 58;
-const MARGIN_TOP_ROTATED = 108;
 const MARGIN_BOTTOM = 96;
 const BASE_WIDTH = 680;
-const ROTATE_THRESHOLD = 8;
-const ROTATED_MIN_SLOT = 46;
+/** 柱数超过该阈值时进入紧凑模式：水平标签 + 奇偶微小错层。 */
+const DENSE_THRESHOLD = 8;
+const DENSE_MIN_SLOT = 36;
 const DEFAULT_MIN_SLOT = 26;
-const STAGGER_STEP = 17;
+const STAGGER_STEP = 6;
+const DATE_STAGGER_STEP = 8;
 const MIN_BAR_HEIGHT = 8;
 
 interface BarGeometry {
@@ -104,7 +104,7 @@ interface ChartGeometry {
   readonly plotBottom: number;
   readonly viewWidth: number;
   readonly slotWidth: number;
-  readonly rotated: boolean;
+  readonly dense: boolean;
 }
 
 /**
@@ -112,7 +112,7 @@ interface ChartGeometry {
  *
  * - 负值从零基线向下延伸；全相同值（包括全 0）用最小高度兜底；
  * - 柱数多时画布变宽，柱宽与间隙按柱数自适应；
- * - 标签在柱数较多时旋转并交错，始终可见。
+ * - 数字标签始终水平；柱数多时奇偶上下错开几像素，避免轻微贴边，但绝不旋转。
  */
 function buildGeometry(
   items: readonly TraceItem[],
@@ -126,10 +126,10 @@ function buildGeometry(
   // 全相同值时 domain 会退化，用 1 做兜底，避免除零与零高度柱。
   const domainMax = domainMaxRaw === domainMin ? domainMin + 1 : domainMaxRaw;
 
-  const rotated = count > ROTATE_THRESHOLD;
-  const marginTop = rotated ? MARGIN_TOP_ROTATED : MARGIN_TOP;
-  const marginRight = rotated ? MARGIN_RIGHT_ROTATED : MARGIN_RIGHT;
-  const minSlot = rotated ? ROTATED_MIN_SLOT : DEFAULT_MIN_SLOT;
+  const dense = count > DENSE_THRESHOLD;
+  const marginTop = MARGIN_TOP;
+  const marginRight = MARGIN_RIGHT;
+  const minSlot = dense ? DENSE_MIN_SLOT : DEFAULT_MIN_SLOT;
   const availableWidth = BASE_WIDTH - MARGIN_LEFT - marginRight;
   const contentWidth = Math.max(availableWidth, count * minSlot);
   const viewWidth = MARGIN_LEFT + marginRight + contentWidth;
@@ -165,14 +165,14 @@ function buildGeometry(
     const height = Math.max(magnitude, MIN_BAR_HEIGHT);
     const centerX = MARGIN_LEFT + slotWidth * (displayIndex + 0.5);
     const y = value < 0 ? baselineY : baselineY - height;
-    // 奇偶错层：相邻标签在垂直方向错开，配合旋转进一步降低重叠概率。
-    const stagger = rotated ? (displayIndex % 2 === 1 ? STAGGER_STEP : 0) : 0;
+    // 奇偶错层：只上下错开几像素，文字仍然水平。
+    const stagger = dense && displayIndex % 2 === 1 ? STAGGER_STEP : 0;
     // 正数标签在柱顶上方（错层向上），负数标签在柱底下方。
     const labelY =
       value < 0
         ? Math.min(y + height + 20 - stagger, plotBottom + 44)
         : Math.max(y - 12 - stagger, marginTop - 6);
-    const dateY = VIEW_HEIGHT - 14 - (rotated && displayIndex % 2 === 1 ? 14 : 0);
+    const dateY = VIEW_HEIGHT - 14 - (dense && displayIndex % 2 === 1 ? DATE_STAGGER_STEP : 0);
 
     return {
       itemId,
@@ -189,7 +189,7 @@ function buildGeometry(
     };
   });
 
-  return { bars, baselineY, plotBottom, viewWidth, slotWidth, rotated };
+  return { bars, baselineY, plotBottom, viewWidth, slotWidth, dense };
 }
 
 export function BarChart({
@@ -204,14 +204,17 @@ export function BarChart({
   const crossPatternId = `${patternPrefix}-cross`;
   const hatchPatternId = `${patternPrefix}-hatch`;
   const geometry = buildGeometry(items, state, event ?? null);
-  const { bars, baselineY, plotBottom, viewWidth, slotWidth, rotated } = geometry;
+  const { bars, baselineY, plotBottom, viewWidth, slotWidth, dense } = geometry;
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   const itemById = new Map(items.map((item) => [item.id, item] as const));
   const hasWeatherDetails = items.some((item) => detailOfItem(item, unit) !== null);
   const focusedItem = focusedItemId === null ? undefined : itemById.get(focusedItemId);
   const focusedDetail = detailOfItem(focusedItem, unit);
-  const labelLayout = rotated ? "rotated-staggered" : "horizontal";
+  const labelLayout = dense ? "horizontal-staggered" : "horizontal";
   const scrollLabel = formatTranslation("player.chart.scrollLabel", {})["zh-Hant"];
+  const unitText = unit
+    ? formatTranslation("player.chart.unit", { unit })
+    : null;
 
   // 比较/交换标记画在图表底部：虚线括号 + 图案 + 图标 + 颜色共同区分。
   const comparedIndices = event?.compared_indices ?? [];
@@ -243,6 +246,11 @@ export function BarChart({
 
   return (
     <figure className="m-0">
+      {unitText ? (
+        <p className="bar-chart__unit" data-testid="bar-chart-unit">
+          <BilingualText size="xs" zh={unitText["zh-Hant"]} en={unitText.en} />
+        </p>
+      ) : null}
       <div
         className="bar-chart__scroll"
         data-testid="bar-chart-scroll"
@@ -251,7 +259,7 @@ export function BarChart({
         tabIndex={0}
       >
         <svg
-          className={rotated ? "bar-chart bar-chart--compact" : "bar-chart"}
+          className={dense ? "bar-chart bar-chart--compact" : "bar-chart"}
           viewBox={`0 0 ${viewWidth} ${VIEW_HEIGHT}`}
           width={viewWidth}
           role="img"
@@ -261,7 +269,7 @@ export function BarChart({
           data-bar-count={bars.length}
           data-slot-width={Math.round(slotWidth * 10) / 10}
           data-label-layout={labelLayout}
-          data-label-rotate={rotated ? "-45" : "0"}
+          data-unit={unit ?? ""}
         >
           <defs>
             <pattern id={dotsPatternId} width="8" height="8" patternUnits="userSpaceOnUse">
@@ -303,10 +311,9 @@ export function BarChart({
             const glyphY = bar.height >= 26 ? bar.y + Math.min(bar.height / 2 + 5, bar.height - 6) : bar.y - 4;
             const item = itemById.get(bar.itemId);
             const detail = detailOfItem(item, unit);
-            const displayValue = detail ? detail.valueText : String(bar.value);
+            // 柱顶只显示纯数字：单位统一放在画布上方的「單位：°C」提示里。
+            const displayValue = item?.value_raw ?? String(bar.value);
             const dateLabel = detail ? shortDateLabel(detail.dateLabel) : null;
-            const rotateValue = rotated ? `rotate(-45 0 ${bar.labelY})` : undefined;
-            const rotateDate = rotated ? `rotate(-40 0 ${bar.dateY})` : undefined;
 
             return (
               <g
@@ -400,12 +407,10 @@ export function BarChart({
                 <text
                   className="bar-chart__value"
                   data-testid="bar-value"
-                  data-label-rotate={rotated ? "-45" : "0"}
                   data-label-stagger={bar.stagger > 0 ? "1" : "0"}
                   x={0}
                   y={bar.labelY}
-                  textAnchor={rotated ? "start" : "middle"}
-                  transform={rotateValue}
+                  textAnchor="middle"
                 >
                   {displayValue}
                 </text>
@@ -413,12 +418,10 @@ export function BarChart({
                   <text
                     className="bar-chart__date"
                     data-testid="bar-label"
-                    data-label-rotate={rotated ? "-40" : "0"}
                     data-label-stagger={bar.stagger > 0 ? "1" : "0"}
                     x={0}
                     y={bar.dateY}
                     textAnchor="middle"
-                    transform={rotateDate}
                     aria-hidden="true"
                   >
                     {dateLabel}

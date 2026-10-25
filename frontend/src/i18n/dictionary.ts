@@ -718,6 +718,10 @@ export const dictionary = {
     "zh-Hant": "可橫向捲動的柱狀圖，每根柱子都能用 Tab 鍵聚焦",
     en: "Scrollable bar chart; every bar can be focused with Tab",
   },
+  "player.chart.unit": {
+    "zh-Hant": "單位：{unit}",
+    en: "Unit: {unit}",
+  },
   "player.bar.title": {
     "zh-Hant": "元素 {id}，數值 {value}",
     en: "Element {id}, value {value}",
@@ -942,26 +946,6 @@ export const dictionary = {
     "zh-Hant": "若某一輪沒有交換，就提前結束。",
     en: "Stop early when a pass makes no swaps.",
   },
-  "lab.mode.title": {
-    "zh-Hant": "學習模式",
-    en: "Learning mode",
-  },
-  "lab.mode.guided": {
-    "zh-Hant": "引導模式",
-    en: "Guided mode",
-  },
-  "lab.mode.guided.hint": {
-    "zh-Hant": "每次比較前，先預測兩個數字是否需要交換。",
-    en: "Predict whether two numbers need swapping before each comparison.",
-  },
-  "lab.mode.free": {
-    "zh-Hant": "自由實驗",
-    en: "Free exploration",
-  },
-  "lab.mode.free.hint": {
-    "zh-Hant": "直接觀看完整播放，不做預測。",
-    en: "Watch the full trace without predictions.",
-  },
 
   // ---------- 阶段 2：代码面板 ----------
   "code.trace.show": {
@@ -977,19 +961,7 @@ export const dictionary = {
     en: "Instrumentation lines record the trace; line numbers stay unchanged.",
   },
 
-  // ---------- 阶段 2：教学预测弹窗 ----------
-  "prediction.title": {
-    "zh-Hant": "教學預測",
-    en: "Prediction",
-  },
-  "prediction.question": {
-    "zh-Hant": "下一步這兩個數需要交換嗎？",
-    en: "Do these two numbers need to be swapped?",
-  },
-  "prediction.help": {
-    "zh-Hant": "只根據畫面上這兩個數字判斷，答錯也沒關係。",
-    en: "Judge from the two numbers shown; a wrong guess is fine.",
-  },
+  // ---------- 阶段 2：比较互动（内联区共用文案） ----------
   "prediction.option.swap": {
     "zh-Hant": "需要",
     en: "Yes, swap them",
@@ -1013,14 +985,6 @@ export const dictionary = {
   "prediction.answer.keep": {
     "zh-Hant": "正確答案：不需要交換。",
     en: "Correct answer: no swap is needed.",
-  },
-  "prediction.continue": {
-    "zh-Hant": "繼續",
-    en: "Continue",
-  },
-  "prediction.close": {
-    "zh-Hant": "關閉預測",
-    en: "Close prediction",
   },
   "prediction.explanation.title": {
     "zh-Hant": "這一步的解釋",
@@ -1071,14 +1035,6 @@ export const dictionary = {
   "weather.mode.imported": {
     "zh-Hant": "匯入資料",
     en: "Imported data",
-  },
-  "weather.mode.demoToggle": {
-    "zh-Hant": "示範模式",
-    en: "Demo mode",
-  },
-  "weather.mode.demoHint": {
-    "zh-Hant": "開啟後所有查詢都加上 mode=demo，只讀取固定的官方快照，不會寫入資料庫。",
-    en: "When on, every query adds mode=demo and reads only the fixed official snapshot; nothing is written to the database.",
   },
   "weather.banner.warning": {
     "zh-Hant": "這不是官方即時資料，請不要當作最新觀測。",
@@ -1215,44 +1171,6 @@ export const dictionary = {
   "weather.reason.unknown": {
     "zh-Hant": "後端回報了未知原因，詳情請看原始原因代碼。",
     en: "The backend reported an unknown reason; see the raw reason code for details.",
-  },
-
-  // ---------- 阶段 3：重新抓取 ----------
-  "weather.refresh.title": {
-    "zh-Hant": "重新抓取官方資料",
-    en: "Refresh official data",
-  },
-  "weather.refresh.button": {
-    "zh-Hant": "請求重新抓取",
-    en: "Request refresh",
-  },
-  "weather.refresh.pending": {
-    "zh-Hant": "正在請求重新抓取…",
-    en: "Requesting a refresh…",
-  },
-  "weather.refresh.accepted": {
-    "zh-Hant": "已接受：送出 {requests} 個請求，寫入 {rows} 列。",
-    en: "Accepted: {requests} requests made and {rows} rows upserted.",
-  },
-  "weather.refresh.rejected": {
-    "zh-Hant": "這次重新抓取沒有執行，原因如下。",
-    en: "This refresh was not performed; the reason is below.",
-  },
-  "weather.refresh.cooldown": {
-    "zh-Hant": "冷卻中，還剩 {seconds} 秒（下次可用：{time}）。",
-    en: "Cooling down, {seconds} seconds left (next allowed: {time}).",
-  },
-  "weather.refresh.remainingBudget": {
-    "zh-Hant": "今日剩餘額度：{budget} 次",
-    en: "Remaining budget today: {budget} requests",
-  },
-  "weather.refresh.failed": {
-    "zh-Hant": "重新抓取請求失敗。",
-    en: "The refresh request failed.",
-  },
-  "weather.refresh.hint": {
-    "zh-Hant": "「重新抓取」不會繞過冷卻、熔斷或每日額度。",
-    en: "Refresh never bypasses cooldowns, circuit breaks or the daily budget.",
   },
 
   // ---------- 阶段 3：查询控件 ----------
@@ -1661,8 +1579,8 @@ export const dictionary = {
     en: "Display options",
   },
   "weather.options.hint": {
-    "zh-Hant": "日期窗口由後端固定提供最近 30 天，畫面只顯示真實資料；示範模式、匯出與重新抓取放在這個次要區域。",
-    en: "The backend always provides the most recent 30-day window and the page shows the real data; demo mode, export and refresh live in this secondary area.",
+    "zh-Hant": "日期窗口由後端固定提供最近 30 天，畫面只顯示真實資料；這裡只保留 CSV 匯出。",
+    en: "The backend always provides the most recent 30-day window and the page shows the real data; this area only keeps the CSV export.",
   },
   "weather.error.title": {
     "zh-Hant": "無法載入天氣資料",
