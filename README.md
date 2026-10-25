@@ -183,6 +183,7 @@ pnpm build
 8. **前端 bundle 偏大**：Plotly 使主 chunk 约 5.2 MB（gzip 1.60 MB），阶段 6 用路由懒加载拆分。
 9. **单 worker 租约是进程级 + TTL**，不是数据库行锁；SQLite 写串行化下足够。
 10. **沙箱兼容层**：`frontend/scripts/sandbox-guard.cjs`、`pnpm-workspace.yaml`（`verifyDepsBeforeRun:false`、`nodeLinker:hoisted`、`allowBuilds: es5-ext:false`）均为本机沙箱所需。
+10. **测站数据覆盖 38/39**：官方 PDF 名单含 `TPO`（大埔自然環境保護研究中心），但当前 API 对三种 dataType 均返回参数错误 HTML（2026-10-25 实测），因此该站可用天数为 0；其余 38 站已回填 2026 全年 tmax/tmin/tmean（30,790 行，其中 `#` 不完整 1,839 行）。`TPO` 不得伪造数据。
 11. **`.tools/` 不入库**；本地 `app.db` 已 gitignore。
 
 ---

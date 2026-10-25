@@ -99,8 +99,8 @@ export function TracePlayer({ trace, guidedMode, unit }: TracePlayerProps) {
       data-testid="trace-player"
     >
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-card border border-border bg-surface p-4 sm:p-5">
-          <h2 className="mb-3">
+        <div className="section-card">
+          <h2>
             <BilingualText as="span" size="subtitle" tkey="player.chart.title" />
           </h2>
           <BarChart
@@ -112,7 +112,7 @@ export function TracePlayer({ trace, guidedMode, unit }: TracePlayerProps) {
           />
         </div>
 
-        <div className="rounded-card border border-border bg-surface p-4 sm:p-5">
+        <div className="section-card">
           <CodePanel
             code={trace.code}
             highlightedLineIds={currentEvent?.code_line_ids ?? []}
@@ -123,12 +123,12 @@ export function TracePlayer({ trace, guidedMode, unit }: TracePlayerProps) {
 
       <section
         aria-labelledby="step-explanation-title"
-        className="rounded-card border border-border bg-surface p-4 sm:p-5"
+        className="section-card"
       >
         <h2 id="step-explanation-title">
           <BilingualText as="span" size="subtitle" tkey="player.explanation.title" />
         </h2>
-        <div className="mt-2 max-w-3xl" data-testid="step-explanation">
+        <div className="section-lead" data-testid="step-explanation">
           {currentEvent ? (
             <BilingualText
               zh={currentEvent.explanation["zh-Hant"]}

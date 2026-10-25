@@ -1,35 +1,37 @@
 /*
- * 设计 tokens（阶段 1 建立，后续阶段继续复用）。
- * 颜色、字体、圆角、阴影、动画时长、焦点样式都以 CSS 变量定义；
- * 其中 --color-* / --font-* / --radius-* / --shadow-* / --ease-* 由
- * Tailwind v4 的 @theme 映射成工具类（如 bg-canvas、rounded-card）。
- * 注释使用简体中文；学生可见文案一律走 src/i18n/dictionary.ts 的繁体中文 + 英文。
+ * 设计 tokens（阶段 4.5 视觉整理）。
+ *
+ * 目标：精緻、可信賴的互動科學實驗室观感——暖白底、深藍文字、克制的中性色，
+ * 青绿/琥珀/珊瑚/绿色只用于语义强调，不铺满界面。
+ * 所有颜色、圆角、阴影、字号、间距都在这里定义；页面与组件只引用变量。
+ * 注释使用简体中文；学生可见文案一律走 src/i18n/dictionary.ts。
  */
 @theme {
-  /* ---------- 颜色：暖白背景、深蓝文字 ---------- */
-  --color-canvas: #fbf7ef;
-  --color-surface: #fffdf8;
+  /* ---------- 表面与文字：暖白 + 深蓝，层级靠明度而不是边框堆叠 ---------- */
+  --color-canvas: #f7f3ec;
+  --color-surface: #fdfbf7;
   --color-surface-raised: #ffffff;
-  --color-ink: #12263f;
-  --color-ink-soft: #3c4a5e; /* 英文副行使用，暖白底对比度约 8.4:1 */
-  --color-ink-muted: #5b6777;
-  --color-border: #ded6c6;
-  --color-border-strong: #b9ae99;
+  --color-surface-sunken: #f0eade;
+  --color-ink: #1a2a41;
+  --color-ink-soft: #46536a; /* 英文副行与说明文字，暖白底对比度约 8.1:1 */
+  --color-ink-muted: #6e7b8e; /* 元信息 */
+  --color-border: #e7e0d3;
+  --color-border-strong: #cdc4b4;
 
-  /* ---------- 主操作色：青绿 ---------- */
-  --color-primary: #0f6f68; /* 白底对比度约 5.9:1 */
-  --color-primary-strong: #0a5650;
-  --color-primary-soft: #e3f1ee;
+  /* ---------- 主操作色：低饱和青绿 ---------- */
+  --color-primary: #0d6a62; /* 白底对比度约 6.1:1 */
+  --color-primary-strong: #084f49;
+  --color-primary-soft: #e6f1ee;
 
-  /* ---------- 图表语义色 ---------- */
-  --color-compare: #a85b00; /* 琥珀：比较，白底约 4.7:1 */
-  --color-compare-soft: #fbefd9;
-  --color-swap: #b3264b; /* 珊瑚：交换/移动，白底约 5.6:1 */
-  --color-swap-soft: #fbe4ea;
-  --color-success: #166534; /* 绿色：已完成，白底约 6.0:1 */
-  --color-success-soft: #e3f2e7;
+  /* ---------- 语义色：比较 / 交换 / 完成（都配图案与图标） ---------- */
+  --color-compare: #9a5b0a; /* 琥珀，白底约 4.9:1 */
+  --color-compare-soft: #f8efdc;
+  --color-swap: #a82c4c; /* 珊瑚，白底约 5.7:1 */
+  --color-swap-soft: #f9e7ec;
+  --color-success: #1c6b3a; /* 绿色，白底约 6.2:1 */
+  --color-success-soft: #e7f2e9;
 
-  --color-focus: #0a5650;
+  --color-focus: #084f49;
 
   /* ---------- 字体：繁中优先 + 系统回退，不下载大字库 ---------- */
   --font-sans:
@@ -39,41 +41,47 @@
     "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas,
     "Liberation Mono", Menlo, monospace;
 
-  /* ---------- 圆角 ---------- */
-  --radius-chip: 0.375rem;
+  /* ---------- 圆角：卡片略收敛，芯片更小，避免"糖果感" ---------- */
+  --radius-chip: 0.5rem;
   --radius-card: 1rem;
   --radius-panel: 1.5rem;
 
-  /* ---------- 阴影 ---------- */
+  /* ---------- 阴影：大范围、低透明度，像纸张而不是浮起的面板 ---------- */
   --shadow-card:
-    0 1px 2px rgb(18 38 63 / 0.06), 0 14px 32px -20px rgb(18 38 63 / 0.3);
+    0 1px 2px rgb(20 32 50 / 0.045), 0 18px 40px -30px rgb(20 32 50 / 0.28);
   --shadow-raised:
-    0 2px 4px rgb(18 38 63 / 0.08), 0 28px 56px -28px rgb(18 38 63 / 0.35);
+    0 2px 4px rgb(20 32 50 / 0.06), 0 30px 60px -32px rgb(20 32 50 / 0.32);
 
   /* ---------- 动画 ---------- */
-  --default-transition-duration: 160ms;
-  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --default-transition-duration: 180ms;
+  --ease-standard: cubic-bezier(0.22, 0.8, 0.24, 1);
 }
 
 :root {
-  /* 双语排版基线：中文 17px（主层级），英文 14px（较小但高对比），间距 3px。 */
+  /* 双语排版基线：中文 17px（主层级），英文 13.5px（较小但高对比），间距 4px。 */
   --bilingual-zh-size: 1.0625rem; /* 17px */
-  --bilingual-en-size: 0.875rem; /* 14px */
-  --bilingual-gap: 0.1875rem; /* 3px */
+  --bilingual-en-size: 0.84375rem; /* 13.5px */
+  --bilingual-gap: 0.25rem; /* 4px */
 
-  /* 页面标题的双语字号，随视口轻微缩放。 */
-  --bilingual-zh-heading: clamp(1.75rem, 1.2rem + 2.4vw, 2.5rem);
-  --bilingual-en-heading: clamp(1rem, 0.88rem + 0.6vw, 1.25rem);
+  /* 页面标题 / 区块标题的双语字号，随视口轻微缩放。 */
+  --bilingual-zh-heading: clamp(2rem, 1.35rem + 2.6vw, 2.75rem);
+  --bilingual-en-heading: clamp(1rem, 0.9rem + 0.5vw, 1.1875rem);
+  --bilingual-zh-subtitle: clamp(1.1875rem, 1.05rem + 0.5vw, 1.375rem);
+  --bilingual-en-subtitle: 0.9375rem;
 
   /* 普通 CSS（动画、过渡）直接使用的时长 token。 */
-  --duration-fast: 120ms;
-  --duration-base: 200ms;
-  --duration-slow: 320ms;
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 360ms;
 
   /* 间距 token：页面区块、卡片内边距、区块内堆叠。 */
-  --space-page-block: clamp(2rem, 1.2rem + 2.5vw, 3.5rem);
-  --space-section: clamp(1.75rem, 1.2rem + 1.8vw, 2.75rem);
-  --space-card: 1.25rem;
-  --space-stack: 1.5rem;
-  --space-inline: 1rem;
+  --space-page-block: clamp(2.5rem, 1.6rem + 3vw, 4.5rem);
+  --space-section: clamp(2rem, 1.4rem + 2vw, 3.25rem);
+  --space-card: clamp(1.35rem, 1.1rem + 0.8vw, 1.9rem);
+  --space-stack: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  --space-inline: 1.1rem;
+
+  /* 内容宽度：阅读区不过宽，大屏留白更从容。 */
+  --content-width: 74rem;
+  --reading-width: 62ch;
 }

@@ -714,6 +714,10 @@ export const dictionary = {
     "zh-Hant": "目前 {count} 個數字的柱狀圖",
     en: "Bar chart of the current {count} numbers",
   },
+  "player.chart.scrollLabel": {
+    "zh-Hant": "可橫向捲動的柱狀圖，每根柱子都能用 Tab 鍵聚焦",
+    en: "Scrollable bar chart; every bar can be focused with Tab",
+  },
   "player.bar.title": {
     "zh-Hant": "元素 {id}，數值 {value}",
     en: "Element {id}, value {value}",

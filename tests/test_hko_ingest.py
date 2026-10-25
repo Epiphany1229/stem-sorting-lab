@@ -199,6 +199,36 @@ def test_parse_records_bad_rows_as_issues() -> None:
     assert reasons == ["invalid_date", "invalid_value", "unknown_quality_flag"]
 
 
+def test_parse_treats_star_value_as_missing_not_error() -> None:
+    """官方把"没有数据"写成 ***；它可能落在数值列（flag 为 #），应计缺失而非格式错误。"""
+    payload = make_payload(
+        [
+            ["2026", "7", "15", "***", "#"],
+            ["2026", "7", "16", "***", "#"],
+            ["2026", "9", "1", "30.1", "C"],
+        ]
+    )
+    result = parse_monthly_payload(payload, station_id="HKS", metric="tmax", requested_year=2026)
+    assert result.missing_count == 2
+    assert result.issues == []
+    assert len(result.rows) == 1
+    assert result.rows[0].value_raw == "30.1"
+
+
+def test_parse_missing_flag_row_is_marked_incomplete() -> None:
+    """质量标记列为空但数值真实存在时，按"不完整"入库，既不丢弃也不冒充完整。"""
+    payload = make_payload(
+        [
+            ["2026", "9", "1", "28.4", ""],
+            ["2026", "9", "2", "29.9", "C"],
+        ]
+    )
+    result = parse_monthly_payload(payload, station_id="HKS", metric="tmean", requested_year=2026)
+    assert result.issues == []
+    assert [row.quality_flag for row in result.rows] == ["#", "C"]
+    assert result.rows[0].value_raw == "28.4"
+
+
 def test_parse_records_year_mismatch_without_dropping_row() -> None:
     """请求年份与实际返回年份不一致时记录问题，但保留数据（官方响应为准）。"""
     result = parse_monthly_payload(
@@ -330,8 +360,47 @@ async def test_ingest_recognizes_not_published_instead_of_error(
     assert summary.not_published == ["HKO/CLMMAXT"]
 
 
-# ------------------------------------------------------------------ 窗口
+async def test_ingest_skips_unsupported_station_and_continues(
+    weather_settings: Settings,
+    weather_database: Database,
+) -> None:
+    """官方对某个站返回参数错误 HTML 时，记录为不支持并继续处理其余站，不中断整批回填。
 
+    现实背景：官方 PDF 名单里有 TPO，但 2026-10 的 API 实测拒绝该站号（返回 200 + HTML）。
+    """
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        station = request.url.params.get("station", "")
+        if station == "TPO":
+            return httpx.Response(
+                200,
+                text="Please include valid parameters in API request.",
+                headers={"content-type": "text/html; charset=utf-8"},
+            )
+        return httpx.Response(200, json=make_payload(make_rows([date(2026, 9, 1)], 30.0)))
+
+    client = make_client(weather_settings, weather_database, handler)
+    try:
+        summary = await ingest_year(
+            client,
+            weather_database,
+            weather_settings,
+            stations=["TPO", "HKO"],
+            metrics=["tmax"],
+            year=2026,
+        )
+    finally:
+        await client.aclose()
+
+    assert summary.unsupported == ["TPO/CLMMAXT"]
+    assert summary.requests == 2
+    assert summary.upserted == 1
+    with weather_database.session() as session:
+        stored = session.execute(select(DailyWeather.station_id)).scalars().all()
+    assert stored == ["HKO"]
+
+
+# ------------------------------------------------------------------ 窗口
 
 def test_window_anchor_uses_last_available_date(weather_database: Database) -> None:
     """窗口锚点 = 官方最后可用日；默认窗口为锚点前 30 天（含锚点）。"""

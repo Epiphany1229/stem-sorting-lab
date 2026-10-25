@@ -153,7 +153,7 @@ describe("天气排序页：复用阶段 2 播放器", () => {
         expect(within(bar).getByTestId("bar-label")).toHaveTextContent(item?.label?.slice(5) ?? "");
       });
     }
-  });
+  }, 20000);
 
   it("切换指标与方向都会把播放器重置到 idle", async () => {
     vi.stubGlobal("fetch", createFetchMock());

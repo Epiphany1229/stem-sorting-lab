@@ -13,12 +13,12 @@ export function DevelopmentNotice({ bodyKey = "page.inDevelopment.body" }: Devel
   return (
     <section
       aria-labelledby="development-notice-title"
-      className="rounded-card border border-border border-l-4 border-l-compare bg-compare-soft/50 p-5 sm:p-6"
+      className="section-card border-l-4 border-l-compare bg-compare-soft/40"
     >
       <h2 id="development-notice-title">
         <BilingualText as="span" size="subtitle" tkey="page.inDevelopment.title" />
       </h2>
-      <div className="mt-3 max-w-3xl">
+      <div className="section-lead">
         <BilingualText tkey={bodyKey} />
       </div>
     </section>

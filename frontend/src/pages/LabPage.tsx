@@ -50,15 +50,12 @@ export default function LabPage() {
     <div className="page-stack">
       <PageHeader titleKey="lab.title" leadKey="lab.lead" />
 
-      <section
-        aria-labelledby="lab-input-title"
-        className="rounded-card border border-border bg-surface p-5 sm:p-6"
-      >
+      <section aria-labelledby="lab-input-title" className="section-card">
         <h2 id="lab-input-title">
           <BilingualText as="span" size="subtitle" tkey="lab.input.title" />
         </h2>
 
-        <div className="mt-4 grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-8 lg:grid-cols-2">
           <div className="space-y-4">
             <div className="flex flex-wrap items-start gap-3">
               <button type="button" className="btn btn--primary" onClick={applyRandomValues}>
@@ -176,14 +173,14 @@ export default function LabPage() {
         </div>
       </section>
 
-      <p>
+      <p className="section-lead">
         <BilingualText size="xs" tkey="player.sourceNote" />
       </p>
 
       {traceQuery.isPending ? (
         <section
           role="status"
-          className="rounded-card border border-border bg-surface p-5"
+          className="section-card"
           data-testid="trace-loading"
         >
           <BilingualText tkey="trace.loading" />
@@ -194,7 +191,7 @@ export default function LabPage() {
         <section
           role="alert"
           aria-labelledby="trace-error-title"
-          className="rounded-card border border-border border-l-4 border-l-swap bg-swap-soft/40 p-5 sm:p-6"
+          className="section-card border-l-4 border-l-swap bg-swap-soft/40"
           data-testid="trace-error"
         >
           <h2 id="trace-error-title">
@@ -216,7 +213,7 @@ export default function LabPage() {
       ) : null}
 
       {isEmptyTrace ? (
-        <section role="alert" className="rounded-card border border-border bg-surface p-5">
+        <section role="alert" className="section-card">
           <BilingualText tkey="trace.empty" />
         </section>
       ) : null}

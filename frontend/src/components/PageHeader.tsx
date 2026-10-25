@@ -15,7 +15,7 @@ interface PageHeaderProps {
 }
 
 /**
- * 统一页头：当前位置 + 页面标题 + 状态徽标 + 返回入口。
+ * 统一页头：当前位置 + 页面标题 + 状态徽标 + 说明 + 返回入口。
  * 七个页面都用它，保证「每页都有标题、当前位置、返回入口」。
  */
 export function PageHeader({
@@ -26,18 +26,18 @@ export function PageHeader({
   backLabelKey,
 }: PageHeaderProps) {
   return (
-    <header className="space-y-4">
+    <header className="page-header">
       <Breadcrumbs currentKey={titleKey} />
-      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+      <div className="page-header__titles">
         <BilingualText as="h1" size="title" tkey={titleKey} />
         {status ? <StatusBadge status={status} /> : null}
       </div>
       {leadKey ? (
-        <p className="max-w-3xl">
+        <p className="page-lead">
           <BilingualText tkey={leadKey} />
         </p>
       ) : null}
-      <BackLink href={backTo} labelKey={backLabelKey} />
+      <BackLink href={backTo} labelKey={backLabelKey} className="page-header__back" />
     </header>
   );
 }

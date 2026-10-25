@@ -624,4 +624,128 @@
     border-block-start: 1px solid var(--color-border);
     color: var(--color-ink-soft);
   }
+
+  /* ---------- 阶段 4.5：视觉收敛（更克制的层级、留白与阴影） ---------- */
+  .weather-panel {
+    gap: 1.25rem;
+    padding: var(--space-card);
+    box-shadow: none;
+    background-color: var(--color-surface);
+  }
+
+  .weather-panel > h2 {
+    padding-block-end: 0.65rem;
+    border-block-end: 1px solid var(--color-border);
+  }
+
+  .weather-chart-card {
+    gap: 1.15rem;
+    padding: var(--space-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .weather-chart-card__head {
+    gap: 0.6rem;
+    padding-block-end: 0.75rem;
+    border-block-end: 1px solid var(--color-border);
+  }
+
+  .weather-chart-card__desc {
+    max-inline-size: var(--reading-width);
+    color: var(--color-ink-soft);
+  }
+
+  .weather-chart-card__note {
+    color: var(--color-ink-muted);
+  }
+
+  .weather-plot {
+    min-block-size: 24rem;
+    padding: 0.4rem 0.35rem 0.2rem;
+    border-color: var(--color-border);
+    border-radius: var(--radius-card);
+    background-color: var(--color-surface-raised);
+  }
+
+  .weather-stats {
+    gap: 1rem;
+  }
+
+  .weather-stat {
+    padding: 0.95rem 1.05rem;
+    border-color: var(--color-border);
+    background-color: transparent;
+  }
+
+  .weather-stat__value {
+    font-size: 1.85rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .weather-coverage__window {
+    padding: 0 0 0.7rem;
+    border-block-end: 1px solid var(--color-border);
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  .weather-table {
+    gap: 0.45rem;
+  }
+
+  .weather-table__scroll {
+    border-color: var(--color-border);
+  }
+
+  .weather-table__table th {
+    background-color: var(--color-surface-sunken);
+    border-block-end: 1px solid var(--color-border);
+    font-weight: 600;
+  }
+
+  .weather-table__table td {
+    border-block-end: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  }
+
+  .weather-table__table tbody tr:hover td {
+    background-color: color-mix(in srgb, var(--color-primary-soft) 45%, transparent);
+  }
+
+  .weather-table__table tbody tr:nth-child(even) td {
+    background-color: transparent;
+  }
+
+  .weather-table__caption {
+    border-block-end: 1px solid var(--color-border);
+    background-color: transparent;
+  }
+
+  .weather-alert {
+    border-radius: var(--radius-card);
+  }
+
+  .weather-chart-empty {
+    padding: 1.5rem;
+    border-color: var(--color-border-strong);
+  }
+
+  .weather-stations__list {
+    max-block-size: 22rem;
+    border-color: var(--color-border);
+    background-color: transparent;
+  }
+
+  .weather-station__label:hover {
+    background-color: color-mix(in srgb, var(--color-primary-soft) 60%, transparent);
+  }
+
+  .weather-layout {
+    gap: var(--space-stack);
+  }
+
+  .weather-chart-card__table {
+    margin-block-start: 0.15rem;
+  }
 }

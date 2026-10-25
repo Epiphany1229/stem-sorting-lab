@@ -36,39 +36,49 @@ export function axisTitle(zhKey: Parameters<typeof translate>[0]): string {
 
 const LEGEND_TITLE = bilingualHtml(translate("weather.chart.legendTitle")["zh-Hant"], translate("weather.chart.legendTitle").en);
 
+const AXIS_BASE: NonNullable<Partial<Layout>["xaxis"]> = {
+  automargin: true,
+  gridcolor: "rgba(205, 196, 180, 0.45)",
+  zeroline: false,
+  linecolor: "rgba(205, 196, 180, 0.8)",
+  tickfont: { size: 10.5, color: "#6e7b8e" },
+};
+
 const BASE_LAYOUT: Partial<Layout> = {
   autosize: true,
-  margin: { l: 56, r: 24, t: 24, b: 56 },
+  margin: { l: 52, r: 22, t: 18, b: 52 },
   paper_bgcolor: "rgba(0,0,0,0)",
   plot_bgcolor: "rgba(0,0,0,0)",
   font: {
     family:
       '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Noto Sans", system-ui, sans-serif',
-    size: 12,
-    color: "#12263f",
+    size: 11.5,
+    color: "#46536a",
   },
-  colorway: ["#0f6f68", "#a85b00", "#b3264b", "#166534", "#4c5fd5", "#7a3e9d"],
+  colorway: ["#0d6a62", "#9a5b0a", "#a82c4c", "#1c6b3a", "#4c5fd5", "#7a3e9d"],
   showlegend: true,
   hovermode: "closest",
   hoverlabel: {
-    bgcolor: "#fffdf8",
-    bordercolor: "#b9ae99",
+    bgcolor: "#ffffff",
+    bordercolor: "#e7e0d3",
     font: {
       family:
         '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Noto Sans", system-ui, sans-serif',
-      size: 12,
-      color: "#12263f",
+      size: 11.5,
+      color: "#1a2a41",
     },
   },
   legend: {
-    title: { text: LEGEND_TITLE },
+    title: { text: LEGEND_TITLE, font: { size: 10.5, color: "#6e7b8e" } },
     orientation: "h",
     x: 0,
     xanchor: "left",
-    y: 1.02,
+    y: 1.04,
     yanchor: "bottom",
-    font: { size: 11 },
+    font: { size: 10.5 },
   },
+  xaxis: AXIS_BASE,
+  yaxis: AXIS_BASE,
 };
 
 export function PlotlyFigure({
@@ -83,6 +93,8 @@ export function PlotlyFigure({
   const mergedLayout: Partial<Layout> = {
     ...BASE_LAYOUT,
     ...layout,
+    xaxis: { ...AXIS_BASE, ...layout?.xaxis },
+    yaxis: { ...AXIS_BASE, ...layout?.yaxis },
     legend: { ...BASE_LAYOUT.legend, ...layout?.legend },
     hoverlabel: { ...BASE_LAYOUT.hoverlabel, ...layout?.hoverlabel },
     // 减少动态时禁用过渡；普通情况也只用很短的过渡。

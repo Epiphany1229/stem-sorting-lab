@@ -179,6 +179,11 @@ def _run_ingest(args: argparse.Namespace) -> int:
             print(f"[質量問題] {len(summary.quality_issues)} 條：")
             for issue in summary.quality_issues:
                 print(f"  - {issue}")
+        if summary.unsupported:
+            print(
+                "[不受支持] 官方接口拒絕以下數據集（PDF 名單仍有，但當前 API 不接受，已跳過）："
+                + ", ".join(summary.unsupported)
+            )
         if summary.not_published:
             print(
                 "[未發布] 以下資料集暫無資料（當月月表未發布，不是錯誤）："

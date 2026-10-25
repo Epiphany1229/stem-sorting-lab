@@ -1,9 +1,13 @@
 /**
  * SVG 柱状图：只按轨迹里的 state.order + state.values 渲染当前快照。
  *
- * 状态区分使用多通道：颜色、图案、图标、描边，不只靠颜色。
- * 数值标签的坐标由当前快照直接算出，柱体几何没有过渡动画，
- * 因此标签在播放时不会与柱子错位。
+ * 布局要点（阶段 4.5 UI 优化）：
+ * - 柱数多时自动加大画布宽度（超过容器则横向滚动），保证每根柱子都有足够间隙；
+ * - 温度标签始终显示（value_raw + 单位），柱数 > 8 时改为 -45° 旋转 + 奇偶错层，
+ *   不再互相遮挡；日期标签同理；
+ * - 位置变化使用 CSS transform 过渡（按 item id 保持 DOM 节点），
+ *   相邻交换时柱子与数字沿着同一路径平移，不会重排跳动；
+ * - 状态区分仍使用颜色、图案、图标、描边多通道，不只靠颜色。
  */
 import { useId, useState } from "react";
 
@@ -65,11 +69,19 @@ function detailOfItem(item: TraceItem | undefined, unit?: string): BarItemDetail
 
 const LEGEND_STATES: readonly BarState[] = ["pending", "compare", "swap", "sorted"];
 
-const VIEW_WIDTH = 640;
-const VIEW_HEIGHT = 400;
-const MARGIN_X = 16;
-const MARGIN_TOP = 52;
-const MARGIN_BOTTOM = 92;
+/* ---------- 画布几何 ---------- */
+const VIEW_HEIGHT = 420;
+const MARGIN_LEFT = 24;
+const MARGIN_RIGHT = 28;
+const MARGIN_RIGHT_ROTATED = 64;
+const MARGIN_TOP = 58;
+const MARGIN_TOP_ROTATED = 108;
+const MARGIN_BOTTOM = 96;
+const BASE_WIDTH = 680;
+const ROTATE_THRESHOLD = 8;
+const ROTATED_MIN_SLOT = 46;
+const DEFAULT_MIN_SLOT = 26;
+const STAGGER_STEP = 17;
 const MIN_BAR_HEIGHT = 8;
 
 interface BarGeometry {
@@ -77,35 +89,59 @@ interface BarGeometry {
   readonly value: number;
   readonly displayIndex: number;
   readonly state: BarState;
-  readonly x: number;
-  readonly y: number;
   readonly width: number;
   readonly height: number;
   readonly centerX: number;
+  readonly y: number;
   readonly labelY: number;
+  readonly dateY: number;
+  readonly stagger: number;
+}
+
+interface ChartGeometry {
+  readonly bars: BarGeometry[];
+  readonly baselineY: number;
+  readonly plotBottom: number;
+  readonly viewWidth: number;
+  readonly slotWidth: number;
+  readonly rotated: boolean;
 }
 
 /**
  * 把当前快照换算成柱子几何。
- * 负值从零基线向下延伸；全相同值（包括全 0）用最小高度兜底，避免零高度柱。
+ *
+ * - 负值从零基线向下延伸；全相同值（包括全 0）用最小高度兜底；
+ * - 柱数多时画布变宽，柱宽与间隙按柱数自适应；
+ * - 标签在柱数较多时旋转并交错，始终可见。
  */
 function buildGeometry(
   items: readonly TraceItem[],
   state: TraceState,
   event: TraceEvent | null,
-): { bars: BarGeometry[]; baselineY: number; plotBottom: number; scale: number } {
-  const count = state.order.length;
+): ChartGeometry {
+  const count = Math.max(state.order.length, 1);
   const values = state.order.map((_, index) => state.values[index] ?? 0);
   const domainMin = Math.min(0, ...values);
   const domainMaxRaw = Math.max(0, ...values);
   // 全相同值时 domain 会退化，用 1 做兜底，避免除零与零高度柱。
   const domainMax = domainMaxRaw === domainMin ? domainMin + 1 : domainMaxRaw;
-  const plotHeight = VIEW_HEIGHT - MARGIN_TOP - MARGIN_BOTTOM;
+
+  const rotated = count > ROTATE_THRESHOLD;
+  const marginTop = rotated ? MARGIN_TOP_ROTATED : MARGIN_TOP;
+  const marginRight = rotated ? MARGIN_RIGHT_ROTATED : MARGIN_RIGHT;
+  const minSlot = rotated ? ROTATED_MIN_SLOT : DEFAULT_MIN_SLOT;
+  const availableWidth = BASE_WIDTH - MARGIN_LEFT - marginRight;
+  const contentWidth = Math.max(availableWidth, count * minSlot);
+  const viewWidth = MARGIN_LEFT + marginRight + contentWidth;
+  const slotWidth = contentWidth / count;
+
+  const plotHeight = VIEW_HEIGHT - marginTop - MARGIN_BOTTOM;
   const scale = plotHeight / (domainMax - domainMin);
-  const baselineY = MARGIN_TOP + domainMax * scale;
+  const baselineY = marginTop + domainMax * scale;
   const plotBottom = VIEW_HEIGHT - MARGIN_BOTTOM;
-  const slotWidth = (VIEW_WIDTH - MARGIN_X * 2) / Math.max(count, 1);
-  const barWidth = Math.min(64, slotWidth * 0.62);
+  const hasDateLabels = items.some((item) => item.label !== undefined);
+  const barWidthCap = hasDateLabels ? 46 : 64;
+  const barWidth = Math.min(barWidthCap, slotWidth * 0.58);
 
   const compared = new Set(event?.compared_indices ?? []);
   const modified = new Set(event?.modified_indices ?? []);
@@ -127,27 +163,33 @@ function buildGeometry(
 
     const magnitude = Math.abs(value) * scale;
     const height = Math.max(magnitude, MIN_BAR_HEIGHT);
-    const x = MARGIN_X + displayIndex * slotWidth + (slotWidth - barWidth) / 2;
+    const centerX = MARGIN_LEFT + slotWidth * (displayIndex + 0.5);
     const y = value < 0 ? baselineY : baselineY - height;
-    const centerX = x + barWidth / 2;
-    // 正数标签在柱顶上方，负数标签在柱底下方；紧贴几何位置计算，避免错位。
-    const labelY = value < 0 ? Math.min(y + height + 18, plotBottom + 56) : y - 10;
+    // 奇偶错层：相邻标签在垂直方向错开，配合旋转进一步降低重叠概率。
+    const stagger = rotated ? (displayIndex % 2 === 1 ? STAGGER_STEP : 0) : 0;
+    // 正数标签在柱顶上方（错层向上），负数标签在柱底下方。
+    const labelY =
+      value < 0
+        ? Math.min(y + height + 20 - stagger, plotBottom + 44)
+        : Math.max(y - 12 - stagger, marginTop - 6);
+    const dateY = VIEW_HEIGHT - 14 - (rotated && displayIndex % 2 === 1 ? 14 : 0);
 
     return {
       itemId,
       value,
       displayIndex,
       state: stateOfBar,
-      x,
-      y,
       width: barWidth,
       height,
       centerX,
+      y,
       labelY,
+      dateY,
+      stagger,
     };
   });
 
-  return { bars, baselineY, plotBottom, scale };
+  return { bars, baselineY, plotBottom, viewWidth, slotWidth, rotated };
 }
 
 export function BarChart({
@@ -161,14 +203,15 @@ export function BarChart({
   const dotsPatternId = `${patternPrefix}-dots`;
   const crossPatternId = `${patternPrefix}-cross`;
   const hatchPatternId = `${patternPrefix}-hatch`;
-  const { bars, baselineY, plotBottom } = buildGeometry(items, state, event ?? null);
+  const geometry = buildGeometry(items, state, event ?? null);
+  const { bars, baselineY, plotBottom, viewWidth, slotWidth, rotated } = geometry;
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   const itemById = new Map(items.map((item) => [item.id, item] as const));
   const hasWeatherDetails = items.some((item) => detailOfItem(item, unit) !== null);
   const focusedItem = focusedItemId === null ? undefined : itemById.get(focusedItemId);
   const focusedDetail = detailOfItem(focusedItem, unit);
-  // 柱子变多时缩小字号，避免温度/日期标签完全重叠。
-  const compactLabels = bars.length > 16;
+  const labelLayout = rotated ? "rotated-staggered" : "horizontal";
+  const scrollLabel = formatTranslation("player.chart.scrollLabel", {})["zh-Hant"];
 
   // 比较/交换标记画在图表底部：虚线括号 + 图案 + 图标 + 颜色共同区分。
   const comparedIndices = event?.compared_indices ?? [];
@@ -200,172 +243,195 @@ export function BarChart({
 
   return (
     <figure className="m-0">
-      <svg
-        className="bar-chart"
-        viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
-        role="img"
-        aria-label={formatTranslation("player.chart.label", { count: bars.length })["zh-Hant"]}
-        data-testid="bar-chart"
-        data-reduced-motion={reducedMotion ? "true" : "false"}
+      <div
+        className="bar-chart__scroll"
+        data-testid="bar-chart-scroll"
+        role="group"
+        aria-label={scrollLabel}
+        tabIndex={0}
       >
-        <defs>
-          <pattern id={dotsPatternId} width="8" height="8" patternUnits="userSpaceOnUse">
-            <circle cx="2" cy="2" r="1.2" className="bar-chart__pattern-dot" />
-          </pattern>
-          <pattern id={crossPatternId} width="8" height="8" patternUnits="userSpaceOnUse">
-            <path d="M0 8 L8 0 M0 0 L8 8" className="bar-chart__pattern-cross" />
-          </pattern>
-          <pattern id={hatchPatternId} width="8" height="8" patternUnits="userSpaceOnUse">
-            <path d="M0 8 L8 0" className="bar-chart__pattern-hatch" />
-          </pattern>
-        </defs>
+        <svg
+          className={rotated ? "bar-chart bar-chart--compact" : "bar-chart"}
+          viewBox={`0 0 ${viewWidth} ${VIEW_HEIGHT}`}
+          width={viewWidth}
+          role="img"
+          aria-label={formatTranslation("player.chart.label", { count: bars.length })["zh-Hant"]}
+          data-testid="bar-chart"
+          data-reduced-motion={reducedMotion ? "true" : "false"}
+          data-bar-count={bars.length}
+          data-slot-width={Math.round(slotWidth * 10) / 10}
+          data-label-layout={labelLayout}
+          data-label-rotate={rotated ? "-45" : "0"}
+        >
+          <defs>
+            <pattern id={dotsPatternId} width="8" height="8" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="1.2" className="bar-chart__pattern-dot" />
+            </pattern>
+            <pattern id={crossPatternId} width="8" height="8" patternUnits="userSpaceOnUse">
+              <path d="M0 8 L8 0 M0 0 L8 8" className="bar-chart__pattern-cross" />
+            </pattern>
+            <pattern id={hatchPatternId} width="8" height="8" patternUnits="userSpaceOnUse">
+              <path d="M0 8 L8 0" className="bar-chart__pattern-hatch" />
+            </pattern>
+          </defs>
 
-        {/* 零基线：负值在下方，正值在上方。 */}
-        <line
-          className="bar-chart__baseline"
-          x1={MARGIN_X}
-          y1={baselineY}
-          x2={VIEW_WIDTH - MARGIN_X}
-          y2={baselineY}
-        />
-        <line
-          className="bar-chart__plot-bottom"
-          x1={MARGIN_X}
-          y1={plotBottom}
-          x2={VIEW_WIDTH - MARGIN_X}
-          y2={plotBottom}
-        />
+          {/* 零基线：负值在下方，正值在上方。 */}
+          <line
+            className="bar-chart__baseline"
+            x1={MARGIN_LEFT}
+            y1={baselineY}
+            x2={viewWidth - MARGIN_RIGHT}
+            y2={baselineY}
+          />
+          <line
+            className="bar-chart__plot-bottom"
+            x1={MARGIN_LEFT}
+            y1={plotBottom}
+            x2={viewWidth - MARGIN_RIGHT}
+            y2={plotBottom}
+          />
 
-        {bars.map((bar) => {
-          const patternId =
-            bar.state === "compare"
-              ? dotsPatternId
-              : bar.state === "swap"
-                ? crossPatternId
-                : bar.state === "sorted"
-                  ? hatchPatternId
-                  : null;
-          const glyphY = bar.height >= 26 ? bar.y + Math.min(bar.height / 2 + 5, bar.height - 6) : bar.y - 4;
-          const item = itemById.get(bar.itemId);
-          const detail = detailOfItem(item, unit);
-          const displayValue = detail ? detail.valueText : bar.value;
-          const dateLabel = detail ? shortDateLabel(detail.dateLabel) : null;
+          {bars.map((bar) => {
+            const patternId =
+              bar.state === "compare"
+                ? dotsPatternId
+                : bar.state === "swap"
+                  ? crossPatternId
+                  : bar.state === "sorted"
+                    ? hatchPatternId
+                    : null;
+            const glyphY = bar.height >= 26 ? bar.y + Math.min(bar.height / 2 + 5, bar.height - 6) : bar.y - 4;
+            const item = itemById.get(bar.itemId);
+            const detail = detailOfItem(item, unit);
+            const displayValue = detail ? detail.valueText : String(bar.value);
+            const dateLabel = detail ? shortDateLabel(detail.dateLabel) : null;
+            const rotateValue = rotated ? `rotate(-45 0 ${bar.labelY})` : undefined;
+            const rotateDate = rotated ? `rotate(-40 0 ${bar.dateY})` : undefined;
 
-          return (
-            <g
-              key={bar.itemId}
-              className={`bar-chart__bar-group bar-chart__bar-group--${bar.state}`}
-              data-testid="bar"
-              data-item-id={bar.itemId}
-              data-display-index={bar.displayIndex}
-              data-state={bar.state}
-              tabIndex={detail ? 0 : undefined}
-              role={detail ? "img" : undefined}
-              aria-label={
-                detail
-                  ? `${detail.dateLabel}｜${detail.stationZh} / ${detail.stationEn}｜${detail.valueText}｜${detail.quality}`
-                  : undefined
-              }
-              onFocus={detail ? () => setFocusedItemId(bar.itemId) : undefined}
-              onBlur={
-                detail
-                  ? () =>
-                      setFocusedItemId((current) => (current === bar.itemId ? null : current))
-                  : undefined
-              }
-              onMouseEnter={detail ? () => setFocusedItemId(bar.itemId) : undefined}
-              onMouseLeave={
-                detail
-                  ? () =>
-                      setFocusedItemId((current) => (current === bar.itemId ? null : current))
-                  : undefined
-              }
-            >
-              <title>
-                {(() => {
-                  // SVG <title> 只能是一条字符串：繁中在上、英文在下一行，保持双语。
-                  if (detail) {
-                    const zhTitle = formatTranslation("weatherSort.bar.title", {
-                      date: detail.dateLabel,
-                      station: detail.stationZh,
-                      value: detail.valueText,
-                      quality: detail.quality,
-                    })["zh-Hant"];
-                    const enTitle = formatTranslation("weatherSort.bar.title", {
-                      date: detail.dateLabel,
-                      station: detail.stationEn,
-                      value: detail.valueText,
-                      quality: detail.quality,
-                    }).en;
-                    return `${zhTitle}\n${enTitle}`;
-                  }
-                  const title = formatTranslation("player.bar.title", {
-                    id: bar.itemId,
-                    value: bar.value,
-                  });
-                  return `${title["zh-Hant"]}\n${title.en}`;
-                })()}
-              </title>
-              <rect
-                data-testid="bar-shape"
-                className="bar-chart__bar"
-                x={bar.x}
-                y={bar.y}
-                width={bar.width}
-                height={bar.height}
-                rx={6}
-              />
-              {patternId ? (
+            return (
+              <g
+                key={bar.itemId}
+                className={`bar-chart__bar-group bar-chart__bar-group--${bar.state}`}
+                data-testid="bar"
+                data-item-id={bar.itemId}
+                data-display-index={bar.displayIndex}
+                data-state={bar.state}
+                data-center-x={Math.round(bar.centerX * 10) / 10}
+                data-label-stagger={bar.stagger > 0 ? "1" : "0"}
+                style={{ transform: `translateX(${bar.centerX}px)` }}
+                tabIndex={detail ? 0 : undefined}
+                role={detail ? "img" : undefined}
+                aria-label={
+                  detail
+                    ? `${detail.dateLabel}｜${detail.stationZh} / ${detail.stationEn}｜${detail.valueText}｜${detail.quality}`
+                    : undefined
+                }
+                onFocus={detail ? () => setFocusedItemId(bar.itemId) : undefined}
+                onBlur={
+                  detail
+                    ? () =>
+                        setFocusedItemId((current) => (current === bar.itemId ? null : current))
+                    : undefined
+                }
+                onMouseEnter={detail ? () => setFocusedItemId(bar.itemId) : undefined}
+                onMouseLeave={
+                  detail
+                    ? () =>
+                        setFocusedItemId((current) => (current === bar.itemId ? null : current))
+                    : undefined
+                }
+              >
+                <title>
+                  {(() => {
+                    // SVG <title> 只能是一条字符串：繁中在上、英文在下一行，保持双语。
+                    if (detail) {
+                      const zhTitle = formatTranslation("weatherSort.bar.title", {
+                        date: detail.dateLabel,
+                        station: detail.stationZh,
+                        value: detail.valueText,
+                        quality: detail.quality,
+                      })["zh-Hant"];
+                      const enTitle = formatTranslation("weatherSort.bar.title", {
+                        date: detail.dateLabel,
+                        station: detail.stationEn,
+                        value: detail.valueText,
+                        quality: detail.quality,
+                      }).en;
+                      return `${zhTitle}\n${enTitle}`;
+                    }
+                    const title = formatTranslation("player.bar.title", {
+                      id: bar.itemId,
+                      value: bar.value,
+                    });
+                    return `${title["zh-Hant"]}\n${title.en}`;
+                  })()}
+                </title>
                 <rect
-                  className="bar-chart__pattern-overlay"
-                  x={bar.x}
+                  data-testid="bar-shape"
+                  className="bar-chart__bar"
+                  x={-bar.width / 2}
                   y={bar.y}
                   width={bar.width}
                   height={bar.height}
-                  rx={6}
-                  fill={`url(#${patternId})`}
+                  rx={7}
                 />
-              ) : null}
-              {bar.height >= 26 ? (
+                {patternId ? (
+                  <rect
+                    className="bar-chart__pattern-overlay"
+                    x={-bar.width / 2}
+                    y={bar.y}
+                    width={bar.width}
+                    height={bar.height}
+                    rx={7}
+                    fill={`url(#${patternId})`}
+                  />
+                ) : null}
+                {bar.height >= 26 ? (
+                  <text
+                    className="bar-chart__glyph"
+                    data-testid="bar-glyph"
+                    x={0}
+                    y={glyphY}
+                    aria-hidden="true"
+                  >
+                    {GLYPHS[bar.state]}
+                  </text>
+                ) : null}
                 <text
-                  className="bar-chart__glyph"
-                  data-testid="bar-glyph"
-                  x={bar.centerX}
-                  y={glyphY}
-                  aria-hidden="true"
+                  className="bar-chart__value"
+                  data-testid="bar-value"
+                  data-label-rotate={rotated ? "-45" : "0"}
+                  data-label-stagger={bar.stagger > 0 ? "1" : "0"}
+                  x={0}
+                  y={bar.labelY}
+                  textAnchor={rotated ? "start" : "middle"}
+                  transform={rotateValue}
                 >
-                  {GLYPHS[bar.state]}
+                  {displayValue}
                 </text>
-              ) : null}
-              <text
-                className="bar-chart__value"
-                data-testid="bar-value"
-                x={bar.centerX}
-                y={bar.labelY}
-                fontSize={compactLabels ? 8 : undefined}
-              >
-                {displayValue}
-              </text>
-              {dateLabel ? (
-                <text
-                  className="bar-chart__date"
-                  data-testid="bar-label"
-                  x={bar.centerX}
-                  y={VIEW_HEIGHT - 6}
-                  textAnchor="middle"
-                  fontSize={compactLabels ? 7 : 9}
-                  aria-hidden="true"
-                >
-                  {dateLabel}
-                </text>
-              ) : null}
-            </g>
-          );
-        })}
+                {dateLabel ? (
+                  <text
+                    className="bar-chart__date"
+                    data-testid="bar-label"
+                    data-label-rotate={rotated ? "-40" : "0"}
+                    data-label-stagger={bar.stagger > 0 ? "1" : "0"}
+                    x={0}
+                    y={bar.dateY}
+                    textAnchor="middle"
+                    transform={rotateDate}
+                    aria-hidden="true"
+                  >
+                    {dateLabel}
+                  </text>
+                ) : null}
+              </g>
+            );
+          })}
 
-        {bracketFor(comparedIndices, plotBottom + 22)}
-        {bracketFor(modifiedIndices, plotBottom + 42)}
-      </svg>
+          {bracketFor(comparedIndices, plotBottom + 22)}
+          {bracketFor(modifiedIndices, plotBottom + 42)}
+        </svg>
+      </div>
 
       {hasWeatherDetails ? (
         <div

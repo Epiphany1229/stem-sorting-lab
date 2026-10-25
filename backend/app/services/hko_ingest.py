@@ -141,6 +141,8 @@ class IngestSummary:
     not_published: list[str] = field(default_factory=list)
     quality_issues: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
+    # 官方接口明确拒绝的数据集（如 PDF 名单仍有、API 已下线的站号）
+    unsupported: list[str] = field(default_factory=list)
     elapsed_seconds: float = 0.0
     ingestion_run_id: int | None = None
 
@@ -242,11 +244,18 @@ def parse_monthly_payload(
                 )
             )
         flag = "" if flag_raw is None else str(flag_raw).strip()
-        if flag == QUALITY_UNAVAILABLE:
-            # *** 代表"无数据"：不入库，只计入缺失
+        raw_value = "" if value_raw is None else str(value_raw).strip()
+        # 官方把"没有数据"写成 ***：可能出现在质量标记列，也可能直接出现在数值列。
+        # 两种都只是缺失，不是格式错误，因此不计入 quality_issues。
+        if flag == QUALITY_UNAVAILABLE or raw_value == QUALITY_UNAVAILABLE:
             result.missing_count += 1
             continue
-        if flag not in {QUALITY_COMPLETE, QUALITY_INCOMPLETE}:
+
+        if flag == "":
+            # 官方偶有数值齐全但质量标记列为空的行（如 HKS 的部分日期）：
+            # 不能当成"完整"，也不能丢弃真实数值，统一按"不完整"入库。
+            flag = QUALITY_INCOMPLETE
+        elif flag not in {QUALITY_COMPLETE, QUALITY_INCOMPLETE}:
             result.issues.append(
                 ParseIssue(
                     line=line_no,
@@ -255,7 +264,7 @@ def parse_monthly_payload(
                 )
             )
             continue
-        raw_value = "" if value_raw is None else str(value_raw).strip()
+
         if not _VALUE_PATTERN.match(raw_value):
             result.issues.append(
                 ParseIssue(
@@ -434,9 +443,29 @@ async def ingest_year(
                         params=params,
                         dataset_key=dataset_key,
                     )
-                except (FetchRejected, HkoFetchError, HkoDataError) as exc:
+                except FetchRejected as exc:
+                    # 限速/熔断/预算等安全拒绝：必须整体停止，不能继续打官方接口。
                     summary.errors.append(f"{station_id}/{dataset_key}: {exc}")
                     raise
+                except HkoFetchError as exc:
+                    # 网络层失败已由客户端做有限重试；仍失败则停止，避免持续冲击上游。
+                    summary.errors.append(f"{station_id}/{dataset_key}: {exc}")
+                    raise
+                except HkoDataError as exc:
+                    # 数据层失败（如官方对 PDF 名单里的某个站返回"参数错误"HTML）：
+                    # 记录该数据集不受支持并继续处理其余站/指标，不中断整批回填。
+                    request_index += 1
+                    summary.requests += 1
+                    summary.errors.append(f"{station_id}/{dataset_key}: {exc}")
+                    summary.unsupported.append(f"{station_id}/{dataset_key}")
+                    validation_logger.warning(
+                        "跳过不受支持的数据集 %s/%s：%s", station_id, dataset_key, exc
+                    )
+                    if on_request is not None:
+                        on_request(
+                            f"[{request_index}] {station_id}/{dataset_key} 跳过（不受支持）：{exc}"
+                        )
+                    continue
                 request_elapsed_ms = (time.monotonic() - request_started) * 1000.0
                 request_index += 1
                 summary.requests += 1

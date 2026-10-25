@@ -76,11 +76,25 @@
 }
 
 /* ---------- SVG 柱状图 ---------- */
+.bar-chart__scroll {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block-end: 0.25rem;
+  /* 横向滚动条只在需要时出现，细而低对比。 */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+.bar-chart__scroll:focus-visible {
+  outline-offset: 0;
+}
+
 .bar-chart {
   display: block;
-  width: 100%;
   height: auto;
   overflow: visible;
+  margin-inline: auto;
 }
 
 .bar-chart__baseline {
@@ -94,11 +108,22 @@
   stroke-dasharray: 3 4;
 }
 
+/* 柱组的位置只用 transform 表达：交换时按 item id 平滑平移，不重排跳动。 */
+.bar-chart__bar-group {
+  transition: transform var(--duration-base) var(--ease-standard);
+  outline: none;
+}
+
 .bar-chart__bar {
   stroke-width: 2;
   transition:
     fill var(--duration-base) var(--ease-standard),
     stroke var(--duration-base) var(--ease-standard);
+}
+
+.bar-chart__bar-group:focus-visible .bar-chart__bar {
+  stroke: var(--color-focus);
+  stroke-width: 3;
 }
 
 .bar-chart__bar-group--pending .bar-chart__bar {
@@ -143,7 +168,7 @@
 }
 
 .bar-chart__glyph {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   text-anchor: middle;
   dominant-baseline: middle;
@@ -151,11 +176,72 @@
 }
 
 .bar-chart__value {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   text-anchor: middle;
   fill: var(--color-ink);
   font-variant-numeric: tabular-nums;
+}
+
+/* 柱数很多时（旋转 + 错层）使用更紧凑的字号，标签仍然完整显示。 */
+.bar-chart--compact .bar-chart__value {
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.bar-chart--compact .bar-chart__glyph {
+  font-size: 12px;
+}
+
+.bar-chart__date {
+  fill: var(--color-ink-muted);
+  font-weight: 500;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-chart--compact .bar-chart__date {
+  font-size: 8.5px;
+}
+
+/* 聚焦详情：悬停/键盘聚焦时显示完整日期、测站与品质标记。 */
+.bar-chart__detail {
+  margin-block-start: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-chip);
+  background-color: var(--color-surface-raised);
+}
+
+.bar-chart__detail-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+}
+
+.bar-chart__detail-hint {
+  margin: 0;
+  color: var(--color-ink-soft);
+}
+
+.bar-chart__detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.5rem 0.9rem;
+  margin: 0;
+}
+
+.bar-chart__detail-grid dt {
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+}
+
+.bar-chart__detail-grid dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .bar-chart__bracket {
@@ -379,12 +465,85 @@
 }
 
 /* 「减少动态」：取消过渡，但状态推进逻辑完全不变。 */
-.lab-player[data-reduced-motion="true"] .bar-chart__bar {
+.lab-player[data-reduced-motion="true"] .bar-chart__bar,
+.lab-player[data-reduced-motion="true"] .bar-chart__bar-group,
+[data-reduced-motion="true"] .bar-chart__bar,
+[data-reduced-motion="true"] .bar-chart__bar-group {
   transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bar-chart__bar {
+  .bar-chart__bar,
+  .bar-chart__bar-group {
     transition: none;
   }
+}
+
+/* ---------- 阶段 4.5：播放器控制栏与代码面板视觉收敛 ---------- */
+.lab-controls {
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+  border-color: var(--color-border);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-surface-raised) 92%, transparent);
+  box-shadow: 0 -12px 32px -28px rgb(20 32 50 / 0.4);
+}
+
+.lab-controls__metrics {
+  gap: 1rem 2rem;
+}
+
+.lab-controls__metrics dt {
+  margin-bottom: 0.25rem;
+  color: var(--color-ink-muted);
+}
+
+.lab-controls__metrics dd {
+  font-size: 1.1rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.lab-controls__phase {
+  padding: 0.2rem 0.65rem;
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  background-color: var(--color-primary-soft);
+  border-radius: 999px;
+}
+
+.lab-input-field {
+  padding: 0.5rem 0.7rem;
+  border-color: var(--color-border-strong);
+  border-radius: var(--radius-chip);
+  background-color: var(--color-surface-raised);
+}
+
+.code-panel__scroll {
+  max-height: 24rem;
+  border-color: var(--color-border);
+  border-radius: var(--radius-chip);
+  background-color: var(--color-surface-raised);
+}
+
+.code-panel__pre {
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.legend-swatch {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.prediction-dialog__values {
+  gap: 1.15rem;
+}
+
+.prediction-dialog__value {
+  border-width: 1.5px;
+  border-radius: var(--radius-card);
+  background-color: var(--color-compare-soft);
+  font-size: 1.4rem;
 }
