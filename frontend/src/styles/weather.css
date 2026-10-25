@@ -615,6 +615,27 @@
     text-align: end;
   }
 
+  /* 折叠表页脚：行数说明 + 展開/收起 按钮 */
+  .weather-table__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem 0.75rem;
+  }
+
+  .weather-table__footer .weather-table__count {
+    text-align: start;
+  }
+
+  .weather-table__toggle {
+    padding: 0.3rem 0.6rem;
+  }
+
+  .weather-options {
+    gap: 0.9rem;
+  }
+
   /* ---------- 页尾说明 ---------- */
   .weather-page__notes {
     display: flex;

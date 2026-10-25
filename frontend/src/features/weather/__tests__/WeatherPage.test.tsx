@@ -16,8 +16,6 @@ import {
   dailyResponse,
   demoDailyResponse,
   emptyOfficialDailyResponse,
-  importedDailyResponse,
-  importResponse,
   stationsEnvelope,
   summaryResponse,
 } from "./fixtures";
@@ -63,9 +61,6 @@ function createFetchMock(options: FetchOptions = {}) {
       if (mode === "demo") {
         return jsonResponse(demoDailyResponse());
       }
-      if (mode === "imported") {
-        return jsonResponse(importedDailyResponse());
-      }
       return jsonResponse(dailyResponse());
     }
     if (path.endsWith("/weather/summary")) {
@@ -73,9 +68,6 @@ function createFetchMock(options: FetchOptions = {}) {
         return jsonResponse(options.summary(mode));
       }
       return jsonResponse(summaryResponse({ mode, notice: officialNotice(mode) }));
-    }
-    if (path.endsWith("/weather/import")) {
-      return jsonResponse(importResponse());
     }
     if (path.endsWith("/weather/refresh")) {
       return jsonResponse({
@@ -108,45 +100,87 @@ function renderPage() {
   );
 }
 
-async function waitForFiveCharts() {
+async function waitForFourCharts() {
   await screen.findByTestId("chart-line");
   await waitFor(() => {
-    expect(screen.getAllByRole("img")).toHaveLength(5);
+    expect(screen.getAllByRole("img")).toHaveLength(4);
   });
 }
 
 describe("天气探索页", () => {
-  it("加载官方资料：覆盖率、五张图、数据表与导出链接", async () => {
+  it("固定显示后端 30 天窗口、四张图与可折叠数据表；不再有查询条件/CSV/散点图", async () => {
     const fetchMock = createFetchMock();
     vi.stubGlobal("fetch", fetchMock);
 
     renderPage();
-    await waitForFiveCharts();
+    await waitForFourCharts();
 
     // 官方模式不显示非官方横幅。
     expect(screen.queryByTestId("demo-banner")).not.toBeInTheDocument();
-
+    // 真实起止日期来自后端 coverage/daily 信封，不是前端写死或让用户选。
     expect(screen.getByText("2026-09-01 至 2026-09-05，共 5 天")).toBeInTheDocument();
 
+    expect(screen.getByTestId("chart-line")).toBeInTheDocument();
+    expect(screen.getByTestId("chart-bar")).toBeInTheDocument();
+    expect(screen.getByTestId("chart-histogram")).toBeInTheDocument();
+    expect(screen.getByTestId("chart-donut")).toBeInTheDocument();
+    // 散点图已删除。
+    expect(screen.queryByTestId("chart-scatter")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("chart-scatter-table")).not.toBeInTheDocument();
+
+    // 查询条件与 CSV 导入已删除。
+    expect(screen.queryByTestId("weather-controls")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("csv-import")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("開始日期")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("結束日期")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("選擇 CSV 檔案")).not.toBeInTheDocument();
+
     const lineTable = await screen.findByTestId("chart-line-table");
-    expect(within(lineTable).getByText("共 8 列")).toBeInTheDocument();
-    expect(within(lineTable).getAllByText("香港天文台").length).toBeGreaterThan(0);
+    // 8 行 > 5，默认折叠：行数说明与展开按钮都存在。
+    expect(within(lineTable).getByText(/共 8 列/)).toBeInTheDocument();
+    const lineToggle = within(lineTable).getByTestId("chart-line-table-toggle");
+    expect(lineToggle).toHaveAttribute("aria-expanded", "false");
+    expect(within(lineTable).getAllByRole("row")).toHaveLength(6); // 表头 + 前 5 行
+    fireEvent.click(lineToggle);
+    expect(lineToggle).toHaveAttribute("aria-expanded", "true");
+    expect(within(lineTable).getAllByRole("row")).toHaveLength(9); // 表头 + 全部 8 行
 
     const exportLink = screen.getByTestId("export-csv");
     expect(exportLink.getAttribute("href")).toContain("/api/weather/export.csv");
     expect(exportLink.getAttribute("href")).toContain("stations=HKO");
     expect(exportLink.getAttribute("href")).toContain("metrics=tmax%2Ctmin");
+    // 请求不再带日期参数：窗口由后端决定。
+    const dailyUrl = fetchMock.mock.calls
+      .map(([input]) => String(input))
+      .find((url) => url.includes("/weather/daily"));
+    expect(dailyUrl).toBeDefined();
+    expect(dailyUrl).not.toContain("start=");
+    expect(dailyUrl).not.toContain("end=");
+  });
+
+  it("测站选择器过滤没有资料的测站（TPO 类）", async () => {
+    vi.stubGlobal("fetch", createFetchMock());
+    renderPage();
+    await waitForFourCharts();
+
+    expect(screen.getByRole("checkbox", { name: /香港天文台/ })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /京士柏/ })).toBeInTheDocument();
+    // 夹具中的 VP1 available_days=0，不应出现在选择器里。
+    expect(screen.queryByRole("checkbox", { name: /山頂/ })).not.toBeInTheDocument();
+    expect(screen.getByText("已選 1 / 2 站")).toBeInTheDocument();
   });
 
   it("多选测站后折线图数据表合并两个站", async () => {
     vi.stubGlobal("fetch", createFetchMock());
     renderPage();
-    await waitForFiveCharts();
+    await waitForFourCharts();
 
     fireEvent.click(screen.getByRole("checkbox", { name: /京士柏/ }));
 
     await waitFor(() => {
-      expect(within(screen.getByTestId("chart-line-table")).getByText("共 16 列")).toBeInTheDocument();
+      expect(
+        within(screen.getByTestId("chart-line-table")).getByText(/共 16 列/),
+      ).toBeInTheDocument();
     });
   });
 
@@ -154,7 +188,7 @@ describe("天气探索页", () => {
     const fetchMock = createFetchMock();
     vi.stubGlobal("fetch", fetchMock);
     renderPage();
-    await waitForFiveCharts();
+    await waitForFourCharts();
 
     fireEvent.click(screen.getByRole("checkbox", { name: /示範模式/ }));
 
@@ -172,7 +206,7 @@ describe("天气探索页", () => {
     ).toBe(true);
   });
 
-  it("官方无数据时五张图都显示空状态与具体原因，且不静默切演示数据", async () => {
+  it("官方无数据时四张图都显示空状态与具体原因，且不静默切演示数据", async () => {
     vi.stubGlobal(
       "fetch",
       createFetchMock({
@@ -190,7 +224,7 @@ describe("天气探索页", () => {
     renderPage();
     await screen.findByTestId("chart-line");
     await waitFor(() => {
-      expect(screen.getAllByTestId(/^chart-.*-empty$/)).toHaveLength(5);
+      expect(screen.getAllByTestId(/^chart-.*-empty$/)).toHaveLength(4);
     });
 
     expect(screen.queryByTestId("demo-banner")).not.toBeInTheDocument();
@@ -208,43 +242,5 @@ describe("天气探索页", () => {
     const error = await screen.findByTestId("stations-error");
     expect(error).toHaveTextContent("連不上後端伺服器");
     expect(screen.getByTestId("charts-no-selection")).toBeInTheDocument();
-  });
-
-  it("CSV 导入完成后切到 mode=imported 并显示匯入資料横幅", async () => {
-    const fetchMock = createFetchMock();
-    vi.stubGlobal("fetch", fetchMock);
-    renderPage();
-    await waitForFiveCharts();
-
-    const fileInput = screen.getByLabelText("選擇 CSV 檔案") as HTMLInputElement;
-    fireEvent.change(fileInput, {
-      target: {
-        files: [new File(["a,b\n"], "hko.csv", { type: "text/csv" })],
-      },
-    });
-    fireEvent.submit(
-      screen.getByTestId("import-submit").closest("form") as HTMLFormElement,
-    );
-
-    await screen.findByTestId("import-report");
-    const banner = await screen.findByTestId("demo-banner");
-    await waitFor(() => expect(banner).toHaveAttribute("data-mode", "imported"));
-    expect(banner).toHaveTextContent("匯入資料");
-
-    const urls = fetchMock.mock.calls.map(([input]) => String(input));
-    expect(
-      urls.some((url) => url.includes("/weather/daily") && url.includes("mode=imported")),
-    ).toBe(true);
-  });
-
-  it("日期不成对时提示错误", async () => {
-    vi.stubGlobal("fetch", createFetchMock());
-    renderPage();
-
-    fireEvent.change(screen.getByLabelText("開始日期"), {
-      target: { value: "2026-09-10" },
-    });
-
-    expect(screen.getByTestId("date-error")).toHaveTextContent("必須成對填寫");
   });
 });

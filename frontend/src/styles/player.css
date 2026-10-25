@@ -547,3 +547,73 @@
   background-color: var(--color-compare-soft);
   font-size: 1.4rem;
 }
+
+/* ---------- 阶段 4.6：代码面板下方的内联比较互动区 ---------- */
+.inline-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--color-border);
+}
+
+.inline-compare__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.inline-compare__question {
+  color: var(--color-ink);
+}
+
+.inline-compare__values {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+
+.inline-compare__mark {
+  color: var(--color-compare);
+}
+
+.inline-compare__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.inline-compare__feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.inline-compare__verdict {
+  color: var(--color-primary-strong);
+  font-weight: 650;
+}
+
+.inline-compare__explanation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 4px solid var(--color-compare);
+  border-radius: var(--radius-chip);
+  background-color: var(--color-compare-soft);
+}
+
+.inline-compare__explanation-title {
+  color: var(--color-ink-soft);
+}
+
+.inline-compare__idle {
+  margin: 0;
+  color: var(--color-ink-soft);
+}

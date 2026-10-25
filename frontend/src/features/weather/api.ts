@@ -280,6 +280,3 @@ export function useWeatherImport(): UseMutationResult<ImportResponse, Error, Fil
     retry: false,
   });
 }
-
-/** 页面默认选中的指标：阶段 3 只展示可回溯的逐日气温。 */
-export const DEFAULT_METRICS: readonly DailyMetric[] = ["tmax", "tmin"];

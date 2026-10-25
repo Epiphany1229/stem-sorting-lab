@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { formatTranslation } from "../../../i18n/dictionary";
@@ -14,6 +14,11 @@ const rows: DataTableRow[] = [
   { key: "a", cells: ["2026-09-01", "30.1"] },
   { key: "b", cells: ["2026-09-02", "31.4"] },
 ];
+
+const manyRows: DataTableRow[] = Array.from({ length: 8 }, (_, index) => ({
+  key: `row-${index}`,
+  cells: [`2026-09-0${index + 1}`, `${30 + index}.0`],
+}));
 
 describe("可访问数据表", () => {
   it("有真实 table/caption/表头，并显示双语标题与行数", () => {
@@ -39,6 +44,40 @@ describe("可访问数据表", () => {
 
     const scroll = figure.querySelector('[role="region"]');
     expect(scroll).toHaveAttribute("tabindex", "0");
+
+    // 行数不超过 5 时不需要展开按钮。
+    expect(within(figure).queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("超过 5 行时默认只显示前 5 行，可展开/收起并更新 aria-expanded", () => {
+    render(
+      <DataTable
+        testId="collapse-table"
+        caption={formatTranslation("weather.table.coverageCaption", {})}
+        columns={columns}
+        rows={manyRows}
+      />,
+    );
+
+    const figure = screen.getByTestId("collapse-table");
+    const table = within(figure).getByRole("table");
+    expect(within(table).getAllByRole("row")).toHaveLength(6); // 表头 + 前 5 行
+    expect(within(figure).getByText("顯示前 5 列，共 8 列")).toBeInTheDocument();
+
+    const toggle = within(figure).getByTestId("collapse-table-toggle");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveTextContent("展開全部");
+    expect(toggle.getAttribute("aria-controls")).toBe(table.id);
+
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(toggle).toHaveTextContent("收起");
+    expect(within(table).getAllByRole("row")).toHaveLength(9); // 表头 + 8 行
+    expect(within(figure).getByText("共 8 列")).toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(within(table).getAllByRole("row")).toHaveLength(6);
   });
 
   it("空数据时显示暫無可用資料、双语原因与原始 reason", () => {

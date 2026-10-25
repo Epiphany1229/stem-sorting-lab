@@ -10,6 +10,7 @@ import { BilingualText } from "../i18n/BilingualText";
 import { formatTranslation, zh } from "../i18n/dictionary";
 import { BarChart } from "./BarChart";
 import { CodePanel } from "./CodePanel";
+import { InlineComparePanel } from "./InlineComparePanel";
 import { PredictionDialog } from "./PredictionDialog";
 import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 import { useTracePlayback, type PlaybackPhase } from "./useTracePlayback";
@@ -17,8 +18,13 @@ import type { BubbleTrace } from "./types";
 
 interface TracePlayerProps {
   readonly trace: BubbleTrace;
-  /** 引导模式：compare 事件前弹预测题；自由实验模式不弹。 */
-  readonly guidedMode: boolean;
+  /** 引导模式（阶段 2 弹窗式预测）：只在 /lab 使用。 */
+  readonly guidedMode?: boolean;
+  /**
+   * 阶段 4.6：在代码面板下方常驻内联比较区，不弹窗、不阻塞播放。
+   * /weather-sort 使用；与 guidedMode 互斥（inline 优先，不会暂停播放）。
+   */
+  readonly inlinePrompt?: boolean;
   /** 天气轨迹的数值单位（如 "°C"）；阶段 2 的整数轨迹不传。 */
   readonly unit?: string;
 }
@@ -43,9 +49,15 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
   );
 }
 
-export function TracePlayer({ trace, guidedMode, unit }: TracePlayerProps) {
+export function TracePlayer({
+  trace,
+  guidedMode = false,
+  inlinePrompt = false,
+  unit,
+}: TracePlayerProps) {
   const reducedMotion = usePrefersReducedMotion();
-  const playback = useTracePlayback(trace, guidedMode);
+  // 内联互动区只展示题目与反馈，不暂停播放；弹窗模式仅在 /lab 使用。
+  const playback = useTracePlayback(trace, guidedMode && !inlinePrompt);
   const { phase, step, total, currentEvent, currentState, prediction } = playback;
 
   // 键盘操作：空格播放/暂停，←/→ 步进；输入控件与弹窗内的按键不受影响。
@@ -118,6 +130,12 @@ export function TracePlayer({ trace, guidedMode, unit }: TracePlayerProps) {
             highlightedLineIds={currentEvent?.code_line_ids ?? []}
             reducedMotion={reducedMotion}
           />
+          {inlinePrompt ? (
+            <InlineComparePanel
+              key={currentEvent?.step_id ?? "idle"}
+              event={currentEvent}
+            />
+          ) : null}
         </div>
       </div>
 

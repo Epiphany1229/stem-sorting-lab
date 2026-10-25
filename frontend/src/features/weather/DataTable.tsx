@@ -1,10 +1,13 @@
 /**
- * 可访问数据表：每张图下方固定附一份。
+ * 可访问数据表：每张图 / 每个覆盖率区块下方附一份。
  *
  * - 真实 <table> + <caption> + th scope，屏幕阅读器可理解表头；
+ * - 默认只显示前 5 行，双语「展開/收起」按钮带 aria-expanded（表格很大时先看重点）；
  * - 外层可聚焦（tabIndex=0）以便键盘横向滚动，caption 也是 region 的可读名称；
  * - 没有数据时显示「暫無可用資料」与后端 reason 的双语说明，不留空白。
  */
+import { useId, useState } from "react";
+
 import { BilingualText } from "../../i18n/BilingualText";
 import type { Translation } from "../../i18n/dictionary";
 import { formatTranslation } from "../../i18n/dictionary";
@@ -28,10 +31,28 @@ export interface DataTableProps {
   readonly columns: readonly DataTableColumn[];
   readonly rows: readonly DataTableRow[];
   readonly emptyReason?: string | null;
+  /** 折叠时显示的行数，默认 5。 */
+  readonly initialRows?: number;
 }
 
-export function DataTable({ testId, caption, columns, rows, emptyReason = null }: DataTableProps) {
-  const rowCount = formatTranslation("weather.table.rowCount", { count: rows.length });
+export function DataTable({
+  testId,
+  caption,
+  columns,
+  rows,
+  emptyReason = null,
+  initialRows = 5,
+}: DataTableProps) {
+  const [expanded, setExpanded] = useState(false);
+  const tableId = `weather-table-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const hasMoreRows = rows.length > initialRows;
+  const visibleRows = hasMoreRows && !expanded ? rows.slice(0, initialRows) : rows;
+  const countText = formatTranslation(
+    hasMoreRows && !expanded ? "weather.table.rowCountCollapsed" : "weather.table.rowCount",
+    hasMoreRows && !expanded
+      ? { shown: initialRows, count: rows.length }
+      : { count: rows.length },
+  );
 
   return (
     <figure className="weather-table" data-testid={testId}>
@@ -41,7 +62,7 @@ export function DataTable({ testId, caption, columns, rows, emptyReason = null }
         role="region"
         aria-label={caption["zh-Hant"]}
       >
-        <table className="weather-table__table">
+        <table className="weather-table__table" id={tableId}>
           <caption className="weather-table__caption">
             <span className="weather-table__caption-zh" lang="zh-Hant">
               {caption["zh-Hant"]}
@@ -87,7 +108,7 @@ export function DataTable({ testId, caption, columns, rows, emptyReason = null }
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
+              visibleRows.map((row) => (
                 <tr key={row.key}>
                   {columns.map((column, index) => (
                     <td
@@ -103,9 +124,28 @@ export function DataTable({ testId, caption, columns, rows, emptyReason = null }
           </tbody>
         </table>
       </div>
-      <p className="weather-table__count">
-        <BilingualText size="xs" zh={rowCount["zh-Hant"]} en={rowCount.en} />
-      </p>
+
+      <div className="weather-table__footer">
+        <p className="weather-table__count">
+          <BilingualText size="xs" zh={countText["zh-Hant"]} en={countText.en} />
+        </p>
+        {hasMoreRows ? (
+          <button
+            type="button"
+            className="btn btn--ghost weather-table__toggle"
+            aria-expanded={expanded}
+            aria-controls={tableId}
+            data-testid={`${testId}-toggle`}
+            onClick={() => setExpanded((current) => !current)}
+          >
+            <BilingualText
+              as="span"
+              size="xs"
+              tkey={expanded ? "weather.table.collapse" : "weather.table.expand"}
+            />
+          </button>
+        ) : null}
+      </div>
     </figure>
   );
 }

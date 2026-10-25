@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import ast
 import inspect
+import io
+import tokenize
 from dataclasses import dataclass
 
 from backend.app.algorithms import bubble as bubble_module
@@ -167,32 +169,103 @@ class _LineMapBuilder:
 
 
 def _load_source_lines() -> list[str]:
-    """读取实际执行的冒泡排序模块源码（模块级从文件第 1 行开始）。"""
+    """读取实际执行的冒泡排序模块源码（模块级从文件第 1 行开始，用于 AST 绝对行号）。"""
     source_lines, start_lineno = inspect.getsourcelines(bubble_module)
     if start_lineno != 0:
         raise LineMapError("冒泡排序模块的源码行号偏移异常，无法按模块行号建立映射")
     return [line.rstrip("\n") for line in source_lines]
 
 
+def _load_function_line_range() -> tuple[int, int]:
+    """返回 ``bubble_sort`` 函数在模块中的行号范围（闭区间）。
+
+    学生只需要看到"被演示的这段算法函数"，不需要模块级 import/docstring。
+    这里仍保留**模块绝对行号**，因此事件的 ``code_line_ids`` 与插桩映射不受影响。
+    """
+    function_lines, start_lineno = inspect.getsourcelines(bubble_module.bubble_sort)
+    if start_lineno < 1 or not function_lines:
+        raise LineMapError("无法定位冒泡排序函数的源码行范围")
+    return start_lineno, start_lineno + len(function_lines) - 1
+
+
+def _docstring_linenos(module_source: str) -> set[int]:
+    """返回 ``bubble_sort`` 文档字符串占用的行号集合（展示时清空）。"""
+    tree = ast.parse(module_source)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "bubble_sort":
+            body = node.body
+            if body and isinstance(body[0], ast.Expr):
+                value = body[0].value
+                if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                    start = body[0].lineno
+                    end = getattr(body[0], "end_lineno", start) or start
+                    return set(range(start, end + 1))
+    return set()
+
+
+def _comment_columns(module_source: str) -> dict[int, int]:
+    """返回每一行行内注释的起始列（整行注释为 0）。"""
+    columns: dict[int, int] = {}
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(module_source).readline):
+            if token.type == tokenize.COMMENT:
+                columns[token.start[0]] = token.start[1]
+    except tokenize.TokenError:
+        return {}
+    return columns
+
+
+def _display_text(
+    text: str,
+    *,
+    lineno: int,
+    comment_columns: dict[int, int],
+    docstring_linenos: set[int],
+) -> str:
+    """生成学生可见代码文本：去掉文档字符串与注释，只保留可执行代码。
+
+    源码内部注释按项目约定使用简体中文；学生界面不允许出现简体，
+    因此这里不展示注释，教学说明由后端的双语 ``explanation`` 承担。
+    行号与行映射保持不变。
+    """
+    if lineno in docstring_linenos:
+        return ""
+    column = comment_columns.get(lineno)
+    if column is None:
+        return text
+    return text[:column].rstrip()
+
+
 def build_bubble_line_map() -> BubbleLineMap:
     """建立冒泡排序的源码行与插桩映射；失败即抛 LineMapError。"""
     source_lines = _load_source_lines()
-    tree = ast.parse("\n".join(source_lines))
+    module_source = "\n".join(source_lines)
+    tree = ast.parse(module_source)
     mappings = _LineMapBuilder().build(tree)
     emit_linenos = {mapping.emit_lineno for mapping in mappings}
+    first_lineno, last_lineno = _load_function_line_range()
+    comment_columns = _comment_columns(module_source)
+    docstring_linenos = _docstring_linenos(module_source)
     lines = tuple(
         SourceLine(
             lineno=lineno,
-            text=text,
+            text=_display_text(
+                text,
+                lineno=lineno,
+                comment_columns=comment_columns,
+                docstring_linenos=docstring_linenos,
+            ),
             kind="trace" if lineno in emit_linenos else "normal",
         )
         for lineno, text in enumerate(source_lines, start=1)
+        if first_lineno <= lineno <= last_lineno
     )
     for mapping in mappings:
-        if not 1 <= mapping.target_lineno <= len(lines):
-            raise LineMapError(
-                f"{mapping.event_type} 的目标行 {mapping.target_lineno} 不在源码行范围内"
-            )
+        for lineno in (mapping.emit_lineno, mapping.target_lineno):
+            if not first_lineno <= lineno <= last_lineno:
+                raise LineMapError(
+                    f"{mapping.event_type} 的行映射（第 {lineno} 行）落在展示函数范围之外"
+                )
     return BubbleLineMap(lines=lines, mappings=mappings)
 
 

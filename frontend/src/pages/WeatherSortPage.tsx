@@ -35,7 +35,6 @@ export default function WeatherSortPage() {
   const [end, setEnd] = useState(() => searchParams.get("end") ?? "");
   const [direction, setDirection] = useState<Direction>("asc");
   const [earlyExit, setEarlyExit] = useState(true);
-  const [guidedMode, setGuidedMode] = useState(false);
   const [parallel, setParallel] = useState(false);
 
   const stationsQuery = useWeatherStations("official");
@@ -51,7 +50,8 @@ export default function WeatherSortPage() {
     if (!list || list.length === 0) {
       return;
     }
-    const first = list.find((item) => item.available_days > 0) ?? list[0];
+    const first =
+      list.find((item) => item.available_days > 0 && item.metrics.length > 0) ?? list[0];
     setStation(first.id);
   }, [station, stationsQuery.data]);
 
@@ -136,8 +136,6 @@ export default function WeatherSortPage() {
         onDirectionChange={setDirection}
         earlyExit={earlyExit}
         onEarlyExitChange={setEarlyExit}
-        guidedMode={guidedMode}
-        onGuidedModeChange={setGuidedMode}
         parallel={parallel}
         onParallelChange={setParallel}
         start={start}
@@ -166,7 +164,6 @@ export default function WeatherSortPage() {
                 trace={state.trace}
                 loading={state.loading}
                 error={state.error}
-                guidedMode={guidedMode}
                 unit={unit}
                 onRetry={() => {
                   void query.refetch();
@@ -181,7 +178,6 @@ export default function WeatherSortPage() {
             trace={activeState.trace}
             loading={activeState.loading}
             error={activeState.error}
-            guidedMode={guidedMode}
             unit={unit}
             onRetry={() => {
               void activeQuery.refetch();

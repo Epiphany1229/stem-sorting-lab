@@ -63,9 +63,11 @@ describe("阶段 3 天气双语文案", () => {
       "weather.chart.bar.titleFallback",
       "weather.chart.bar.descFallback",
       "weather.chart.hist.title",
-      "weather.chart.scatter.descMean",
       "weather.chart.donut.desc",
-      "weather.import.failed",
+      "weather.table.expand",
+      "weather.table.collapse",
+      "weather.options.title",
+      "weather.stations.noMatch",
       "weather.table.empty",
     ] as const;
 
@@ -74,13 +76,9 @@ describe("阶段 3 天气双语文案", () => {
     }
   });
 
-  it("图表红线写清楚：柱状图不冒充降雨、散点图不冒充湿度、环形图只讲天数占比", () => {
+  it("图表红线写清楚：柱状图不冒充降雨、环形图只讲天数占比", () => {
     expect(dictionary["weather.chart.bar.descFallback"]["zh-Hant"]).toContain("這不是降雨資料");
     expect(dictionary["weather.chart.bar.descFallback"].en).toContain("not rainfall data");
-    expect(dictionary["weather.chart.scatter.descMean"]["zh-Hant"]).toContain(
-      "這不是濕度資料",
-    );
-    expect(dictionary["weather.chart.scatter.descMean"].en).toContain("not humidity data");
 
     const donutDesc = dictionary["weather.chart.donut.desc"];
     expect(donutDesc["zh-Hant"]).toContain("天數佔比");

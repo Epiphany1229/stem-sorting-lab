@@ -317,16 +317,36 @@ def test_swap_target_is_the_swap_assignment_not_the_flag_assignment() -> None:
     assert isinstance(assignments[0].targets[0], ast.Tuple)
 
 
-def test_code_lines_come_from_real_executed_module_source() -> None:
-    """code.lines 必须来自实际执行的模块源码：行号、文本、trace 标记、行组全部核对。"""
+def test_code_lines_come_from_real_executed_function_source() -> None:
+    """code.lines 只展示算法函数本体，且去掉注释/文档字符串（学生界面不允许简体）。
+
+    需求：学生不需要看到模块级 import/docstring，也不需要看内部简体注释；
+    但行号仍是模块绝对行号，事件 ``code_line_ids`` 必须仍能解析。
+    """
     trace = _trace([3, 1, 2])
-    source_lines = inspect.getsource(bubble_module).splitlines()
-    assert len(trace.code.lines) == len(source_lines)
+    module_lines = inspect.getsource(bubble_module).splitlines()
+    function_lines, function_start = inspect.getsourcelines(bubble_module.bubble_sort)
+    expected_count = len(function_lines)
+
+    assert len(trace.code.lines) == expected_count
+    assert trace.code.lines[0].lineno == function_start
+    assert trace.code.lines[0].text.lstrip().startswith("def bubble_sort(")
+    assert trace.code.lines[-1].text.strip() == "return arr"
+
+    # 模块级内容（docstring / import）不得出现
+    assert not any(line.text.lstrip().startswith("from __future__") for line in trace.code.lines)
+    assert not any(line.text.lstrip().startswith("from collections") for line in trace.code.lines)
 
     line_ids = set()
     for line in trace.code.lines:
         assert line.line_id == f"L{line.lineno}"
-        assert line.text == source_lines[line.lineno - 1]
+        # 不含注释与文档字符串
+        assert "#" not in line.text
+        assert '"""' not in line.text
+        # 可执行部分必须与真实源码一致（去掉注释后）
+        original = module_lines[line.lineno - 1]
+        if line.text.strip():
+            assert original.startswith(line.text.rstrip())
         line_ids.add(line.line_id)
 
     trace_linenos = {line.lineno for line in trace.code.lines if line.kind == "trace"}

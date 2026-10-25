@@ -202,19 +202,52 @@ describe("天气排序页：复用阶段 2 播放器", () => {
     expect(within(tminPanel).getByTestId("step-progress")).toHaveTextContent("已播放 0 /");
   });
 
-  it("引导模式直接复用阶段 2 的教学预测弹窗", async () => {
+  it("内联比较区常驻代码面板下方：非 compare 显示状态说明，compare 出题并即时反馈", async () => {
     vi.stubGlobal("fetch", createFetchMock());
     renderPage();
     await screen.findByTestId("trace-player");
 
-    fireEvent.click(screen.getByRole("radio", { name: "引導模式" }));
-    fireEvent.click(nextButton()); // mark_sorted，不弹窗
+    const inline = screen.getByTestId("inline-compare");
+    expect(inline).toHaveAttribute("aria-live", "polite");
+    expect(screen.getByTestId("inline-compare-idle")).toBeInTheDocument();
+    // 不再使用弹窗式引导模式。
     expect(screen.queryByTestId("prediction-dialog")).not.toBeInTheDocument();
-    fireEvent.click(nextButton()); // 即将执行 compare，弹预测
+    expect(screen.queryByRole("radio", { name: "引導模式" })).not.toBeInTheDocument();
 
-    expect(screen.getByTestId("prediction-dialog")).toBeInTheDocument();
-    expect(screen.getByText("下一步這兩個數需要交換嗎？")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "需要" })).toBeInTheDocument();
+    fireEvent.click(nextButton()); // mark_sorted：非 compare
+    expect(screen.getByTestId("inline-compare-idle")).toBeInTheDocument();
+
+    fireEvent.click(nextButton()); // compare：出题
+    expect(screen.getByTestId("inline-compare-question")).toBeInTheDocument();
+    expect(screen.getByText("這兩個數需要交換嗎？")).toBeInTheDocument();
+    expect(screen.queryByTestId("prediction-dialog")).not.toBeInTheDocument();
+
+    // 第一个 compare 是 30.2 vs 27.5，升序需要交换。
+    fireEvent.click(screen.getByRole("button", { name: "需要" }));
+    const feedback = screen.getByTestId("inline-compare-feedback");
+    expect(feedback).toHaveTextContent("答對了");
+    expect(screen.getByTestId("inline-compare-answer")).toHaveTextContent("需要交換");
+    // 反馈里带后端 explanation（包含真实日期与温度）。
+    expect(feedback).toHaveTextContent("9 月 1 日");
+    expect(feedback).toHaveTextContent("30.2°C");
+    // 答题不阻塞播放：进度不变，仍可继续下一步。
+    expect(screen.getByTestId("step-progress")).toHaveTextContent("已播放 2 /");
+    fireEvent.click(nextButton());
+    expect(screen.getByTestId("step-progress")).toHaveTextContent("已播放 3 /");
+  });
+
+  it("内联比较区答错时给出纠正反馈，判定只读后端 will_swap", async () => {
+    vi.stubGlobal("fetch", createFetchMock());
+    renderPage();
+    await screen.findByTestId("trace-player");
+
+    fireEvent.click(nextButton());
+    fireEvent.click(nextButton());
+    fireEvent.click(screen.getByRole("button", { name: "不需要" }));
+
+    expect(screen.getByTestId("inline-compare-feedback")).toHaveTextContent("答錯了");
+    expect(screen.getByTestId("inline-compare-answer")).toHaveTextContent("需要交換");
+    expect(screen.getByText("這一步的解釋")).toBeInTheDocument();
   });
 
   it("直接打开本页时用 coverage 返回的真实窗口作为默认日期", async () => {

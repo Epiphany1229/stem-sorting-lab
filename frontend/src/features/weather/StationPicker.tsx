@@ -1,5 +1,8 @@
 /**
- * 测站多选：显示官方中英文名、起始年与窗口内可用天数；不可用测站明确标注。
+ * 测站多选：只列出在当前窗口内真的有资料的测站，只显示中英文站名。
+ *
+ * 数据不可用的测站（available_days === 0 或 metrics 为空）不显示为可选项；
+ * 起始年、可用天数等信息不再展示，避免选择器变成小型仪表盘。
  * 支持名称/代号筛选，便于在 39 站里快速找到目标。
  */
 import { useMemo, useState } from "react";
@@ -20,6 +23,13 @@ export interface StationPickerProps {
   readonly onClear: () => void;
 }
 
+/** 过滤出真正可以选择的测站；页面自动选中也复用这条规则。 */
+export function selectableStations(stations: readonly Station[] | undefined): readonly Station[] {
+  return (stations ?? []).filter(
+    (station) => station.available_days > 0 && station.metrics.length > 0,
+  );
+}
+
 export function StationPicker({
   stations,
   loading,
@@ -31,7 +41,7 @@ export function StationPicker({
   onClear,
 }: StationPickerProps) {
   const [filter, setFilter] = useState("");
-  const allStations = stations ?? [];
+  const allStations = selectableStations(stations);
 
   const filtered = useMemo(() => {
     const needle = filter.trim().toLowerCase();
@@ -107,16 +117,13 @@ export function StationPicker({
             </button>
           </div>
 
-          <ul className="weather-stations__list">
-            {filtered.map((station) => {
-              const unavailable = station.available_days <= 0 || station.last_date === null;
-              const startYear = formatTranslation("weather.stations.startYear", {
-                year: station.start_year,
-              });
-              const availableDays = formatTranslation("weather.stations.availableDays", {
-                days: station.available_days,
-              });
-              return (
+          {filtered.length === 0 ? (
+            <p className="weather-stations__empty" data-testid="stations-no-match">
+              <BilingualText tkey="weather.stations.noMatch" />
+            </p>
+          ) : (
+            <ul className="weather-stations__list">
+              {filtered.map((station) => (
                 <li key={station.id} className="weather-station">
                   <label className="weather-station__label">
                     <input
@@ -129,31 +136,14 @@ export function StationPicker({
                         as="span"
                         size="sm"
                         zh={station.name_zh_hant}
-                        en={`${station.name_en} (${station.id})`}
+                        en={station.name_en}
                       />
-                      <span className="weather-station__meta">
-                        <BilingualText
-                          size="xs"
-                          zh={startYear["zh-Hant"]}
-                          en={startYear.en}
-                        />
-                        <BilingualText
-                          size="xs"
-                          zh={availableDays["zh-Hant"]}
-                          en={availableDays.en}
-                        />
-                        {unavailable ? (
-                          <span className="weather-station__unavailable">
-                            <BilingualText size="xs" tkey="weather.stations.unavailable" />
-                          </span>
-                        ) : null}
-                      </span>
                     </span>
                   </label>
                 </li>
-              );
-            })}
-          </ul>
+              ))}
+            </ul>
+          )}
 
           <p className="weather-stations__notice">
             <BilingualText size="xs" tkey="weather.stations.notice" />

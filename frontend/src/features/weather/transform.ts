@@ -2,7 +2,7 @@
  * 图表数据准备：把后端逐日观测转换成各图表的纯数据形状。
  *
  * 这里不做任何伪造或插值：缺失日期在折线图里是 null（connectgaps=false 断开），
- * 在直方图/散点图里直接不参与统计；温度数据永远不会被当作降雨或湿度。
+ * 在直方图里直接不参与统计；温度数据永远不会被当作降雨或湿度。
  */
 import type { TranslationKey } from "../../i18n/dictionary";
 import { translate } from "../../i18n/dictionary";
@@ -297,133 +297,6 @@ export function computeHistogramBins(
   }
 
   return { start: min, end: max, size, bins, total: allValues.length };
-}
-
-/* ------------------------------------------------------------------ */
-/* 散点图：同日 tmax vs tmean（阶段 3）；tmax vs 湿度为阶段 4 预留        */
-/* ------------------------------------------------------------------ */
-
-export interface ScatterPoint {
-  readonly date: string;
-  readonly x: number;
-  readonly y: number;
-  readonly xRaw: string;
-  readonly yRaw: string;
-}
-
-export interface ScatterSeries {
-  readonly stationId: string;
-  readonly stationNameZh: string;
-  readonly stationNameEn: string;
-  readonly labelZh: string;
-  readonly labelEn: string;
-  readonly points: readonly ScatterPoint[];
-}
-
-export function buildScatterSeries(
-  rows: readonly DailyRow[],
-  stations: readonly Station[],
-  window: WeatherWindow | null,
-): ScatterSeries[] {
-  const inWindow = (date: string) =>
-    !window || (date >= window.start && date <= window.end);
-
-  return stations.map((station) => {
-    const byDate = new Map<string, { tmax?: DailyRow; tmean?: DailyRow }>();
-    for (const row of rows) {
-      if (row.station_id !== station.id || !inWindow(row.obs_date)) {
-        continue;
-      }
-      const slot = byDate.get(row.obs_date) ?? {};
-      if (row.metric === "tmax") {
-        slot.tmax = row;
-      } else if (row.metric === "tmean") {
-        slot.tmean = row;
-      }
-      byDate.set(row.obs_date, slot);
-    }
-    const points: ScatterPoint[] = [];
-    for (const [date, slot] of byDate) {
-      if (slot.tmax && slot.tmean) {
-        points.push({
-          date,
-          x: slot.tmax.value,
-          y: slot.tmean.value,
-          xRaw: slot.tmax.value_raw,
-          yRaw: slot.tmean.value_raw,
-        });
-      }
-    }
-    points.sort((a, b) => a.date.localeCompare(b.date));
-    return {
-      stationId: station.id,
-      stationNameZh: station.name_zh_hant,
-      stationNameEn: station.name_en,
-      labelZh: station.name_zh_hant,
-      labelEn: station.name_en,
-      points,
-    };
-  });
-}
-
-/** 阶段 4 预留：相对湿度观测（官方只有天文台总部单站、无历史接口）。 */
-export interface HumidityObservation {
-  readonly date: string;
-  readonly value: number;
-}
-
-export interface HumiditySeries {
-  readonly stationId: string;
-  readonly stationNameZh: string;
-  readonly stationNameEn: string;
-  readonly points: readonly HumidityObservation[];
-}
-
-/**
- * 阶段 4 预留：只有接口真正返回湿度时才能调用。
- * 阶段 3 页面不传任何湿度数据，散点图固定显示 tmax vs tmean。
- */
-export function buildHumidityScatterSeries(
-  rows: readonly DailyRow[],
-  stations: readonly Station[],
-  humidity: readonly HumiditySeries[],
-  window: WeatherWindow | null,
-): ScatterSeries[] {
-  const humidityByStation = new Map(humidity.map((item) => [item.stationId, item] as const));
-  const inWindow = (date: string) => !window || (date >= window.start && date <= window.end);
-
-  return stations.map((station) => {
-    const source = humidityByStation.get(station.id);
-    const tmaxByDate = new Map<string, DailyRow>();
-    for (const row of rows) {
-      if (row.station_id === station.id && row.metric === "tmax" && inWindow(row.obs_date)) {
-        tmaxByDate.set(row.obs_date, row);
-      }
-    }
-    const points: ScatterPoint[] = [];
-    for (const observation of source?.points ?? []) {
-      const tmaxRow = tmaxByDate.get(observation.date);
-      if (!tmaxRow) {
-        continue;
-      }
-      points.push({
-        date: observation.date,
-        x: tmaxRow.value,
-        y: observation.value,
-        xRaw: tmaxRow.value_raw,
-        yRaw: String(observation.value),
-      });
-    }
-    points.sort((a, b) => a.date.localeCompare(b.date));
-    return {
-      stationId: station.id,
-      stationNameZh: station.name_zh_hant,
-      stationNameEn: station.name_en,
-      labelZh: station.name_zh_hant,
-      labelEn: station.name_en,
-      points,
-    };
-  });
 }
 
 /* ------------------------------------------------------------------ */

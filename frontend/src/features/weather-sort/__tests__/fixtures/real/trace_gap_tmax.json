@@ -17,7 +17,7 @@
       "quality_flag": "C",
       "source": {
         "dataset": "CLMMAXT",
-        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "fetched_at": "2026-10-25T11:04:22.291237+00:00",
         "mode": "official"
       }
     },
@@ -32,7 +32,7 @@
       "quality_flag": "C",
       "source": {
         "dataset": "CLMMAXT",
-        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "fetched_at": "2026-10-25T11:04:22.291237+00:00",
         "mode": "official"
       }
     },
@@ -47,7 +47,7 @@
       "quality_flag": "C",
       "source": {
         "dataset": "CLMMAXT",
-        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "fetched_at": "2026-10-25T11:04:22.291237+00:00",
         "mode": "official"
       }
     },
@@ -62,7 +62,7 @@
       "quality_flag": "C",
       "source": {
         "dataset": "CLMMAXT",
-        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "fetched_at": "2026-10-25T11:04:22.291237+00:00",
         "mode": "official"
       }
     },
@@ -77,7 +77,7 @@
       "quality_flag": "C",
       "source": {
         "dataset": "CLMMAXT",
-        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "fetched_at": "2026-10-25T11:04:22.291237+00:00",
         "mode": "official"
       }
     },
@@ -92,7 +92,7 @@
       "quality_flag": "C",
       "source": {
         "dataset": "CLMMAXT",
-        "fetched_at": "2026-10-23T12:29:24.898432+00:00",
+        "fetched_at": "2026-10-25T11:04:22.291237+00:00",
         "mode": "official"
       }
     }
@@ -100,102 +100,6 @@
   "code": {
     "language": "python",
     "lines": [
-      {
-        "line_id": "L1",
-        "lineno": 1,
-        "text": "\"\"\"冒泡排序：唯一可信源码。",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L2",
-        "lineno": 2,
-        "text": "",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L3",
-        "lineno": 3,
-        "text": "学生看到的代码就是这里被真实执行的代码：轨迹插桩 ``recorder.emit_*`` 直接写在",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L4",
-        "lineno": 4,
-        "text": "函数体里，展示时按行号标记为 trace 行，不存在第二份“教学版”源码。",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L5",
-        "lineno": 5,
-        "text": "\"\"\"",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L6",
-        "lineno": 6,
-        "text": "",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L7",
-        "lineno": 7,
-        "text": "from __future__ import annotations",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L8",
-        "lineno": 8,
-        "text": "",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L9",
-        "lineno": 9,
-        "text": "from collections.abc import Sequence",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L10",
-        "lineno": 10,
-        "text": "",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L11",
-        "lineno": 11,
-        "text": "from backend.app.trace.recorder import NullRecorder, Tracer",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L12",
-        "lineno": 12,
-        "text": "",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L13",
-        "lineno": 13,
-        "text": "# 未传入 tracer 时使用全空接收器：纯算法调用不产生任何轨迹数据结构。",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L14",
-        "lineno": 14,
-        "text": "_NULL_RECORDER: Tracer = NullRecorder()",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L15",
-        "lineno": 15,
-        "text": "",
-        "kind": "normal"
-      },
-      {
-        "line_id": "L16",
-        "lineno": 16,
-        "text": "",
-        "kind": "normal"
-      },
       {
         "line_id": "L17",
         "lineno": 17,
@@ -235,7 +139,7 @@
       {
         "line_id": "L23",
         "lineno": 23,
-        "text": "    \"\"\"冒泡排序：返回排序后的新列表，传入 tracer 时同步产生真实执行轨迹。\"\"\"",
+        "text": "",
         "kind": "normal"
       },
       {
@@ -277,7 +181,7 @@
       {
         "line_id": "L30",
         "lineno": 30,
-        "text": "        # 进入新一轮：上一轮冒泡到末尾的元素已经确定最终位置。",
+        "text": "",
         "kind": "normal"
       },
       {
@@ -307,7 +211,7 @@
       {
         "line_id": "L35",
         "lineno": 35,
-        "text": "            # 先记录“即将比较”，此时数组还没有任何变化。",
+        "text": "",
         "kind": "normal"
       },
       {
@@ -319,7 +223,7 @@
       {
         "line_id": "L37",
         "lineno": 37,
-        "text": "            # 升序：左 > 右 才交换；降序：左 < 右 才交换。",
+        "text": "",
         "kind": "normal"
       },
       {
@@ -337,7 +241,7 @@
       {
         "line_id": "L40",
         "lineno": 40,
-        "text": "                # 交换赋值之后记录，才能拿到真实的前后状态。",
+        "text": "",
         "kind": "normal"
       },
       {
@@ -367,7 +271,7 @@
       {
         "line_id": "L45",
         "lineno": 45,
-        "text": "    # 只有“还有轮次没跑就退出”才算提前结束；最后一轮自然退出不算。",
+        "text": "",
         "kind": "normal"
       },
       {

@@ -1,5 +1,6 @@
 /**
- * 排序条件控件：测站、指标、方向、日期、提前结束、引导模式和并排比较。
+ * 排序条件控件：测站、指标、方向、日期、提前结束与并排比较。
+ * 阶段 4.6 移除「引导模式 / 自由实验」开关：比较互动改为代码面板下方常驻内联区。
  * 所有输入变化都会成为新的查询条件，从而让播放器回到 idle（见页面与 useTracePlayback）。
  */
 import { BilingualText } from "../../i18n/BilingualText";
@@ -7,6 +8,7 @@ import { formatTranslation, translate } from "../../i18n/dictionary";
 import type { Direction, WeatherMetric } from "../../player/types";
 import type { Station } from "../weather/types";
 import { weatherErrorKey } from "../weather/api";
+import { selectableStations } from "../weather/StationPicker";
 import { metricLabelEn, metricLabelZh, WEATHER_METRICS } from "./weatherSortHelpers";
 
 export interface WeatherSortControlsProps {
@@ -21,8 +23,6 @@ export interface WeatherSortControlsProps {
   readonly onDirectionChange: (direction: Direction) => void;
   readonly earlyExit: boolean;
   readonly onEarlyExitChange: (earlyExit: boolean) => void;
-  readonly guidedMode: boolean;
-  readonly onGuidedModeChange: (guidedMode: boolean) => void;
   readonly parallel: boolean;
   readonly onParallelChange: (parallel: boolean) => void;
   readonly start: string;
@@ -30,6 +30,11 @@ export interface WeatherSortControlsProps {
   readonly onStartChange: (start: string) => void;
   readonly onEndChange: (end: string) => void;
   readonly dateInvalid: boolean;
+}
+
+/** 只列出在当前窗口有资料的测站（与 /weather 的筛选规则一致）。 */
+function selectable(stations: readonly Station[] | undefined): readonly Station[] {
+  return selectableStations(stations);
 }
 
 export function WeatherSortControls({
@@ -44,8 +49,6 @@ export function WeatherSortControls({
   onDirectionChange,
   earlyExit,
   onEarlyExitChange,
-  guidedMode,
-  onGuidedModeChange,
   parallel,
   onParallelChange,
   start,
@@ -54,7 +57,7 @@ export function WeatherSortControls({
   onEndChange,
   dateInvalid,
 }: WeatherSortControlsProps) {
-  const stationList = stations ?? [];
+  const stationList = selectable(stations);
   const startLabel = translate("weather.controls.startDate");
   const endLabel = translate("weather.controls.endDate");
   const stationLabel = translate("weatherSort.controls.station");
@@ -85,7 +88,7 @@ export function WeatherSortControls({
             <option value="">{`${placeholder["zh-Hant"]} / ${placeholder.en}`}</option>
             {stationList.map((item) => (
               <option key={item.id} value={item.id}>
-                {`${item.name_zh_hant} / ${item.name_en} (${item.id})`}
+                {`${item.name_zh_hant} / ${item.name_en}`}
               </option>
             ))}
           </select>
@@ -206,34 +209,6 @@ export function WeatherSortControls({
           <p className="weather-controls__hint">
             <BilingualText size="xs" tkey="lab.earlyExit.hint" />
           </p>
-
-          <fieldset className="weather-sort-controls__group">
-            <legend>
-              <BilingualText as="span" size="sm" tkey="lab.mode.title" />
-            </legend>
-            <div className="weather-sort-controls__options">
-              <label className="weather-sort-controls__checkbox">
-                <input
-                  type="radio"
-                  name="weather-sort-mode"
-                  value="guided"
-                  checked={guidedMode}
-                  onChange={() => onGuidedModeChange(true)}
-                />
-                <BilingualText as="span" size="sm" tkey="lab.mode.guided" />
-              </label>
-              <label className="weather-sort-controls__checkbox">
-                <input
-                  type="radio"
-                  name="weather-sort-mode"
-                  value="free"
-                  checked={!guidedMode}
-                  onChange={() => onGuidedModeChange(false)}
-                />
-                <BilingualText as="span" size="sm" tkey="lab.mode.free" />
-              </label>
-            </div>
-          </fieldset>
 
           <label className="weather-sort-controls__checkbox">
             <input

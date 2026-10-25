@@ -1,6 +1,6 @@
 /**
  * 单个指标的排序面板：直接复用阶段 2 的 TracePlayer（播放控件、代码高亮、
- * 预测弹窗、减少动态）与结果区；本组件不包含任何排序逻辑。
+ * 内联比较区、减少动态）与结果区；本组件不包含任何排序逻辑。
  */
 import { BilingualText } from "../../i18n/BilingualText";
 import { formatTranslation } from "../../i18n/dictionary";
@@ -15,7 +15,6 @@ export interface WeatherTracePanelProps {
   readonly trace: BubbleTrace | undefined;
   readonly loading: boolean;
   readonly error: unknown;
-  readonly guidedMode: boolean;
   readonly unit: string;
   readonly onRetry: () => void;
 }
@@ -25,7 +24,6 @@ export function WeatherTracePanel({
   trace,
   loading,
   error,
-  guidedMode,
   unit,
   onRetry,
 }: WeatherTracePanelProps) {
@@ -70,7 +68,7 @@ export function WeatherTracePanel({
         </div>
       ) : trace ? (
         <>
-          <TracePlayer key={metric} trace={trace} guidedMode={guidedMode} unit={unit} />
+          <TracePlayer key={metric} trace={trace} inlinePrompt unit={unit} />
           <WeatherSortResults trace={trace} metric={metric} />
         </>
       ) : (

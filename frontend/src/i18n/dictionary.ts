@@ -1027,6 +1027,20 @@ export const dictionary = {
     en: "Explanation of this step",
   },
 
+  // ---------- 阶段 4.6：排序页内联比较区 ----------
+  "player.inline.title": {
+    "zh-Hant": "比較與交換",
+    en: "Comparison and swap",
+  },
+  "player.inline.question": {
+    "zh-Hant": "這兩個數需要交換嗎？",
+    en: "Do these two numbers need to be swapped?",
+  },
+  "player.inline.idle": {
+    "zh-Hant": "這一步不是比較；繼續播放，遇到比較時這裡會出題。",
+    en: "This step is not a comparison; keep playing and a question will appear at the next comparison.",
+  },
+
   // ---------- 页脚署名 ----------
   "footer.disclaimer": {
     "zh-Hant": "本網站是教學專案，不是香港天文台的官方產品。",
@@ -1065,14 +1079,6 @@ export const dictionary = {
   "weather.mode.demoHint": {
     "zh-Hant": "開啟後所有查詢都加上 mode=demo，只讀取固定的官方快照，不會寫入資料庫。",
     en: "When on, every query adds mode=demo and reads only the fixed official snapshot; nothing is written to the database.",
-  },
-  "weather.mode.importedHint": {
-    "zh-Hant": "目前檢視上傳的官方 CSV 資料，與官方資料分開儲存與標註。",
-    en: "You are viewing uploaded official CSV data, stored and labelled separately from official data.",
-  },
-  "weather.mode.backToOfficial": {
-    "zh-Hant": "返回官方資料",
-    en: "Back to official data",
   },
   "weather.banner.warning": {
     "zh-Hant": "這不是官方即時資料，請不要當作最新觀測。",
@@ -1250,10 +1256,6 @@ export const dictionary = {
   },
 
   // ---------- 阶段 3：查询控件 ----------
-  "weather.controls.title": {
-    "zh-Hant": "查詢條件",
-    en: "Query settings",
-  },
   "weather.controls.dateRange": {
     "zh-Hant": "日期範圍（香港時區自然日）",
     en: "Date range (Hong Kong calendar days)",
@@ -1265,10 +1267,6 @@ export const dictionary = {
   "weather.controls.endDate": {
     "zh-Hant": "結束日期",
     en: "End date",
-  },
-  "weather.controls.metrics": {
-    "zh-Hant": "指標",
-    en: "Metrics",
   },
   "weather.controls.metric.tmax": {
     "zh-Hant": "日最高溫",
@@ -1282,10 +1280,6 @@ export const dictionary = {
     "zh-Hant": "日平均溫",
     en: "Daily mean temperature",
   },
-  "weather.controls.metric.humidity": {
-    "zh-Hant": "相對濕度",
-    en: "Relative humidity",
-  },
   "weather.controls.dateInvalid": {
     "zh-Hant": "開始日期與結束日期必須成對填寫，且開始日期不能晚於結束日期。",
     en: "The start and end dates must both be set, and the start cannot be after the end.",
@@ -1293,10 +1287,6 @@ export const dictionary = {
   "weather.controls.hint": {
     "zh-Hant": "留空日期則使用後端依錨點回推的預設窗口；畫面上永遠顯示後端回傳的真實起止日期。",
     en: "Leave the dates empty to use the backend's default window derived from the anchor; the real start and end dates returned by the backend are always shown.",
-  },
-  "weather.controls.primaryStationHint": {
-    "zh-Hant": "直方圖、散點圖與環形圖以第一個已選測站為主；可用多測站比較折線與柱狀圖。",
-    en: "The histogram, scatter and donut charts use the first selected station; the line and bar charts compare multiple stations.",
   },
   "weather.controls.export": {
     "zh-Hant": "匯出目前查詢 CSV",
@@ -1316,17 +1306,9 @@ export const dictionary = {
     "zh-Hant": "已選 {selected} / {total} 站",
     en: "{selected} of {total} stations selected",
   },
-  "weather.stations.unavailable": {
-    "zh-Hant": "此窗口暫無資料",
-    en: "No data in this window",
-  },
-  "weather.stations.startYear": {
-    "zh-Hant": "資料起始年 {year}",
-    en: "Data from {year}",
-  },
-  "weather.stations.availableDays": {
-    "zh-Hant": "可用 {days} 天",
-    en: "{days} days available",
+  "weather.stations.noMatch": {
+    "zh-Hant": "沒有符合篩選條件的測站。",
+    en: "No stations match the filter.",
   },
   "weather.stations.selectAll": {
     "zh-Hant": "全選目前篩選結果",
@@ -1458,54 +1440,6 @@ export const dictionary = {
     "zh-Hant": "{station}：{count} 個樣本",
     en: "{station}: {count} samples",
   },
-  "weather.chart.scatter.title": {
-    "zh-Hant": "同日最高溫與平均溫散點圖",
-    en: "Same-day maximum vs mean temperature scatter chart",
-  },
-  "weather.chart.scatter.descMean": {
-    "zh-Hant": "階段 3 沒有濕度歷史介面，因此本圖顯示同日的日最高溫（橫軸）與日平均溫（縱軸）；這不是濕度資料。",
-    en: "Phase 3 has no humidity history, so this chart plots same-day daily maximum (x) against daily mean (y) temperature; it is not humidity data.",
-  },
-  "weather.chart.scatter.descHumidity": {
-    "zh-Hant": "顯示同日的日最高溫（橫軸）與相對濕度（縱軸）；只有已累積的觀測才會出現。",
-    en: "Plots same-day daily maximum temperature (x) against relative humidity (y); only accumulated observations appear.",
-  },
-  "weather.chart.scatter.aria": {
-    "zh-Hant": "{stations} 個測站的同日最高溫與平均溫散點圖（非濕度資料）",
-    en: "Scatter chart of same-day maximum and mean temperatures for {stations} stations (not humidity data)",
-  },
-  "weather.chart.scatter.ariaHumidity": {
-    "zh-Hant": "{stations} 個測站的同日最高溫與相對濕度散點圖",
-    en: "Scatter chart of same-day maximum temperature and relative humidity for {stations} stations",
-  },
-  "weather.chart.scatter.hoverMean": {
-    "zh-Hant": "{station}｜%{text}｜最高 %{x} °C，平均 %{y} °C",
-    en: "{station} | %{text} | max %{x} °C, mean %{y} °C",
-  },
-  "weather.chart.scatter.hoverHumidity": {
-    "zh-Hant": "{station}｜%{text}｜最高 %{x} °C，濕度 %{y}%",
-    en: "{station} | %{text} | max %{x} °C, humidity %{y}%",
-  },
-  "weather.chart.scatter.noteMean": {
-    "zh-Hant": "本圖實際指標：日最高溫（橫軸）與日平均溫（縱軸），不是濕度。",
-    en: "Actual metrics of this chart: daily maximum (x) and daily mean (y) temperature, not humidity.",
-  },
-  "weather.chart.scatter.noteHumidity": {
-    "zh-Hant": "本圖實際指標：日最高溫（橫軸）與相對濕度（縱軸）。",
-    en: "Actual metrics of this chart: daily maximum temperature (x) and relative humidity (y).",
-  },
-  "weather.chart.scatter.xTitle": {
-    "zh-Hant": "日最高溫（°C）",
-    en: "Daily maximum (°C)",
-  },
-  "weather.chart.scatter.yTitleMean": {
-    "zh-Hant": "日平均溫（°C）",
-    en: "Daily mean (°C)",
-  },
-  "weather.chart.scatter.yTitleHumidity": {
-    "zh-Hant": "相對濕度（%）",
-    en: "Relative humidity (%)",
-  },
   "weather.chart.donut.title": {
     "zh-Hant": "有效觀測日的溫度區間佔比",
     en: "Share of valid observation days by temperature range",
@@ -1584,6 +1518,18 @@ export const dictionary = {
     "zh-Hant": "共 {count} 列",
     en: "{count} rows",
   },
+  "weather.table.rowCountCollapsed": {
+    "zh-Hant": "顯示前 {shown} 列，共 {count} 列",
+    en: "Showing the first {shown} of {count} rows",
+  },
+  "weather.table.expand": {
+    "zh-Hant": "展開全部",
+    en: "Show all rows",
+  },
+  "weather.table.collapse": {
+    "zh-Hant": "收起",
+    en: "Collapse",
+  },
   "weather.table.station": {
     "zh-Hant": "測站",
     en: "Station",
@@ -1623,18 +1569,6 @@ export const dictionary = {
   "weather.table.temperature": {
     "zh-Hant": "氣溫",
     en: "Temperature",
-  },
-  "weather.table.line": {
-    "zh-Hant": "行號",
-    en: "Line",
-  },
-  "weather.table.errorReason": {
-    "zh-Hant": "原因",
-    en: "Reason",
-  },
-  "weather.table.errorDetail": {
-    "zh-Hant": "詳細內容",
-    en: "Detail",
   },
   "weather.table.dataset": {
     "zh-Hant": "資料集",
@@ -1688,14 +1622,6 @@ export const dictionary = {
     "zh-Hant": "日最高溫分布的可存取資料表",
     en: "Accessible data table for the daily maximum temperature distribution",
   },
-  "weather.table.scatterCaption": {
-    "zh-Hant": "同日最高溫與平均溫的可存取資料表",
-    en: "Accessible data table for same-day maximum and mean temperatures",
-  },
-  "weather.table.scatterHumidityCaption": {
-    "zh-Hant": "同日最高溫與相對濕度的可存取資料表",
-    en: "Accessible data table for same-day maximum temperature and relative humidity",
-  },
   "weather.table.donutCaption": {
     "zh-Hant": "溫度區間天數與佔比的可存取資料表",
     en: "Accessible data table for days and share per temperature range",
@@ -1708,80 +1634,6 @@ export const dictionary = {
     "zh-Hant": "資料來源與抓取時間的可存取資料表",
     en: "Accessible data table for data sources and fetch times",
   },
-  "weather.table.importErrorsCaption": {
-    "zh-Hant": "CSV 匯入錯誤明細的可存取資料表",
-    en: "Accessible data table for CSV import error details",
-  },
-
-  // ---------- 阶段 3：CSV 导入 ----------
-  "weather.import.title": {
-    "zh-Hant": "匯入官方 CSV",
-    en: "Import official CSV",
-  },
-  "weather.import.desc": {
-    "zh-Hant": "接受官方 rformat=csv 原始格式（雙語標題 2 行、欄位行、資料列、legend 3 行）或規範 5 欄格式；逐行驗證日期、站號、數值精度與品質標記。",
-    en: "Accepts the official rformat=csv raw format (two bilingual title rows, a field row, data rows and three legend rows) or the canonical five-column format; every row is validated for date, station code, numeric precision and quality flag.",
-  },
-  "weather.import.fileLabel": {
-    "zh-Hant": "選擇 CSV 檔案",
-    en: "Choose a CSV file",
-  },
-  "weather.import.submit": {
-    "zh-Hant": "上傳並驗證",
-    en: "Upload and validate",
-  },
-  "weather.import.pending": {
-    "zh-Hant": "正在上傳與驗證…",
-    en: "Uploading and validating…",
-  },
-  "weather.import.acceptedRows": {
-    "zh-Hant": "成功匯入 {count} 列",
-    en: "{count} rows accepted",
-  },
-  "weather.import.skippedRows": {
-    "zh-Hant": "略過 {count} 列",
-    en: "{count} rows skipped",
-  },
-  "weather.import.detectedFormat": {
-    "zh-Hant": "偵測到的格式：{format}",
-    en: "Detected format: {format}",
-  },
-  "weather.import.format.official": {
-    "zh-Hant": "官方原始 CSV",
-    en: "Official raw CSV",
-  },
-  "weather.import.format.canonical": {
-    "zh-Hant": "規範 5 欄 CSV",
-    en: "Canonical five-column CSV",
-  },
-  "weather.import.errorsTitle": {
-    "zh-Hant": "錯誤明細",
-    en: "Error details",
-  },
-  "weather.import.errorsCount": {
-    "zh-Hant": "共 {count} 個錯誤",
-    en: "{count} errors",
-  },
-  "weather.import.noFile": {
-    "zh-Hant": "請先選擇一個 CSV 檔案。",
-    en: "Choose a CSV file first.",
-  },
-  "weather.import.success": {
-    "zh-Hant": "匯入完成，已切換到「匯入資料」檢視。",
-    en: "Import finished; the page switched to the imported-data view.",
-  },
-  "weather.import.failed": {
-    "zh-Hant": "匯入失敗。",
-    en: "The import failed.",
-  },
-  "weather.import.modeHint": {
-    "zh-Hant": "匯入的資料與官方資料分開儲存與標註；匯入後請用 mode=imported 檢視。",
-    en: "Imported data is stored and labelled separately from official data; view it with mode=imported after import.",
-  },
-  "weather.import.errorLine": {
-    "zh-Hant": "第 {line} 行",
-    en: "Line {line}",
-  },
 
   // ---------- 阶段 3：页面通用与错误 ----------
   "weather.page.dataNote": {
@@ -1793,16 +1645,24 @@ export const dictionary = {
     en: "Loading weather data from the backend…",
   },
   "weather.page.chartsTitle": {
-    "zh-Hant": "五類圖表與可存取資料表",
-    en: "Five chart types with accessible data tables",
+    "zh-Hant": "四類圖表與可存取資料表",
+    en: "Four chart types with accessible data tables",
   },
   "weather.page.chartsLead": {
-    "zh-Hant": "每張圖都標明實際指標、有效樣本與缺失天數；下方固定附上可鍵盤瀏覽的資料表。",
-    en: "Every chart states its actual metric, valid samples and missing days, with a keyboard-accessible data table below it.",
+    "zh-Hant": "每張圖都標明實際指標、有效樣本與缺失天數；下方固定附上可鍵盤瀏覽、可展開的資料表。",
+    en: "Every chart states its actual metric, valid samples and missing days, with a keyboard-accessible, expandable data table below it.",
   },
   "weather.page.emptySelection": {
     "zh-Hant": "請先選擇至少一個測站，圖表才會載入。",
     en: "Select at least one station before the charts can load.",
+  },
+  "weather.options.title": {
+    "zh-Hant": "顯示選項",
+    en: "Display options",
+  },
+  "weather.options.hint": {
+    "zh-Hant": "日期窗口由後端固定提供最近 30 天，畫面只顯示真實資料；示範模式、匯出與重新抓取放在這個次要區域。",
+    en: "The backend always provides the most recent 30-day window and the page shows the real data; demo mode, export and refresh live in this secondary area.",
   },
   "weather.error.title": {
     "zh-Hant": "無法載入天氣資料",

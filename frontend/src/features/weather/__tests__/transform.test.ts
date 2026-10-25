@@ -5,8 +5,6 @@ import {
   buildDailySeries,
   buildDonutRows,
   buildHistogramSeries,
-  buildHumidityScatterSeries,
-  buildScatterSeries,
   buildSourceRows,
   buildTmaxComparisonSeries,
   computeHistogramBins,
@@ -98,38 +96,6 @@ describe("直方图", () => {
     expect(flat?.total).toBe(2);
     expect(flat?.bins.reduce((sum, bin) => sum + bin.counts[0], 0)).toBe(2);
     expect(formatTemperature(30)).toBe("30.0");
-  });
-});
-
-describe("散点图", () => {
-  it("同日配对 tmax 与 tmean", () => {
-    const series = buildScatterSeries(rows, [HKO], WINDOW);
-    expect(series[0].points).toHaveLength(4);
-    expect(series[0].points[0]).toMatchObject({ date: "2026-09-01", x: 30.1 });
-    expect(series[0].points[0].y).toBeCloseTo(28.1);
-  });
-
-  it("预留湿度序列只保留同时有 tmax 与湿度的日期", () => {
-    const series = buildHumidityScatterSeries(
-      rows,
-      [HKO],
-      [
-        {
-          stationId: "HKO",
-          stationNameZh: "香港天文台",
-          stationNameEn: "Hong Kong Observatory",
-          points: [
-            { date: "2026-09-01", value: 78 },
-            { date: "2026-09-04", value: 80 },
-            { date: "2026-09-09", value: 70 },
-          ],
-        },
-      ],
-      WINDOW,
-    );
-    // 09-04 缺 tmax、09-09 不在窗口内，都应被排除。
-    expect(series[0].points).toHaveLength(1);
-    expect(series[0].points[0].y).toBe(78);
   });
 });
 

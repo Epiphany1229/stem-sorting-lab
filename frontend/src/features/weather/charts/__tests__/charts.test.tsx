@@ -11,13 +11,7 @@ import { BarChart } from "../BarChart";
 import { DonutChart } from "../DonutChart";
 import { Histogram } from "../Histogram";
 import { LineChart } from "../LineChart";
-import { ScatterChart } from "../ScatterChart";
-import type { ScatterSeries } from "../../transform";
-import {
-  buildHumidityScatterSeries,
-  buildScatterSeries,
-  type RainfallSeries,
-} from "../../transform";
+import type { RainfallSeries } from "../../transform";
 import {
   buildDailyRows,
   HKO,
@@ -91,7 +85,12 @@ describe("图 1 折线图", () => {
 
     const table = screen.getByTestId("chart-line-table");
     expect(within(table).getByText("氣溫折線圖的可存取資料表")).toBeInTheDocument();
-    expect(within(table).getByText("共 16 列")).toBeInTheDocument();
+    expect(within(table).getByText(/共 16 列/)).toBeInTheDocument();
+    // 超过 5 行的表格默认折叠，可展开。
+    expect(within(table).getByTestId("chart-line-table-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
   });
 
   it("没有数据时显示空状态与后端原因，不渲染画布", () => {
@@ -134,7 +133,7 @@ describe("图 2 柱状图", () => {
 
     const table = screen.getByTestId("chart-bar-table");
     expect(within(table).getByText(/不是降雨資料/)).toBeInTheDocument();
-    expect(within(table).getByText("共 8 列")).toBeInTheDocument();
+    expect(within(table).getByText(/共 8 列/)).toBeInTheDocument();
     expect(screen.queryByText("每日降雨量柱狀圖")).not.toBeInTheDocument();
   });
 
@@ -180,7 +179,7 @@ describe("图 3 直方图", () => {
 
     const table = screen.getByTestId("chart-histogram-table");
     expect(within(table).getByText("日最高溫分布的可存取資料表")).toBeInTheDocument();
-    expect(within(table).getByText("共 6 列")).toBeInTheDocument();
+    expect(within(table).getByText(/共 6 列/)).toBeInTheDocument();
     expect(layout().barmode).toBe("overlay");
   });
 
@@ -192,67 +191,7 @@ describe("图 3 直方图", () => {
   });
 });
 
-describe("图 4 散点图", () => {
-  it("阶段 3 用 tmax vs tmean，并标注不是湿度", () => {
-    render(<ScatterChart rows={rows} stations={stations} window={WINDOW} />);
-
-    expect(screen.getByRole("img")).toHaveAttribute(
-      "aria-label",
-      expect.stringContaining("非濕度資料"),
-    );
-    expect(screen.getByText(/這不是濕度資料/)).toBeInTheDocument();
-    expectBilingualHover(trace(0).hovertemplate);
-
-    const xTitle = JSON.stringify((layout().xaxis as Record<string, unknown>)?.title);
-    const yTitle = JSON.stringify((layout().yaxis as Record<string, unknown>)?.title);
-    expect(xTitle).toContain("日最高溫");
-    expect(yTitle).toContain("日平均溫");
-
-    const table = screen.getByTestId("chart-scatter-table");
-    expect(within(table).getByText("同日最高溫與平均溫的可存取資料表")).toBeInTheDocument();
-    expect(within(table).getByText("共 8 列")).toBeInTheDocument();
-  });
-
-  it("预留湿度入参：只有传入湿度序列时才切换纵轴", () => {
-    const humiditySeries: ScatterSeries[] = buildHumidityScatterSeries(
-      rows,
-      [HKO],
-      [
-        {
-          stationId: "HKO",
-          stationNameZh: "香港天文台",
-          stationNameEn: "Hong Kong Observatory",
-          points: [
-            { date: "2026-09-01", value: 78 },
-            { date: "2026-09-02", value: 74 },
-          ],
-        },
-      ],
-      WINDOW,
-    );
-
-    render(
-      <ScatterChart
-        rows={rows}
-        stations={[HKO]}
-        window={WINDOW}
-        humiditySeries={humiditySeries}
-      />,
-    );
-
-    expect(screen.getAllByText(/相對濕度（縱軸）/).length).toBeGreaterThan(0);
-    const yTitle = JSON.stringify((layout().yaxis as Record<string, unknown>)?.title);
-    expect(yTitle).toContain("相對濕度");
-    expect(within(screen.getByTestId("chart-scatter-table")).getByText("相對濕度")).toBeInTheDocument();
-  });
-
-  it("没有配对样本时显示空状态", () => {
-    render(<ScatterChart rows={[]} stations={stations} window={WINDOW} reason="no_cache" />);
-    expect(screen.getByTestId("chart-scatter-empty")).toBeInTheDocument();
-  });
-});
-
-describe("图 5 环形图", () => {
+describe("图 4 环形图", () => {
   it("只表达有效观测日的温度区间天数占比，并标注阈值/样本/缺失", () => {
     const summary = summaryResponse();
     render(<DonutChart summary={summary} station={HKO} />);
@@ -284,14 +223,6 @@ describe("图 5 环形图", () => {
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.getByTestId("chart-donut-empty")).toBeInTheDocument();
     expect(screen.getAllByText(/這個指標沒有官方歷史介面/).length).toBeGreaterThan(0);
-  });
-});
-
-// 保证 buildScatterSeries 在测试中被真正使用（避免未使用导入）。
-describe("ScatterSeries 构造", () => {
-  it("同日配对只保留 tmax 与 tmean 都存在的数据", () => {
-    const series = buildScatterSeries(rows, [HKO], WINDOW);
-    expect(series[0].points).toHaveLength(4);
   });
 });
 
