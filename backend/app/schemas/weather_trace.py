@@ -137,8 +137,9 @@ class WeatherTraceRequest(BaseModel):
     # 必须在官方 39 站名单内（服务层用 stations.json 校验）
     station: str = Field(min_length=2, max_length=8)
     metric: WeatherMetric
-    start: date
-    end: date
+    # 省略 start/end 时，服务层按该站自身最新温度数据锚定默认 30 天窗口
+    start: date | None = None
+    end: date | None = None
     direction: Direction
     options: BubbleTraceOptions = Field(default_factory=BubbleTraceOptions)
 

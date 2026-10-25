@@ -472,6 +472,13 @@ https://data.weather.gov.hk/weatherAPI/opendata/opendata.php
 - **RYES 日报可补齐最近逐日温度**：`dataType=RYES&date=YYYYMMDD` 对 2026-10-01/10-20/10-24 均返回 JSON，`ReportTimeInfoDate`=资料日、`BulletinDate`=次日，含 `HKOReadingsMaxTemp/MinTemp` 与多个按站 `*MaxTemp/*MinTemp` 平铺键。
 - **项目实现**：`ryes_temperature.py` 只映射名称与官方 39 站**完全一致**的 22 站（未映射键跳过计数，不猜行政区）；`recent_ingest.py` 逐日 1 请求、校验资料日、**月表优先**、幂等；CLI `ingest-recent --days 35`。真实补数结果：35 请求写入 144 行（Oct 01–24，HKO/KP/SHA × tmax/tmin），Sep 20–30 月表行未被覆盖。
 - **口径声明**：RYES 官方注明数据为 **provisional**（有限校验）；月表正式发布后以月表为准。前端/文档必须如实标注数据来源，不得把 provisional 数据说成最终官方值。
+- **窗口锚定规则（2026-10-25 修复）**：默认"最近 30 天"**不得使用全库最大日期**；必须按请求测站计算 `station_max_date`（仅温度指标）：
+  - 单站：以该站自身最新日期为锚点往前 30 天；
+  - 多站：取各站最新日期的 **最小值**（共同有数据的最新日期），保证每个被选站都不缺尾部日期；
+  - 无数据站不参与锚点计算（前端也不提供无数据站供选择）；
+  - 显式传 `start/end` 时以传入窗口为准。
+  修复前曾出现"全局锚点被 HKO/KP/SHA 的 10 月数据推到 10-24，其余只有 9 月数据的站缺 24 天"的真实 bug。
+- **RYES 补数范围**：`ingest-recent` 省略 `--stations` 时写入 RYES 可映射的**全部 22 个官方站**（10 月数据一次补齐 1052 行）；未映射键（Chek Lap Kok / Tai Po / Tsing Yi 等 12 个前缀）跳过不写入，不猜站号。
 
 ---
 

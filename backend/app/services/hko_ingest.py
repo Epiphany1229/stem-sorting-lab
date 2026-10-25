@@ -536,10 +536,13 @@ class WindowRange:
 
 
 def default_window_anchor(database: Database, *, mode: str = "official") -> date | None:
-    """返回库内某模式下"最后可用日"。
+    """返回库内某模式下"最后可用日"（全库范围，仅供刷新等全站统计使用）。
 
     只统计 API 支持的三个温度指标：阶段 4 的 RYES 日雨量会写入 ``rainfall`` 行，
     如果把它算进锚点，默认窗口会整体后移，导致温度数据被截断。
+
+    **注意**：读接口的默认窗口必须按请求测站计算（见 :func:`stations_window_anchor`），
+    不能使用本函数，否则会把部分站点的数据窗口带到其它站点的尾部。
     """
     with database.session() as session:
         statement = (
@@ -549,6 +552,40 @@ def default_window_anchor(database: Database, *, mode: str = "official") -> date
         )
         value = session.execute(statement).scalar()
         return value if isinstance(value, date) else None
+
+
+def stations_window_anchor(
+    database: Database,
+    *,
+    stations: Sequence[str],
+    metrics: Sequence[str],
+    mode: str = "official",
+) -> date | None:
+    """按请求测站计算默认窗口锚点（SQL 聚合，不拉全表）。
+
+    规则（任务 D-1 修订）：
+
+    - 单站：该站温度数据（按请求指标）的 ``max(obs_date)``；
+    - 多站：各选中站各自 max 的 **min** —— 所选测站共同有数据的最新日期，
+      保证每个被选测站都不缺窗口尾部日期；
+    - 只统计有数据的测站；全部无数据时返回 None（由调用方给出空结果 + reason）。
+    """
+    if not stations or not metrics:
+        return None
+    with database.session() as session:
+        statement = (
+            select(DailyWeather.station_id, func.max(DailyWeather.obs_date))
+            .where(DailyWeather.mode == mode)
+            .where(DailyWeather.station_id.in_(list(stations)))
+            .where(DailyWeather.metric.in_(list(metrics)))
+            .group_by(DailyWeather.station_id)
+        )
+        maxima = [
+            value
+            for _station_id, value in session.execute(statement).all()
+            if isinstance(value, date)
+        ]
+    return min(maxima) if maxima else None
 
 
 def has_any_data(database: Database, *, mode: str = "official") -> bool:

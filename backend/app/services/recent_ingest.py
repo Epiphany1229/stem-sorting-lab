@@ -36,6 +36,7 @@ from backend.app.data_sources.hko.client import (
 from backend.app.data_sources.hko.registry import station_ids
 from backend.app.data_sources.hko.ryes_temperature import (
     RYES_TEMPERATURE_DATASET_KEY,
+    RYES_TEMPERATURE_PREFIXES,
     parse_ryes_temperature_payload,
 )
 from backend.app.models.base import utc_now_naive
@@ -84,6 +85,13 @@ class RecentIngestSummary:
             f"缺失/日期不符跳過 {self.skipped_days} 天，"
             f"未映射鍵 {self.unmapped_key_count} 個，快取命中 {self.cache_hits} 次）"
         )
+
+
+def default_mapped_stations() -> tuple[str, ...]:
+    """RYES 能明确映射到的全部官方站（按站号排序；当前 22 个）。"""
+    return tuple(
+        sorted({station_id for station_id, _name in RYES_TEMPERATURE_PREFIXES.values()})
+    )
 
 
 def parse_recent_stations(raw: str, settings: Settings) -> tuple[str, ...]:
@@ -268,6 +276,7 @@ async def ingest_recent_temperature(
 __all__ = [
     "MONTHLY_DATASETS",
     "RecentIngestSummary",
+    "default_mapped_stations",
     "ingest_recent_temperature",
     "parse_recent_stations",
 ]

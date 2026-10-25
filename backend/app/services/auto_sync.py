@@ -33,6 +33,7 @@ from backend.app.models.db import Database
 from backend.app.models.weather import DailyWeather
 from backend.app.services.recent_ingest import (
     RecentIngestSummary,
+    default_mapped_stations,
     ingest_recent_temperature,
 )
 from backend.app.services.weather_util import TEMPERATURE_METRICS
@@ -139,8 +140,18 @@ async def run_auto_sync(
     *,
     now: datetime | None = None,
 ) -> RecentIngestSummary | None:
-    """执行一轮 ``ingest-recent``；失败只记日志并返回 None（不抛出）。"""
-    stations = parse_auto_sync_stations(settings)
+    """执行一轮 ``ingest-recent``；失败只记日志并返回 None（不抛出）。
+
+    ``auto_sync_stations`` 只用于“是否需要同步”的核心站判断；实际写入默认覆盖
+    RYES 全部可映射站（``auto_sync_write_all_mapped=True``），避免其它只有 9 月
+    数据的测站在默认窗口里整段缺 10 月。
+    """
+    core_stations = parse_auto_sync_stations(settings)
+    write_stations = (
+        default_mapped_stations()
+        if settings.auto_sync_write_all_mapped
+        else core_stations
+    )
     end = _hk_yesterday(now)
     current = now if now is not None else datetime.now(timezone.utc)
     client = client_factory()
@@ -149,7 +160,7 @@ async def run_auto_sync(
             client,
             database,
             settings,
-            stations=stations,
+            stations=write_stations,
             end=end,
             days=max(1, settings.auto_sync_days),
         )

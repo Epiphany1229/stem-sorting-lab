@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import func, select
@@ -66,6 +66,7 @@ from backend.app.services.hko_ingest import (
     parse_window_dates,
     query_daily_records,
     resolve_window,
+    stations_window_anchor,
     summarize_temperature,
 )
 from backend.app.services.weather_import import (
@@ -188,13 +189,30 @@ def build_window(
     mode: ModeCode,
     start: date | None,
     end: date | None,
+    stations: Sequence[str],
+    metrics: Sequence[str],
 ) -> WindowRange:
-    """按模式确定窗口锚点（official/imported 取库内最后可用日，demo 取样本末日）。"""
+    """按模式与**请求测站**确定默认窗口锚点。
+
+    - 显式传入 start/end：行为不变（直接使用传入窗口，不查询锚点）；
+    - demo：锚点取样本末日；
+    - official/imported：锚点 = 所选测站各自 max(obs_date) 的 min（单站即该站 max），
+      避免用全库全局最大日期导致其它测站尾部整段缺失；无任何数据时交给
+      :func:`resolve_window` 回退到“昨天前 30 天”，接口返回空数据 + reason。
+    """
     if mode == "demo":
         _, demo_last = demo_date_range(settings)
-        anchor = demo_last
+        anchor: date | None = demo_last
+    elif start is not None and end is not None:
+        # 显式窗口不查询库：anchor 由 resolve_window 取 end（保持旧行为）。
+        anchor = None
     else:
-        anchor = default_window_anchor(database, mode=mode)
+        anchor = stations_window_anchor(
+            database,
+            stations=stations,
+            metrics=metrics,
+            mode=mode,
+        )
     return resolve_window(start=start, end=end, anchor=anchor)
 
 
@@ -205,10 +223,34 @@ def build_window_from_query(
     mode: ModeCode,
     start_text: str | None,
     end_text: str | None,
+    stations: Sequence[str],
+    metrics: Sequence[str],
 ) -> WindowRange:
-    """从查询字符串解析起止日期并构造窗口。"""
+    """从查询字符串解析起止日期，并按请求测站构造默认窗口。"""
     start, end = parse_window_dates(start_text, end_text)
-    return build_window(database, settings, mode=mode, start=start, end=end)
+    return build_window(
+        database,
+        settings,
+        mode=mode,
+        start=start,
+        end=end,
+        stations=stations,
+        metrics=metrics,
+    )
+
+
+def _align_default_coverage(
+    summary: CoverageSummary,
+    window: WindowRange,
+    *,
+    requested_default_window: bool,
+) -> CoverageSummary:
+    """默认窗口下让 coverage.last_available_date 与 window.anchor 一致。"""
+    if not requested_default_window or summary.days_with_data == 0:
+        return summary
+    if summary.last_available_date == window.anchor:
+        return summary
+    return replace(summary, last_available_date=window.anchor)
 
 
 def _window_info(window: WindowRange) -> WindowInfo:
@@ -535,8 +577,15 @@ def build_coverage_response(
     """GET /api/weather/coverage 的响应。"""
     stations = parse_station_selection(stations_raw, settings)
     metrics = parse_metric_selection(metrics_raw)
+    default_window = start_text is None and end_text is None
     window = build_window_from_query(
-        database, settings, mode=mode, start_text=start_text, end_text=end_text
+        database,
+        settings,
+        mode=mode,
+        start_text=start_text,
+        end_text=end_text,
+        stations=stations,
+        metrics=metrics,
     )
     mode_data = load_mode_data(
         database,
@@ -546,12 +595,16 @@ def build_coverage_response(
         stations=stations,
         metrics=metrics,
     )
-    coverage = compute_coverage(
-        mode_data.records,
-        start=window.start,
-        end=window.end,
-        stations=stations,
-        metrics=metrics,
+    coverage = _align_default_coverage(
+        compute_coverage(
+            mode_data.records,
+            start=window.start,
+            end=window.end,
+            stations=stations,
+            metrics=metrics,
+        ),
+        window,
+        requested_default_window=default_window,
     )
     return CoverageResponse(
         mode=mode,
@@ -576,8 +629,15 @@ def build_daily_response(
     """GET /api/weather/daily 的响应（含 precision_policy=raw_string）。"""
     stations = parse_station_selection(stations_raw, settings)
     metrics = parse_metric_selection(metrics_raw)
+    default_window = start_text is None and end_text is None
     window = build_window_from_query(
-        database, settings, mode=mode, start_text=start_text, end_text=end_text
+        database,
+        settings,
+        mode=mode,
+        start_text=start_text,
+        end_text=end_text,
+        stations=stations,
+        metrics=metrics,
     )
     mode_data = load_mode_data(
         database,
@@ -587,12 +647,16 @@ def build_daily_response(
         stations=stations,
         metrics=metrics,
     )
-    coverage = compute_coverage(
-        mode_data.records,
-        start=window.start,
-        end=window.end,
-        stations=stations,
-        metrics=metrics,
+    coverage = _align_default_coverage(
+        compute_coverage(
+            mode_data.records,
+            start=window.start,
+            end=window.end,
+            stations=stations,
+            metrics=metrics,
+        ),
+        window,
+        requested_default_window=default_window,
     )
     return DailyResponse(
         mode=mode,
@@ -635,8 +699,15 @@ def build_summary_response(
     """GET /api/weather/summary 的响应：温度区间天数统计。"""
     ensure_station(station_id, settings)
     ensure_metric(metric)
+    default_window = start_text is None and end_text is None
     window = build_window_from_query(
-        database, settings, mode=mode, start_text=start_text, end_text=end_text
+        database,
+        settings,
+        mode=mode,
+        start_text=start_text,
+        end_text=end_text,
+        stations=[station_id],
+        metrics=[metric],
     )
     mode_data = load_mode_data(
         database,
@@ -646,12 +717,16 @@ def build_summary_response(
         stations=[station_id],
         metrics=[metric],
     )
-    coverage = compute_coverage(
-        mode_data.records,
-        start=window.start,
-        end=window.end,
-        stations=[station_id],
-        metrics=[metric],
+    coverage = _align_default_coverage(
+        compute_coverage(
+            mode_data.records,
+            start=window.start,
+            end=window.end,
+            stations=[station_id],
+            metrics=[metric],
+        ),
+        window,
+        requested_default_window=default_window,
     )
     summary = summarize_temperature(
         mode_data.records,
@@ -699,7 +774,13 @@ def build_export_csv(
     stations = parse_station_selection(stations_raw, settings)
     metrics = parse_metric_selection(metrics_raw)
     window = build_window_from_query(
-        database, settings, mode=mode, start_text=start_text, end_text=end_text
+        database,
+        settings,
+        mode=mode,
+        start_text=start_text,
+        end_text=end_text,
+        stations=stations,
+        metrics=metrics,
     )
     mode_data = load_mode_data(
         database,

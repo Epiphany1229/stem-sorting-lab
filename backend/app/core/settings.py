@@ -87,6 +87,9 @@ class Settings(BaseSettings):
     auto_sync_stations: str = "HKO,KP,SHA"
     # 单轮同步允许的最大尝试次数（超过即放弃本轮，只记日志）
     auto_sync_max_attempts: int = 3
+    # 自动同步实际写入是否覆盖 RYES 全部可映射站（默认 true）；
+    # auto_sync_stations 只用于“是否需要同步”的核心站判断，不限制写入范围。
+    auto_sync_write_all_mapped: bool = True
 
 
 @lru_cache(maxsize=1)

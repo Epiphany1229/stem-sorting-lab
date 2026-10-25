@@ -33,6 +33,7 @@ from backend.app.models.base import today_hk
 from backend.app.models.db import count_stations, create_database
 from backend.app.services.hko_ingest import METRIC_TO_DATATYPE, ingest_year
 from backend.app.services.recent_ingest import (
+    default_mapped_stations,
     ingest_recent_temperature,
     parse_recent_stations,
 )
@@ -101,8 +102,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     recent.add_argument(
         "--stations",
-        default="HKO,KP,SHA",
-        help="逗号分隔的官方站号（默认 HKO,KP,SHA）",
+        default=None,
+        help="逗号分隔的官方站号；省略时写入 RYES 可映射的全部站（当前 22 个）",
     )
     recent.add_argument(
         "--end",
@@ -308,7 +309,10 @@ def _run_ingest_recent(args: argparse.Namespace) -> int:
     days = int(args.days)
     if days < 1:
         raise ValueError("--days 必须为正整数")
-    stations = parse_recent_stations(str(args.stations), settings)
+    if args.stations is None:
+        stations = default_mapped_stations()
+    else:
+        stations = parse_recent_stations(str(args.stations), settings)
     if args.end is not None:
         end = _parse_cli_date(args.end, "--end")
     else:
@@ -319,7 +323,10 @@ def _run_ingest_recent(args: argparse.Namespace) -> int:
             f"[dry-run] 目標：{days} 天 × 1 請求/天 = {days} 次請求"
             f"（{start.isoformat()} .. {end.isoformat()}）"
         )
-        print(f"[dry-run] 測站：{', '.join(stations)}（僅寫入這些站的 tmax/tmin）")
+        print(
+            f"[dry-run] 測站 {len(stations)} 個：{', '.join(stations)}"
+            "（僅寫入這些站的 tmax/tmin）"
+        )
         print(
             f"[dry-run] 接口：{settings.hko_opendata_url}?dataType=RYES&date=YYYYMMDD"
         )

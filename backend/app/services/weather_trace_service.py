@@ -46,7 +46,12 @@ from backend.app.schemas.weather_trace import (
     WeatherTraceResponse,
     WeatherTraceSummary,
 )
-from backend.app.services.hko_ingest import MAX_WINDOW_DAYS, METRIC_TO_DATATYPE
+from backend.app.services.hko_ingest import (
+    MAX_WINDOW_DAYS,
+    METRIC_TO_DATATYPE,
+    resolve_window,
+    stations_window_anchor,
+)
 from backend.app.services.trace_service import MAX_EVENTS, TraceValidationError
 from backend.app.trace.line_map import BUBBLE_LINE_MAP
 from backend.app.trace.recorder import (
@@ -485,17 +490,32 @@ def build_weather_trace(
     *,
     station: str,
     metric: str,
-    start: date,
-    end: date,
+    start: date | None,
+    end: date | None,
     direction: str,
     early_exit: bool,
 ) -> WeatherTraceResponse:
-    """真实读取天气数据并执行冒泡排序，返回带天气解释的协议轨迹。"""
+    """真实读取天气数据并执行冒泡排序，返回带天气解释的协议轨迹。
+
+    省略 ``start``/``end`` 时，按该站自身温度数据锚定默认 30 天窗口
+    （不跟随全库全局锚点，避免其它站的 10 月数据把本站窗口带到尾部空白）。
+    """
     direction_value = _normalise_direction(direction)
     metric_value = _normalise_metric(metric)
     if not isinstance(early_exit, bool):
         raise TraceValidationError("options.early_exit", "early_exit 必须是布尔值")
     station_record = _station_or_raise(station, settings)
+    if (start is None) != (end is None):
+        raise TraceValidationError("start", "start 与 end 必须同时提供")
+    if start is None or end is None:
+        anchor = stations_window_anchor(
+            database,
+            stations=[station_record.id],
+            metrics=[metric_value],
+            mode="official",
+        )
+        window = resolve_window(start=None, end=None, anchor=anchor)
+        start, end = window.start, window.end
     if start > end:
         raise TraceValidationError("start", "start 不能晚于 end")
     requested_days = (end - start).days + 1
