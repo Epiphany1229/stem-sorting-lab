@@ -1,13 +1,16 @@
 # 排序實驗室 · Sorting Lab
 
+[![CI](https://github.com/Epiphany1229/stem-sorting-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/Epiphany1229/stem-sorting-lab/actions/workflows/ci.yml)
+
 面向**零算法基础初学者**的互动 STEM 教学网站：以 Python 排序算法为核心，用**香港天文台真实气象数据**展示算法如何解决现实问题。
 
+> 仓库 / Repository：<https://github.com/Epiphany1229/stem-sorting-lab>
 > **双语约定**：网站所有面向学生的文字为 **繁体中文在上、英文紧贴在下**（纵向堆叠，非左右并排、非语言切换）。
 > **注释约定**（用户已确认）：源码内部注释用**简体中文**；学生可见的代码视图与步骤说明用**繁中 + 英文**。
 
 ---
 
-## 当前状态（2026-10-23）
+## 当前状态（2026-11-16）
 
 | 阶段 | 内容 | 状态 |
 |---|---|---|
