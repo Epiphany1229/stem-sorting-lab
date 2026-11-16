@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Stage-1 frontend shell for the bilingual Python sorting + Hong Kong weather STEM site.",
+  "description": "Bilingual (zh-Hant/en) Python sorting + Hong Kong Observatory weather STEM teaching site - frontend",
   "scripts": {
     "dev": "node --require ./scripts/sandbox-guard.cjs node_modules/vite/bin/vite.js",
     "build": "node --require ./scripts/sandbox-guard.cjs node_modules/vite/bin/vite.js build",
@@ -37,5 +37,6 @@
     "typescript": "~5.9.3",
     "vite": "^8.3.5",
     "vitest": "^4.1.12"
-  }
+  },
+  "license": "MIT"
 }

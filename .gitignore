@@ -35,3 +35,17 @@ frontend/.vite/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# 鎶ュ憡宸ヤ綔鏂囦欢锛堢敓鎴愯剼鏈�佽瘉鎹。妗堛�佸師濮嬫埅鍥撅紝涓嶅叆搴擄級
+.reports/
+
+# Cloudflare Tunnel 可执行文件与本地隧道配置（含凭据风险，不入库）
+cloudflared.exe
+cloudflared
+config.yml
+cloudflared*.log
+
+
+# 课程报告截图素材（如需公开博客再单独加入）
+report-assets/
+

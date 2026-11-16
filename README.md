@@ -202,18 +202,29 @@ cloudflared tunnel --url http://127.0.0.1:8000
 
 ## 未完成与已知限制
 
-1. **阶段 5–6 未开始**：其余九种算法未实现、未做浏览器截图验收。
-2. **雨量/湿度仍未在页面暴露**：官方无 `CLMRAINF`；`hourlyRainfall.php` 只有当前一小时；`RYES` 日报可给 HKO 单站日雨量（已实现 CLI `ingest-rainfall`），但尚未接入阶段 3 的 metrics 白名单，因此天气页柱状图仍用"日最高温对比"并显式标注。`Trace`（<0.05mm）不入库、不写 0。
-3. **shadcn/ui 未生成具体组件**：`components.json`、`cn()`、路径别名已就位，组件留待按需添加。
-4. **ESLint、Playwright 未接入**；三视口验收属阶段 6。
-5. **行政区 ↔ 测站映射仍缺失**：官方 PDF 只给站名，没有行政区归属表，**不得**按站名猜测。
-6. **API 响应头未观测**：ETag / Last-Modified / Retry-After 是否由官方返回仍未验证；客户端按"支持则用"实现，缺失时降级为无条件请求。
-7. **pytest 有一条第三方弃用警告**（fastapi/starlette 建议 `httpx2`），未处理。
-8. **前端 bundle 偏大**：Plotly 使主 chunk 约 5.2 MB（gzip 1.60 MB），阶段 6 用路由懒加载拆分。
-9. **单 worker 租约是进程级 + TTL**，不是数据库行锁；SQLite 写串行化下足够。
-10. **沙箱兼容层**：`frontend/scripts/sandbox-guard.cjs`、`pnpm-workspace.yaml`（`verifyDepsBeforeRun:false`、`nodeLinker:hoisted`、`allowBuilds: es5-ext:false`）均为本机沙箱所需。
-10. **测站数据覆盖 38/39**：官方 PDF 名单含 `TPO`（大埔自然環境保護研究中心），但当前 API 对三种 dataType 均返回参数错误 HTML（2026-10-25 实测），因此该站可用天数为 0；其余 38 站已回填 2026 全年 tmax/tmin/tmean（30,790 行，其中 `#` 不完整 1,839 行）。`TPO` 不得伪造数据。
-11. **`.tools/` 不入库**；本地 `app.db` 已 gitignore。
+1. **未执行浏览器截图验收**：未运行 Playwright 三视口视觉检查（本机无浏览器自动化）；当前只有 DOM 测试、构建与 HTTP 冒烟。
+2. **非比较类排序不做**：计数/桶/基数排序已由产品决策排除（零基础教学场景认知负荷过高），算法中心只有 7 种比较类排序。
+3. **数据边界**：官方月表按月发布，**当月无数据**；`RYES` 为官方标注的 provisional 数据（月表发布后以月表为准）；39 站中 17 站暂无最新月数据，会按各自最新日期显示真实的 30 天窗口；`TPO` 被官方 API 拒绝；行政区↔测站映射官方未提供，代码不猜。
+4. **降雨/湿度未在图表页暴露**：官方无 `CLMRAINF`；`hourlyRainfall.php` 只有当前一小时；`RYES` 含 HKO 日雨量（CLI `ingest-rainfall` 已支持，`Trace` <0.05mm 不入库不写 0），但尚未接入查询接口。
+5. **shadcn/ui 只接入地基**（`components.json`/`cn()`/别名），未生成具体组件；**未接入 ESLint**。
+6. **API 响应头未观测**：ETag / Last-Modified / Retry-After 是否由官方返回仍未验证，客户端按"支持则用、缺失降级"实现。
+7. **pytest 有 1 条第三方弃用警告**（fastapi/starlette 建议 `httpx2`），未处理。
+8. **Plotly 体积**：独立 chunk 4.64 MB（gzip 1.42 MB）只在天气页加载；首屏入口 chunk 已降至 373.89 kB。
+9. **并发与存储**：SQLite 单写者；单 worker 租约是进程级 + TTL，不是数据库行锁；公网演示请保持 `--workers 1`。
+10. **Cloudflare 快速隧道**（`trycloudflare.com`）地址每次重启都会变，且免费隧道有限流，只适合演示。
+11. **沙箱兼容层**：`frontend/scripts/sandbox-guard.cjs`、`pnpm-workspace.yaml`（`verifyDepsBeforeRun:false`、`nodeLinker:hoisted`、`allowBuilds: es5-ext:false`）为本机受限环境所需，普通环境可保留。
+12. **不入库内容**：`.tools/`、`.venv/`、`app.db`、`frontend/dist/` 均已 gitignore；克隆后需自行 `pnpm build` 生成 dist。
+
+---
+
+## 开源与许可
+
+- **代码许可**：[MIT](LICENSE)（Copyright © 2026 Kayson Wong）。
+- **数据不属于本项目**：气象数据版权归香港天文台所有，遵循其**非商业用途**条款（承认知识产权、复现免责声明、不得出售、不得暗示官方背书）；详见 [NOTICE](NOTICE) 与 [`docs/data-sources.md`](docs/data-sources.md)。**本站不是香港天文台官方产品。**
+- **演示数据**：`sample_data/demo/` 为官方月表在某一时点的真实快照，仅用于离线演示，页面会标注「示範資料」。
+- **贡献指南**：[CONTRIBUTING.md](CONTRIBUTING.md)（开发环境、提交前门禁、代码/双语/数据规范）。
+- **CI**：GitHub Actions 在 push/PR 时运行后端 `ruff + mypy + pytest` 与前端 `tsc + vitest + build`（`.github/workflows/ci.yml`）。测试全部离线，不会访问真实官方接口。
+- **第三方 Skills**：`.claude/skills/` 下 9 个外部 Skill 保留原始内容与许可说明（`SOURCE.md` + `LICENSE.repo`），3 个为本项目自写。
 
 ---
 

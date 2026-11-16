@@ -1,0 +1,40 @@
+# NOTICE — 数据来源、署名与第三方内容
+
+本项目（代碼部分）以 MIT 許可開源，但**氣象數據與部分第三方內容不屬於本項目**，其版權與使用條件如下。
+
+## 1. 香港天文台（Hong Kong Observatory, HKO）氣象數據
+
+- 來源：香港天文台官方網站與開放數據 API（`https://data.weather.gov.hk/weatherAPI/opendata/`），
+  包括 `CLMMAXT`（日最高溫）、`CLMMINT`（日最低溫）、`CLMTEMP`（日平均溫）月表，以及 `RYES`（天氣與輻射報告）日報。
+- 官方 API 說明：`https://data.weather.gov.hk/weatherAPI/doc/HKO_Open_Data_API_Documentation.pdf`
+- 使用條件（HKO 非商業用途條款）：
+  - 必須承認香港特別行政區政府（透過香港天文台）為資料的知識產權擁有人；
+  - 必須聲明資料來自香港天文台，並複現其知識產權公告與免責聲明；
+  - 不得出售或交換該等資料以獲取利益；
+  - 不得暗示香港天文台認可或背書本項目。
+- `RYES` 日報在官方說明中標註為 **provisional（臨時／有限校驗）**；月表正式發布後以月表為準。
+- **本項目不是香港天文台的官方產品**，數據以官方原件為準。
+
+## 2. data.gov.hk
+
+- 資料集入口：`https://data.gov.hk/`
+- 使用條件：須清楚標示資料來源，並鳴謝「香港特別行政區政府」及相關資料提供機構。
+
+## 3. 演示數據快照
+
+- `sample_data/demo/` 內的 CSV 是**官方月表在某一時點的真實快照**（來源同上），僅用於離線演示；
+  頁面使用時必須顯示「示範資料」標識，不得冒充即時官方數據。
+
+## 4. 第三方 Skills（`.claude/skills/`）
+
+- 外部下載的 9 個 Skill 為第三方原始內容，各自附有 `SOURCE.md`（來源、commit、sha256）與 `LICENSE.repo`（原倉庫許可）。
+  使用與再分發請以各原倉庫許可為準。
+- 另有 3 個項目自寫 Skill（`trace-and-code-sync`、`bilingual-a11y-lab-ui`、`hko-safe-fetcher`），隨本項目以 MIT 許可提供。
+
+## 5. 字體
+
+- 前端僅使用系統字體棧（Noto Sans TC / PingFang TC / Microsoft JhengHei 等），**未打包任何 Web 字體文件**。
+
+---
+
+本 NOTICE 會隨項目數據來源變更而更新。最後核對日期：2026-11-16。

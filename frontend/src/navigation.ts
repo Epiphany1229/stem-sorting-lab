@@ -58,7 +58,8 @@ export const navItems: readonly NavItem[] = [
     navKey: "nav.sources",
     titleKey: "sources.title",
     descriptionKey: "home.card.sources.desc",
-    status: "inDevelopment",
+    // 阶段 6.1：正式的双语来源与方法说明页
+    status: "available",
   },
   {
     path: "/help",

@@ -518,49 +518,272 @@ export const dictionary = {
   },
   "sources.lead": {
     "zh-Hant":
-      "香港天氣數據來自官方公開來源。這一頁會列出實際使用的網址、欄位定義、單位、測站範圍、授權要求與驗證日期。",
-    en: "Hong Kong weather data comes from official open sources. This page will list the exact URLs, field definitions, units, station coverage, licensing terms and verification dates.",
+      "本站只使用香港天文台與 data.gov.hk 的官方開放資料；所有數字都來自真實抓取與真實執行。這是教學專案，不是香港天文台的官方產品。",
+    en: "This site uses only official open data from the Hong Kong Observatory and data.gov.hk; every number comes from real ingestion and real execution. It is a teaching project, not an official product of the Hong Kong Observatory.",
   },
-  "sources.notice": {
+  "sources.official.title": {
+    "zh-Hant": "官方來源",
+    en: "Official sources",
+  },
+  "sources.official.intro": {
     "zh-Hant":
-      "資料可行性調查仍在進行。在完成驗證之前，本網站不會宣稱已接通官方歷史數據，也不會顯示虛構的氣象數字。",
-    en: "The data feasibility study is still in progress. Until verification is complete, this site does not claim a live connection to official historical data and never shows invented weather numbers.",
+      "天氣資料只來自香港天文台開放數據 API（data.weather.gov.hk），並透過 data.gov.hk 確認公開資料條款。",
+    en: "Weather data comes only from the Hong Kong Observatory Open Data API (data.weather.gov.hk), with open-data terms confirmed through data.gov.hk.",
   },
-  "sources.planned.1": {
-    "zh-Hant": "官方文件與實際資料地址，並附上驗證日期",
-    en: "Official documentation and the actual data URLs, with verification dates",
+  "sources.official.clm": {
+    "zh-Hant":
+      "CLMMAXT、CLMMINT、CLMTEMP 分別是日最高溫、日最低溫與日平均溫的月表，按月發布，覆蓋 39 個官方測站；香港天文台總部（HKO）的資料可回溯至 1884 年。",
+    en: "CLMMAXT, CLMMINT and CLMTEMP are the monthly tables for daily maximum temperature, daily minimum temperature and daily mean temperature. They are published monthly, cover 39 official stations, and the Hong Kong Observatory headquarters (HKO) data goes back to 1884.",
   },
-  "sources.planned.2": {
-    "zh-Hant": "欄位定義、單位與時間粒度",
-    en: "Field definitions, units and time granularity",
+  "sources.official.ryes": {
+    "zh-Hant":
+      "RYES（天氣與輻射報告）逐日提供最近日期的補充資料；官方標示為 provisional（暫定），並且只有部分測站能對應到本網站使用的測站代號。",
+    en: "RYES (weather and radiation report) supplies supplementary daily data for recent dates. It is officially marked provisional, and only some stations map to the station codes used by this site.",
   },
-  "sources.planned.3": {
-    "zh-Hant": "測站範圍，以及行政區與測站對應的來源",
-    en: "Station coverage and the source for district-to-station mapping",
+  "sources.official.noThirdParty": {
+    "zh-Hant":
+      "本站不採用第三方氣象機構的資料；官方來源不可用時會如實顯示限制，不以模擬資料替代。",
+    en: "This site does not use data from third-party weather providers. When an official source is unavailable, the limitation is stated honestly and never replaced with simulated data.",
   },
-  "sources.planned.4": {
-    "zh-Hant": "授權與署名要求，以及已知限制",
-    en: "Licensing and attribution requirements, plus known limitations",
+  "sources.method.title": {
+    "zh-Hant": "資料方法與限速",
+    en: "Data methods and rate limits",
   },
-  "sources.attribution.title": {
-    "zh-Hant": "資料來源與署名",
-    en: "Sources and attribution",
+  "sources.method.backend": {
+    "zh-Hant":
+      "後端是唯一的抓取方；瀏覽器只讀取本網站後端，不會直接連接香港天文台或 data.gov.hk。",
+    en: "The backend is the only data fetcher; the browser reads only this site's backend and never connects to the Hong Kong Observatory or data.gov.hk directly.",
   },
-  "sources.attribution.body": {
-    "zh-Hant": "官方網站提供公開資料目錄。使用條款與署名要求依香港天文台及政府資料一線通公布為準。",
-    en: "The official websites publish the open data catalogue. Terms of use and attribution follow what the Hong Kong Observatory and data.gov.hk publish.",
+  "sources.method.rateLimits": {
+    "zh-Hant":
+      "限速規則：同一主機同時只允許 1 個請求，每次至少間隔 3 秒（附隨機抖動），每日請求有預算上限；遇到 429 會尊重 Retry-After，遇到 403 會熔斷並暫停抓取。",
+    en: "Rate limits: at most one request per host at a time, at least 3 seconds between requests (with random jitter), and a daily request budget. A 429 response is honoured with Retry-After, while a 403 response opens the circuit and pauses fetching.",
   },
-  "sources.attribution.hko": {
-    "zh-Hant": "香港天文台",
-    en: "Hong Kong Observatory",
+  "sources.method.sync": {
+    "zh-Hant":
+      "自動同步：服務啟動時自檢，之後每 24 小時同步一次；月表（CLM*）優先於 RYES，月表已提供的日期不再重複抓取 RYES。",
+    en: "Automatic sync: a self-check runs on startup, then data syncs every 24 hours. Monthly tables (CLM*) take priority over RYES, and dates already covered by a monthly table are not fetched again from RYES.",
   },
-  "sources.attribution.dataGov": {
+  "sources.method.missing": {
+    "zh-Hant":
+      "缺失值保留為缺失，不補 0；溫度保留官方原始字串與一位小數精度，前端只負責顯示。",
+    en: "Missing values stay missing and are never filled with 0. Temperatures keep the official raw string and one-decimal precision; the frontend only displays them.",
+  },
+  "sources.method.sorting": {
+    "zh-Hant":
+      "排序動畫由後端真實執行 Python 演算法並產生軌跡，前端只播放後端提供的軌跡與程式行映射，不自行推導。",
+    en: "Sorting animations come from a Python algorithm actually executed by the backend, which produces the trace. The frontend only plays the provided trace and code-line mapping and never derives the process itself.",
+  },
+  "sources.quality.title": {
+    "zh-Hant": "品質標記",
+    en: "Quality flags",
+  },
+  "sources.quality.caption": {
+    "zh-Hant": "官方月表的品質標記（data Completeness）",
+    en: "Quality flags in the official monthly tables (data completeness)",
+  },
+  "sources.quality.flag": {
+    "zh-Hant": "標記",
+    en: "Flag",
+  },
+  "sources.quality.meaning": {
+    "zh-Hant": "含義",
+    en: "Meaning",
+  },
+  "sources.quality.c": {
+    "zh-Hant": "C：資料完整",
+    en: "C: data complete",
+  },
+  "sources.quality.hash": {
+    "zh-Hant": "#：資料不完整（仍會保留並如實標示）",
+    en: "#: data incomplete (still kept and flagged honestly)",
+  },
+  "sources.quality.stars": {
+    "zh-Hant": "***：沒有資料",
+    en: "***: no data available",
+  },
+  "sources.window.title": {
+    "zh-Hant": "最近 30 天窗口口徑",
+    en: "The 30-day window",
+  },
+  "sources.window.body1": {
+    "zh-Hant":
+      "最近 30 天以「所選測站自身最新有效溫度日期」為錨點向前回推，而不是以今天為錨點。",
+    en: "The 30-day window is anchored on the selected station's own latest valid temperature date, not on today.",
+  },
+  "sources.window.body2": {
+    "zh-Hant":
+      "多測站比較時取共同最新日期；介面始終顯示真實起止日期，不以推測日期代替。",
+    en: "For multi-station comparisons the shared latest date is used; the interface always shows the real start and end dates and never substitutes guessed dates.",
+  },
+  "sources.limits.title": {
+    "zh-Hant": "已知限制",
+    en: "Known limitations",
+  },
+  "sources.limits.monthly": {
+    "zh-Hant":
+      "官方月表按月發布：當月通常尚未發布，因此最新日期可能比今天落後數天。",
+    en: "Official monthly tables are published monthly; the current month is usually not available yet, so recent dates may lag several days behind today.",
+  },
+  "sources.limits.provisional": {
+    "zh-Hant": "RYES 資料為官方 provisional（暫定），日後可能被官方修訂。",
+    en: "RYES data is officially provisional and may be revised by the official source later.",
+  },
+  "sources.limits.station": {
+    "zh-Hant":
+      "部分測站沒有最新月份的月表資料，介面會顯示實際可用日期或「不適用」說明。",
+    en: "Some stations have no monthly data for the latest month; the interface shows the actual available dates or a not-applicable message.",
+  },
+  "sources.limits.tpo": {
+    "zh-Hant":
+      "測站代號 TPO 會被官方 API 拒絕，因此本站不提供該站資料，也不把它當成網絡故障重試。",
+    en: "Station code TPO is rejected by the official API, so this site does not provide data for it and does not retry it as a network failure.",
+  },
+  "sources.limits.district": {
+    "zh-Hant":
+      "官方未提供行政區與測站的對應關係；本站不做推測映射，因此不顯示行政區層級的氣溫。",
+    en: "The official source provides no district-to-station mapping; this site does not guess one, so district-level temperatures are not shown.",
+  },
+  "sources.limits.rainHumidity": {
+    "zh-Hant":
+      "降雨與濕度只有香港天文台的有限資料，目前未在圖表頁展示，也不以氣溫冒充。",
+    en: "Rainfall and humidity only have limited Hong Kong Observatory data. They are not shown on the chart pages, and temperature is never used as a substitute.",
+  },
+  "sources.license.title": {
+    "zh-Hant": "許可與署名",
+    en: "Licensing and attribution",
+  },
+  "sources.license.hko": {
+    "zh-Hant":
+      "香港天文台非商業使用條款：須承認香港天文台為知識產權擁有者、復現免責聲明、不得暗示獲官方認可、不得出售資料。",
+    en: "Hong Kong Observatory non-commercial terms: acknowledge the Observatory as the intellectual property owner, reproduce the disclaimer, do not imply official endorsement, and do not sell the data.",
+  },
+  "sources.license.dataGov": {
+    "zh-Hant":
+      "data.gov.hk 使用條款：須清楚標示資料來源，並鳴謝政府及相關機構。",
+    en: "data.gov.hk terms: clearly identify the data source and acknowledge the Government and the relevant organisations.",
+  },
+  "sources.license.apiNote": {
+    "zh-Hant": "以上為條款摘要；完整條款以官方網站公布為準。",
+    en: "The above is a summary; the full terms published on the official websites prevail.",
+  },
+  "sources.license.fromApi": {
+    "zh-Hant": "以下許可摘要直接來自後端 GET /api/sources。",
+    en: "The licence summaries below come directly from the backend GET /api/sources.",
+  },
+  "sources.license.disclaimer": {
+    "zh-Hant":
+      "免責聲明：本網站是教學專案，並非香港天文台或香港特別行政區政府的官方產品。資料可能延遲、缺漏或被官方修訂；排序動畫與解說僅作教學用途，不構成任何專業、投資或決策建議。使用者應以官方來源公布的資料為準。",
+    en: "Disclaimer: this site is a teaching project, not an official product of the Hong Kong Observatory or the Government of the Hong Kong Special Administrative Region. Data may be delayed, incomplete or revised by the official source; the sorting animations and explanations are for teaching only and do not constitute professional, investment or decision-making advice. Users should rely on the data published by the official sources.",
+  },
+  "sources.status.title": {
+    "zh-Hant": "資料狀態",
+    en: "Data status",
+  },
+  "sources.status.loading": {
+    "zh-Hant": "正在讀取資料狀態…",
+    en: "Loading data status…",
+  },
+  "sources.status.error": {
+    "zh-Hant": "暫時無法讀取即時資料狀態；以下靜態來源與方法說明仍然有效。",
+    en: "Live data status is temporarily unavailable; the static source and method information below still applies.",
+  },
+  "sources.status.retry": {
+    "zh-Hant": "重新載入",
+    en: "Reload",
+  },
+  "sources.status.lastSuccess": {
+    "zh-Hant": "最近成功同步時間（香港時間）",
+    en: "Last successful sync (Hong Kong time)",
+  },
+  "sources.status.never": {
+    "zh-Hant": "尚未成功同步",
+    en: "No successful sync yet",
+  },
+  "sources.status.today": {
+    "zh-Hant": "今日請求數 / 每日預算",
+    en: "Requests today / daily budget",
+  },
+  "sources.status.remaining": {
+    "zh-Hant": "今日剩餘預算",
+    en: "Remaining budget today",
+  },
+  "sources.status.service": {
+    "zh-Hant": "服務狀態",
+    en: "Service status",
+  },
+  "sources.status.normal": {
+    "zh-Hant": "正常",
+    en: "Normal",
+  },
+  "sources.status.circuitOpen": {
+    "zh-Hant": "熔斷中（暫停抓取）",
+    en: "Circuit open (fetching paused)",
+  },
+  "sources.status.circuitUntil": {
+    "zh-Hant": "熔斷至（香港時間）：{time}",
+    en: "Circuit open until (Hong Kong time): {time}",
+  },
+  "sources.status.mode": {
+    "zh-Hant": "資料模式",
+    en: "Data mode",
+  },
+  "sources.status.modeOfficial": {
+    "zh-Hant": "官方資料",
+    en: "Official data",
+  },
+  "sources.status.note": {
+    "zh-Hant":
+      "這一區只顯示可理解的服務狀態；內部錯誤分類統計不會提供給初學者。",
+    en: "This area shows only understandable service status; internal error-outcome counters are not shown to beginners.",
+  },
+  "sources.table.caption": {
+    "zh-Hant": "最近成功抓取的資料集",
+    en: "Datasets from the most recent successful fetches",
+  },
+  "sources.table.dataset": {
+    "zh-Hant": "資料集",
+    en: "Dataset",
+  },
+  "sources.table.host": {
+    "zh-Hant": "接口主機",
+    en: "API host",
+  },
+  "sources.table.fetchedAt": {
+    "zh-Hant": "抓取時間（香港時間）",
+    en: "Fetched at (Hong Kong time)",
+  },
+  "sources.footer.checked": {
+    "zh-Hant": "本頁說明最後核對日期：2026-11-16",
+    en: "This page was last verified on 2026-11-16",
+  },
+  "sources.footer.linksTitle": {
+    "zh-Hant": "相關連結",
+    en: "Related links",
+  },
+  "sources.link.hko": {
+    "zh-Hant": "香港天文台官方網站",
+    en: "Hong Kong Observatory official website",
+  },
+  "sources.link.dataGov": {
     "zh-Hant": "政府資料一線通（data.gov.hk）",
     en: "data.gov.hk (Hong Kong public sector information portal)",
   },
-  "sources.pending": {
-    "zh-Hant": "實際資料網址、欄位與驗證日期仍在調查中，完成後會補上。",
-    en: "The exact data URLs, fields and verification dates are still under investigation and will be added once confirmed.",
+  "sources.link.apiPdf": {
+    "zh-Hant": "官方 API 說明文件（PDF）",
+    en: "Official API documentation (PDF)",
+  },
+  "sources.error.network": {
+    "zh-Hant": "連不上後端伺服器，請確認服務已啟動後重試。",
+    en: "Could not reach the backend server. Make sure it is running, then try again.",
+  },
+  "sources.error.server": {
+    "zh-Hant": "後端回應錯誤，請稍後重試。",
+    en: "The backend returned an error. Please try again later.",
+  },
+  "sources.error.invalidResponse": {
+    "zh-Hant": "後端的資料狀態格式不符合預期，請回報這個問題。",
+    en: "The backend data-status response has an unexpected shape. Please report this problem.",
   },
 
   // ---------- 使用说明 ----------
